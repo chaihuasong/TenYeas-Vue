@@ -19,13 +19,13 @@
       <li>
         <h5>请输入您的手机号</h5>
       </li>
-      <el-input placeholder="Please input" v-model="input" style="width:30%;"></el-input>
+      <el-input placeholder="Please input" prefix-icon="el-icon-mobile-phone" v-model="input" style="width:30%;"></el-input>
     </ul>
     <ul>
       <li>
         <h5>请输入您的身份证号</h5>
       </li>
-      <el-input placeholder="Please input" v-model="input" style="width:30%;"></el-input>
+      <el-input placeholder="Please input" prefix-icon="el-icon-s-custom" v-model="input" style="width:30%;"></el-input>
     </ul>
     <h5 style="margin-right: 30%">请输入立志信息</h5>
     <ul>
@@ -34,6 +34,8 @@
           :rows="5"
           style="width:40%;"
           placeholder="Please input"
+          maxlength="999"
+          show-word-limit
           v-model="textarea">
       </el-input>
     </ul>
@@ -53,7 +55,8 @@ export default {
   },
   data () {
     return {
-      radio: '1'
+      radio: '1',
+      textarea: '',
     };
   }
 }
