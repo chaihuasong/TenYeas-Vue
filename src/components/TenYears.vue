@@ -4,7 +4,10 @@
     <p style="color: chocolate;font-style: italic">
       让我们一起 预约十年后更好的自己
     </p>
-    <div class="sexTitleStyle"><span class='req'>*</span> 1、您的性别</div>
+    <div class="titleNameStyle"><span class='req'>*</span> 1、您的姓名</div>
+    <el-input placeholder="请输入" prefix-icon="el-icon-s-custom" v-model="input" class="inputStyle" clearable></el-input>
+    <br/>
+    <div class="sexTitleStyle"><span class='req'>*</span> 2、您的性别</div>
     <br/>
     <br/>
     <div class="radioButtonStyle2">
@@ -13,16 +16,16 @@
         <el-radio label="0">女</el-radio>
       </el-radio-group>
     </div>
-    <div class="titleNameStyle"><span class='req'>*</span> 2、您的手机号</div>
+    <div class="titleNameStyle"><span class='req'>*</span> 3、您的手机号</div>
     <el-input placeholder="请输入" prefix-icon="el-icon-mobile-phone" v-model="input" class="inputStyle" clearable pattern="[0-9]*"></el-input>
 
-    <div class="titleNameStyle"><span class='req'>*</span> 3、您的身份证号</div>
-    <el-input placeholder="请输入" prefix-icon="el-icon-s-custom" v-model="input" class="inputStyle" clearable pattern="[0-9]*[x]"></el-input>
+    <div class="titleNameStyle"><span class='req'>*</span> 4、您的身份证号</div>
+    <el-input placeholder="请输入" prefix-icon="el-icon-postcard" v-model="input" class="inputStyle" clearable pattern="[0-9]*[x]"></el-input>
 
-    <div class="titleNameStyle"><span class='req'>*</span> 4、请输入立志信息</div>
+    <div class="titleNameStyle"><span class='req'>*</span> 5、请输入立志信息</div>
     <el-input
         type="textarea"
-        :rows="10"
+        :rows="8"
         placeholder="请输入"
         style="width: 90%"
         maxlength="999"
