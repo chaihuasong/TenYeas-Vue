@@ -34,7 +34,7 @@
     </el-input>
     <br/>
     <br/>
-    <el-button type="primary" class="submitStyle">提交</el-button>
+    <el-button type="primary" class="submitStyle" @click="submit">提交</el-button>
     <br/>
     <br/>
     <ul>
@@ -46,6 +46,9 @@
 </template>
 
 <script>
+import axios from 'axios'
+import qs from 'qs'
+
 export default {
   name: 'TenYears',
   props: {
@@ -57,6 +60,28 @@ export default {
       textarea: '',
       input: '',
     };
+  },
+  methods: {
+    submit() {
+      var data = qs.stringify({
+        id: "1",
+        name: "chaihuasong",
+        gender: 1,
+        identityCard: "32423421342421",
+        telephone: "234234",
+        info: "lizhidashen"
+      })
+      axios({
+        method: "POST",
+        url: "http://localhost:8080/save",
+        data: data,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        alert(res)
+      });
+    }
   }
 }
 </script>
