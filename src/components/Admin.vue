@@ -87,8 +87,6 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        console.log(res)
-        console.log(res.data)
         this.tableData = res.data
       });
     }
