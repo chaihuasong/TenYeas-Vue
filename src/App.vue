@@ -1,18 +1,14 @@
 <template>
   <div id="app">
 <!--    <img alt="Vue logo" src="./assets/logo.png">-->
-    <TenYears msg="十年立志"/>
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
-import TenYears from './components/TenYears.vue'
 
 export default {
   name: 'App',
-  components: {
-    TenYears
-  }
 }
 </script>
 

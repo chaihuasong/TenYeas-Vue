@@ -1,5 +1,5 @@
 <template>
-  <div class="hello">
+  <div>
     <h2>{{ msg }}</h2>
     <p style="color: chocolate;font-style: italic">
       让我们一起 预约十年后更好的自己
