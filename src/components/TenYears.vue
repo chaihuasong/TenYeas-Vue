@@ -5,22 +5,22 @@
       让我们一起 预约十年后更好的自己
     </p>
     <div class="titleNameStyle"><span class='req'>*</span> 1、您的姓名</div>
-    <el-input placeholder="请输入" prefix-icon="el-icon-s-custom" v-model="input" class="inputStyle" clearable></el-input>
+    <el-input placeholder="请输入" prefix-icon="el-icon-s-custom" v-model="name" class="inputStyle" clearable></el-input>
     <br/>
     <div class="sexTitleStyle"><span class='req'>*</span> 2、您的性别</div>
     <br/>
     <br/>
     <div class="radioButtonStyle2">
-      <el-radio-group v-model="radio" >
+      <el-radio-group v-model="gender" >
         <el-radio label="1">男</el-radio>
         <el-radio label="0">女</el-radio>
       </el-radio-group>
     </div>
     <div class="titleNameStyle"><span class='req'>*</span> 3、您的手机号</div>
-    <el-input placeholder="请输入" prefix-icon="el-icon-mobile-phone" v-model="input" class="inputStyle" clearable pattern="[0-9]*"></el-input>
+    <el-input placeholder="请输入" prefix-icon="el-icon-mobile-phone" v-model="telephone" class="inputStyle" clearable pattern="[0-9]*"></el-input>
 
     <div class="titleNameStyle"><span class='req'>*</span> 4、您的身份证号</div>
-    <el-input placeholder="请输入" prefix-icon="el-icon-postcard" v-model="input" class="inputStyle" clearable pattern="[0-9]*[x]"></el-input>
+    <el-input placeholder="请输入" prefix-icon="el-icon-postcard" v-model="identityCard" class="inputStyle" clearable pattern="[0-9]*[x]"></el-input>
 
     <div class="titleNameStyle"><span class='req'>*</span> 5、请输入立志信息</div>
     <el-input
@@ -30,7 +30,7 @@
         style="width: 90%"
         maxlength="999"
         show-word-limit
-        v-model="textarea">
+        v-model="info">
     </el-input>
     <br/>
     <br/>
@@ -49,6 +49,17 @@
 import axios from 'axios'
 import qs from 'qs'
 
+
+function getParameterByName(name, url) {
+  if (!url) url = window.location.href;
+  name = name.replace(/[\\[\]]/g, '\\$&');
+  var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+      results = regex.exec(url);
+  if (!results) return null;
+  if (!results[2]) return '';
+  return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
+
 export default {
   name: 'TenYears',
   props: {
@@ -56,20 +67,42 @@ export default {
   },
   data () {
     return {
-      radio: '1',
-      textarea: '',
-      input: '',
+      name: '',
+      gender: '1',
+      telephone: '',
+      identityCard: '',
+      info: '',
     };
   },
+  mounted: function () {
+    this.getData()
+  },
   methods: {
+    getData() {
+      let code = getParameterByName("code", window.location.href)
+      if (code !== "" && code != null && code.length > 0) {
+        alert(code)
+        // axios({
+        //   method: "GET",
+        //   url: "http://localhost:8080/getOpenId?code=" + code,
+        //   data: null,
+        //   headers: {
+        //     'Content-Type': 'application/x-www-form-urlencoded'
+        //   }
+        // }).then((res) => {
+        //   window.location.href = "http://localhost:8081/#/TenYears?openid=" + res.data
+        // });
+      }
+    }
+  },
     submit() {
-      var data = qs.stringify({
-        id: "1",
-        name: "chaihuasong",
-        gender: 1,
-        identityCard: "32423421342421",
-        telephone: "234234",
-        info: "lizhidashen"
+      let data = qs.stringify({
+        id: '0',
+        name: this.name,
+        gender: this.gender,
+        identityCard: this.identityCard,
+        telephone: this.telephone,
+        info: this.info
       })
       axios({
         method: "POST",
@@ -81,7 +114,6 @@ export default {
       }).then((res) => {
         alert(res)
       });
-    }
   }
 }
 </script>

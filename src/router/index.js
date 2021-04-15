@@ -2,6 +2,8 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import TenYears from '@/components/TenYears'
 import Admin from '@/components/Admin'
+import Login from '@/components/Login'
+import Redirect from '@/components/Redirect'
 
 Vue.use(Router)
 
@@ -21,6 +23,16 @@ export default new Router({
       path: '/admin',
       name: 'admin',
       component: Admin
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: Login
+    },
+    {
+      path: '/redirect',
+      name: 'redirect',
+      component: Redirect
     }
   ]
 })
