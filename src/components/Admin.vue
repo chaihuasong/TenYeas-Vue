@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-container style="height: 500px; border: 1px solid #eee">
-      <el-aside width="200px" style="background-color: rgb(238, 241, 246)">
+      <el-aside width="100px" style="background-color: rgb(238, 241, 246)">
         <el-menu :default-openeds="['1', '3']">
           <el-submenu index="1">
             <template slot="title"><i class="el-icon-menu"></i>导航</template>
@@ -12,7 +12,7 @@
           <el-submenu index="3">
             <template slot="title"><i class="el-icon-setting"></i>设置</template>
             <el-menu-item-group>
-              <template slot="title">关于</template>
+              <template slot="title">退出</template>
             </el-menu-item-group>
           </el-submenu>
         </el-menu>
@@ -32,7 +32,7 @@
 
         <el-main>
           <el-table :data="tableData">
-            <el-table-column prop="id" label="id" width="60">
+            <el-table-column prop="id" label="id" width="150">
             </el-table-column>
             <el-table-column prop="name" label="姓名" width="80">
             </el-table-column>
@@ -45,6 +45,8 @@
             <el-table-column prop="telephone" label="手机" width="120">
             </el-table-column>
             <el-table-column prop="info" label="立志信息">
+            </el-table-column>
+            <el-table-column prop="createDate" label="创建时间">
             </el-table-column>
           </el-table>
         </el-main>
@@ -82,7 +84,7 @@ export default {
     getData() {
       axios({
         method: "GET",
-        url: "http://localhost:8080/get",
+        url: "http://htzchina.org:8080/get",
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }

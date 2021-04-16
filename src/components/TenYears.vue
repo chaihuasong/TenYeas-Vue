@@ -34,7 +34,7 @@
     </el-input>
     <br/>
     <br/>
-    <el-button type="primary" class="submitStyle" @click="submit">提交</el-button>
+    <el-button :disabled="submitDisable" type="primary" class="submitStyle" @click="submit">提交</el-button>
     <br/>
     <br/>
     <ul>
@@ -50,14 +50,16 @@ import axios from 'axios'
 import qs from 'qs'
 
 
-function getParameterByName(name, url) {
-  if (!url) url = window.location.href;
-  name = name.replace(/[\\[\]]/g, '\\$&');
-  var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
-      results = regex.exec(url);
-  if (!results) return null;
-  if (!results[2]) return '';
-  return decodeURIComponent(results[2].replace(/\+/g, ' '));
+function getOpenId() {
+  const str = window.location.href
+  if (str == null || !(str.indexOf("?") > 0)) {
+    return null
+  }
+  const openid = window.location.href.split("?")[1].split("=")[1];
+  if (openid != null) {
+    return openid
+  }
+  return null
 }
 
 export default {
@@ -72,49 +74,182 @@ export default {
       telephone: '',
       identityCard: '',
       info: '',
+      createDate: '',
+
+      unionid: '',
+      nickname: '',
+      openid: '',
+      headimgurl: '',
+      country: '',
+      province: '',
+      city: '',
+      language: '',
+      groupId: '',
+      submitDisable: false,
+
     };
   },
   mounted: function () {
+    console.log("getData")
     this.getData()
   },
   methods: {
     getData() {
-      let code = getParameterByName("code", window.location.href)
-      if (code !== "" && code != null && code.length > 0) {
-        alert(code)
-        // axios({
-        //   method: "GET",
-        //   url: "http://localhost:8080/getOpenId?code=" + code,
-        //   data: null,
-        //   headers: {
-        //     'Content-Type': 'application/x-www-form-urlencoded'
-        //   }
-        // }).then((res) => {
-        //   window.location.href = "http://localhost:8081/#/TenYears?openid=" + res.data
-        // });
+      let openid = getOpenId()
+      console.log("openid:" + openid)
+      if (openid !== "" && openid != null && openid.length > 0) {
+        console.log("begin axios...")
+        axios({
+          method: "GET",
+          url: "http://htzchina.org:8080/getUserInfo?openid=" + openid,
+          data: null,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }).then((res) => {
+          console.log(res)
+          console.log(res.data.unionid)
+          this.unionid = res.data.unionid
+          this.nickname = res.data.nickname
+          this.openid = res.data.openid
+          this.headimgurl = res.data.headimgurl
+          this.country = res.data.country
+          this.province = res.data.province
+          this.city = res.data.city
+          this.language = res.data.language
+          this.groupId = res.data.groupId
+          this.gender = res.data.sex + ''
+
+          axios({
+            method: "GET",
+            url: "http://htzchina.org:8080/getById?id=" + this.unionid,
+            data: null,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          }).then((res) => {
+            console.log(res)
+            console.log(res.data)
+            if (res != null && res.data != null) {
+              this.name = res.data.name
+              this.gender = res.data.gender + ''
+              this.identityCard = res.data.identityCard
+              this.telephone = res.data.telephone
+              this.info = res.data.info
+              this.createDate = res.data.createDate
+
+              let createTime = Date.parse(this.createDate)
+              console.log("remaining time:" + (Date.now() - createTime))
+              if ((Date.now() - createTime) > 3600000 * 24) {
+                this.$message({
+                  message: '数据已被锁定，无法修改！',
+                  type: 'warning'
+                })
+                this.submitDisable = true
+              }
+            }
+          });
+        });
+      } else {
+        window.location.href = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx83aec75c3ca58f0e&redirect_uri=http://htzchina.org/wc_redirect&response_type=code&scope=snsapi_base&state=123#wechat_redirect"
       }
-    }
-  },
+    },
+
     submit() {
+      if (this.name.trim() === '') {
+        this.$message({
+          message: '请输入您的姓名！',
+          type: 'warning'
+        })
+        return;
+      }
+      if (this.name.length < 2) {
+        this.$message({
+          message: '请输入您完整姓名！',
+          type: 'warning'
+        })
+        return;
+      }
+      if (this.telephone.trim() === '') {
+        this.$message({
+          message: '请输入您的手机号！',
+          type: 'warning'
+        })
+        return;
+      }
+      if (this.telephone.length !== 11) {
+        this.$message({
+          message: '请输入正确的手机号码！',
+          type: 'warning'
+        })
+        return;
+      }
+      if (this.identityCard.trim() === '') {
+        this.$message({
+          message: '请输入您的身份证号！',
+          type: 'warning'
+        })
+        return;
+      }
+      if (this.identityCard.length !== 18) {
+        this.$message({
+          message: '请输入正确的身份证号码！',
+          type: 'warning'
+        })
+        return;
+      }
+      if (this.info.trim() === '') {
+        this.$message({
+          message: '请输入您的立志信息！',
+          type: 'warning'
+        })
+        return;
+      }
+      if (this.info.length < 10) {
+        this.$message({
+          message: '立志信息字数过少！',
+          type: 'warning'
+        })
+        return;
+      }
+      let time = this.createDate
+      if (time == null || time === '') {
+        time = new Date(Date.now() + 8 * 3600000)
+      }
       let data = qs.stringify({
-        id: '0',
+        id: this.unionid,
         name: this.name,
         gender: this.gender,
         identityCard: this.identityCard,
         telephone: this.telephone,
-        info: this.info
+        info: this.info,
+        unionid: this.unionid,
+        nickname: this.nickname,
+        openid: this.openid,
+        headimgurl: this.headimgurl,
+        country: this.country,
+        province: this.province,
+        city: this.city,
+        language: this.language,
+        groupId: this.groupId,
+        createDate: time
       })
       axios({
         method: "POST",
-        url: "http://localhost:8080/save",
+        url: "http://htzchina.org:8080/save",
         data: data,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        alert(res)
+        this.$message({
+          message: '信息已成功提交！',
+          type: 'success'
+        })
+        console.log(res)
       });
-  }
+    }
+  },
 }
 </script>
 

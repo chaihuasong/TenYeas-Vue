@@ -20,9 +20,9 @@ export default {
   },
   methods: {
     getData() {
-      window.location.href = "http://localhost:8081/#/redirect?code=1234"
+      //window.location.href = "http://htzchina.org:8081/#/redirect?code=1234"
       //encodeURI() // TODO
-      //window.location.href = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx83aec75c3ca58f0e&redirect_uri=http://htzchina.org&response_type=code&scope=snsapi_base&state=123#wechat_redirect"
+      window.location.href = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx83aec75c3ca58f0e&redirect_uri=http://htzchina.org/wc_redirect&response_type=code&scope=snsapi_base&state=123#wechat_redirect"
     }
   }
 };

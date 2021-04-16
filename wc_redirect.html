@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>loading...</title>
+</head>
+<script lang="javascript">
+    function getCode() {
+        const str = window.location.href
+        const code = str.split("?")[1].split("=")[1].split("&")[0];
+        if (code != null) {
+            return code
+        }
+        return null
+    }
+
+    let code = getCode()
+    if (code !== "" && code != null && code.length > 0) {
+        const ajax = new XMLHttpRequest();
+        ajax.open("get", "http://htzchina.org:8080/getOpenId?code=" + code, true)
+        ajax.send()
+        ajax.onreadystatechange = function () {
+            if (ajax.readyState === 4 && ajax.status === 200) {
+                const res = ajax.responseText
+                if (res != null) {
+                    window.location.href = "http://htzchina.org/tenyears/#/index?openid=" + res
+                }
+            }
+        }
+    }
+</script>
+<body>
+<!-- Note: don't tell people to `click` the link, just tell them that it is a link. -->
+<!-- If you are not redirected automatically, follow this <a href='http://htz.org.cn'>link to 黄庭禅官网</a>.    </body></html> -->
+</body>
+</html>

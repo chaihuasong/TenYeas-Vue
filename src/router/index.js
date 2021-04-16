@@ -17,12 +17,12 @@ export default new Router({
     {
       path: '/index',
       name: 'index',
-      component: TenYears
+      component: TenYears,
     },
     {
       path: '/admin',
       name: 'admin',
-      component: Admin
+      component: Admin,
     },
     {
       path: '/login',
@@ -30,8 +30,8 @@ export default new Router({
       component: Login
     },
     {
-      path: '/redirect',
-      name: 'redirect',
+      path: '/wc_redirect',
+      name: 'wc_redirect',
       component: Redirect
     }
   ]
