@@ -21,6 +21,7 @@
       <el-container>
         <el-header style="text-align: right; font-size: 12px">
           <span style="text-align: center; font-size: 30px; margin-right: 45%">管理后台</span>
+          <el-button type="primary" icon="el-icon-download" @click="outTab" style="margin-right: 20px; text-align: center">export</el-button>
           <el-dropdown>
             <i class="el-icon-setting" style="margin-right: 15px"></i>
             <el-dropdown-menu slot="dropdown">
@@ -31,7 +32,7 @@
         </el-header>
 
         <el-main>
-          <el-table :data="tableData">
+          <el-table :data="tableData" id="out-table">
             <el-table-column prop="id" label="id" width="150">
             </el-table-column>
             <el-table-column prop="name" label="姓名" width="80">
@@ -68,7 +69,9 @@
 </style>
 
 <script>
-import axios from "axios";
+import axios from "axios"
+import XLSX from 'xlsx'
+import FileSaver from 'file-saver'
 
 export default {
   data() {
@@ -101,7 +104,20 @@ export default {
       let login = this.$store.getters.getSortage
       console.log(login)
       return login === 'login' || login.replaceAll("\"", "") === 'login'
-    }
+    },
+    outTab () {
+      /* generate workbook object from table */
+      let wb = XLSX.utils.table_to_book(document.querySelector('#out-table'))
+      /* get binary string as output */
+      let wbout = XLSX.write(wb, { bookType: 'xlsx', bookSST: true, type: 'array' })
+      let time = new Date(Date.now())
+      let fileStr = time.getFullYear() + '' + (time.getMonth() + 1) + '' + time.getDay() + '' + time.getHours() + '' + time.getMinutes()
+      try {
+        FileSaver.saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'TenYears_Info_' + fileStr + '.xlsx')
+      } catch (e) { if (typeof console !== 'undefined') console.log(e, wbout) }
+      return wbout
+    },
+
   }
 };
 </script>
