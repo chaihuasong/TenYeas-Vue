@@ -106,12 +106,17 @@ export default {
       return login === 'login' || login.replaceAll("\"", "") === 'login'
     },
     outTab () {
+      let xlsxParam = {raw: true}
       /* generate workbook object from table */
-      let wb = XLSX.utils.table_to_book(document.querySelector('#out-table'))
+      let wb = XLSX.utils.table_to_book(document.querySelector('#out-table'), xlsxParam)
       /* get binary string as output */
       let wbout = XLSX.write(wb, { bookType: 'xlsx', bookSST: true, type: 'array' })
       let time = new Date(Date.now())
-      let fileStr = time.getFullYear() + '' + (time.getMonth() + 1) + '' + time.getDay() + '' + time.getHours() + '' + time.getMinutes()
+      let month = (time.getMonth() + 1) < 10 ? '0' + (time.getMonth() + 1) : (time.getMonth() + 1)
+      let day = time.getDate() < 10 ? '0' + time.getDate() : time.getDate()
+      let hours = time.getHours() < 10 ? '0' + time.getHours() : time.getHours()
+      let minutes = time.getMinutes() < 10 ? '0' + time.getMinutes() : time.getMinutes()
+      let fileStr = time.getFullYear() + '' + month + '' + day + '' + hours + '' + minutes
       try {
         FileSaver.saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'TenYears_Info_' + fileStr + '.xlsx')
       } catch (e) { if (typeof console !== 'undefined') console.log(e, wbout) }
