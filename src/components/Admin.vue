@@ -21,7 +21,7 @@
       <el-container>
         <el-header style="text-align: right; font-size: 12px">
           <span style="text-align: center; font-size: 30px; margin-right: 45%">管理后台</span>
-          <el-button type="primary" icon="el-icon-download" @click="outTab" style="margin-right: 20px; text-align: center">export</el-button>
+          <el-button type="primary" icon="el-icon-download" @click="outTab" style="margin-right: 20px; text-align: center">导出</el-button>
           <el-dropdown>
             <i class="el-icon-setting" style="margin-right: 15px"></i>
             <el-dropdown-menu slot="dropdown">
@@ -47,10 +47,53 @@
             </el-table-column>
             <el-table-column prop="info" label="立志信息">
             </el-table-column>
-            <el-table-column prop="createDate" label="创建时间">
+            <el-table-column prop="createDate" label="创建时间" width="200">
+            </el-table-column>
+            <el-table-column label="操作">
+              <template slot-scope="scope">
+                <el-button size="mini" @click="editUser(scope.$index, scope.row)">编辑</el-button>
+                <el-button size="mini" type="danger" @click="delUser(scope.$index)">删除</el-button>
+              </template>
             </el-table-column>
           </el-table>
         </el-main>
+        <!-- 编辑 -->
+        <el-dialog title="编辑" :visible.sync="editDialogVisible">
+          <el-form ref="form" :model="userInfo" label-width="80px">
+            <el-form-item label="姓名">
+              <el-input v-model="userInfo.name" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="身份证号">
+              <el-input v-model="userInfo.identityCard" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="昵称">
+              <el-input v-model="userInfo.nickname" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="性别">
+              <el-input v-model="userInfo.gender" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="手机号">
+              <el-input v-model="userInfo.telephone" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="立志信息">
+              <el-input v-model="userInfo.info" autocomplete="off" :rows="4"></el-input>
+            </el-form-item>
+            <el-form-item label="创建时间">
+              <el-input v-model="userInfo.createDate" autocomplete="off" disabled></el-input>
+            </el-form-item>
+          </el-form>
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="editDialogVisible = false">取 消</el-button>
+            <el-button type="primary" @click="saveUser">确 定</el-button>
+          </div>
+        </el-dialog>
+        <!-- 删除 -->
+        <el-dialog title="提示" :visible.sync="delDialogVisible" width="30%">
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="delDialogVisible = false">取 消</el-button>
+          <el-button type="primary" @click="delDialogVisible = false">确 定</el-button>
+        </span>
+        </el-dialog>
       </el-container>
     </el-container>
   </div>
@@ -76,7 +119,19 @@ import FileSaver from 'file-saver'
 export default {
   data() {
     return {
-      tableData: []
+      tableData: [],
+      delDialogVisible: false,
+      editDialogVisible: false,
+      userInfo: {
+        name  : '',
+        identityCard: '',
+        nickname: '',
+        gender: '',
+        telephone: '',
+        info: '',
+        createDate: '',
+      },
+      userIndex: 0,
     }
   },
 
@@ -122,6 +177,27 @@ export default {
       } catch (e) { if (typeof console !== 'undefined') console.log(e, wbout) }
       return wbout
     },
+    editUser(index, item) {
+      this.userIndex = index
+      console.log("index:" + index)
+      this.userInfo = {
+        name: item.name,
+        identityCard: item.identityCard,
+        nickname: item.nickname,
+        gender: item.gender,
+        telephone: item.telephone,
+        info: item.info,
+        createDate: item.createDate,
+      }
+      this.editDialogVisible = true
+    },
+    delUser(index) {
+      this.$confirm('确认删除？')
+          .then(() => {
+            this.UserList.splice(index, 1)
+          })
+          .catch(() => { });
+    }
 
   }
 };
