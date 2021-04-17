@@ -1,13 +1,15 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import TenYears from '@/components/TenYears'
-import Admin from '@/components/Admin'
+import LoginAdmin from '@/components/LoginAdmin'
 import Login from '@/components/Login'
 import Redirect from '@/components/Redirect'
+import Home from '@/components/Admin'
 
 Vue.use(Router)
 
 export default new Router({
+  mode: 'history',
   routes: [
     {
       path: '/',
@@ -22,7 +24,12 @@ export default new Router({
     {
       path: '/admin',
       name: 'admin',
-      component: Admin,
+      component: LoginAdmin,
+    },
+    {
+      path: '/home',
+      name: 'home',
+      component: Home,
     },
     {
       path: '/login',

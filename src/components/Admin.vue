@@ -78,7 +78,12 @@ export default {
   },
 
   mounted: function () {
-    this.getData()
+    console.log("login?" + this.checkLogin())
+    if (this.checkLogin()) {
+      this.getData()
+    } else {
+      this.$router.push("/admin");
+    }
   },
   methods: {
     getData() {
@@ -91,6 +96,11 @@ export default {
       }).then((res) => {
         this.tableData = res.data
       });
+    },
+    checkLogin() {
+      let login = this.$store.getters.getSortage
+      console.log(login)
+      return login === 'login' || login.replaceAll("\"", "") === 'login'
     }
   }
 };
