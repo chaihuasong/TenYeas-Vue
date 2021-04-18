@@ -34,7 +34,25 @@
         <el-main>
           <el-input v-model="search" placeholder="请输入内容" style="width: 200px"></el-input>
           <el-button type="primary" icon="el-icon-search" style="margin-left: 20px; margin-right: 60%" @click="searchData">搜索</el-button>
-          <el-table :data="tableData.slice((currentPage-1)*pageSize,currentPage*pageSize)" id="out-table">
+          <el-table :data="tableData" id="out-table" style="height: 0px;width: 0px">
+            <el-table-column prop="id" label="id" width="150">
+            </el-table-column>
+            <el-table-column prop="name" label="姓名" width="80">
+            </el-table-column>
+            <el-table-column prop="identityCard" label="身份证号" width="180">
+            </el-table-column>
+            <el-table-column prop="nickname" label="昵称" width="80">
+            </el-table-column>
+            <el-table-column prop="gender" label="性别" width="60">
+            </el-table-column>
+            <el-table-column prop="telephone" label="手机" width="120">
+            </el-table-column>
+            <el-table-column prop="info" label="立志信息">
+            </el-table-column>
+            <el-table-column prop="createDate" label="创建时间" width="200">
+            </el-table-column>
+          </el-table>
+          <el-table :data="tableData.slice((currentPage-1)*pageSize,currentPage*pageSize)">
             <el-table-column prop="id" label="id" width="150">
             </el-table-column>
             <el-table-column prop="name" label="姓名" width="80">
@@ -204,7 +222,7 @@ export default {
     outTab () {
       let xlsxParam = {raw: true}
       /* generate workbook object from table */
-      let wb = XLSX.utils.table_to_book(document.querySelector('#out-table'), xlsxParam)
+      let wb = XLSX.utils.table_to_book(document.querySelector("#out-table"), xlsxParam)
       /* get binary string as output */
       let wbout = XLSX.write(wb, { bookType: 'xlsx', bookSST: true, type: 'array' })
       let time = new Date(Date.now())
