@@ -9,27 +9,38 @@ import Home from '@/components/Admin'
 Vue.use(Router)
 
 export default new Router({
-  mode: 'history',
   routes: [
     {
       path: '/',
       name: 'TenYears',
-      redirect: '/index'
+      redirect: '/index',
+      meta: {
+        title: '十年立志'
+      }
     },
     {
       path: '/index',
       name: 'index',
       component: TenYears,
+      meta: {
+        title: '十年立志'
+      }
     },
     {
       path: '/admin',
       name: 'admin',
       component: LoginAdmin,
+      meta: {
+        title: '登录'
+      }
     },
     {
       path: '/home',
       name: 'home',
       component: Home,
+      meta: {
+        title: '管理后台'
+      }
     },
     {
       path: '/login',

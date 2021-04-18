@@ -20,6 +20,7 @@ export default {
   name: "LoginAdmin",
   mounted() {
     this.$store.commit('$_setStorage', "")
+    document.title = this.$route.meta.title
   },
   data() {
     return {

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2>{{ msg }}</h2>
+    <h2>十年立志</h2>
     <p style="color: chocolate;font-style: italic">
       让我们一起 预约十年后更好的自己
     </p>
@@ -90,6 +90,7 @@ export default {
     };
   },
   mounted: function () {
+    document.title = this.$route.meta.title
     console.log("getData")
     this.getData()
   },

@@ -157,6 +157,7 @@ export default {
     } else {
       this.$router.push("/admin");
     }
+    document.title = this.$route.meta.title
   },
   methods: {
     getData() {
@@ -213,7 +214,7 @@ export default {
       axios({
         method: "POST",
         url: "http://htzchina.org:8080/update",
-        data: this.newUserInfo,
+        data: qs.stringify(this.newUserInfo),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
