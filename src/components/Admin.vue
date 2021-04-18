@@ -34,7 +34,7 @@
         <el-main>
           <el-input v-model="search" placeholder="请输入内容" style="width: 200px"></el-input>
           <el-button type="primary" icon="el-icon-search" style="margin-left: 20px; margin-right: 60%" @click="searchData">搜索</el-button>
-          <el-table :data="tableData" id="out-table">
+          <el-table :data="tableData.slice((currentPage-1)*pageSize,currentPage*pageSize)" id="out-table">
             <el-table-column prop="id" label="id" width="150">
             </el-table-column>
             <el-table-column prop="name" label="姓名" width="80">
@@ -58,6 +58,15 @@
               </template>
             </el-table-column>
           </el-table>
+          <el-pagination
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+              :current-page="currentPage"
+              :page-sizes="[10, 20, 30, 50, 100]"
+              :page-size="pageSize"
+              layout="total, sizes, prev, pager, next, jumper"
+              :total="tableData.length">
+          </el-pagination>
         </el-main>
         <!-- 编辑 -->
         <el-dialog title="编辑" :visible.sync="editDialogVisible">
@@ -126,6 +135,8 @@ export default {
   data() {
     return {
       tableData: [],
+      currentPage: 1,
+      pageSize: 10,
       search: '',
       delDialogVisible: false,
       editDialogVisible: false,
@@ -271,9 +282,14 @@ export default {
               console.log(res)
             })
           })
-          .catch(() => { });
-    }
-
+          .catch(() => { })
+    },
+    handleSizeChange(val) {
+      this.pageSize = val
+    },
+    handleCurrentChange(val) {
+      this.currentPage = val
+    },
   }
 }
 </script>
