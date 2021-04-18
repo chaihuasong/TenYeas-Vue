@@ -59,27 +59,30 @@
         </el-main>
         <!-- 编辑 -->
         <el-dialog title="编辑" :visible.sync="editDialogVisible">
-          <el-form ref="form" :model="userInfo" label-width="80px">
+          <el-form ref="form" :model="newUserInfo" label-width="80px">
+            <el-form-item label="ID">
+              <el-input v-model="newUserInfo.id" autocomplete="off" disabled></el-input>
+            </el-form-item>
             <el-form-item label="姓名">
-              <el-input v-model="userInfo.name" autocomplete="off"></el-input>
+              <el-input v-model="newUserInfo.name" autocomplete="off"></el-input>
             </el-form-item>
             <el-form-item label="身份证号">
-              <el-input v-model="userInfo.identityCard" autocomplete="off"></el-input>
+              <el-input v-model="newUserInfo.identityCard" autocomplete="off"></el-input>
             </el-form-item>
             <el-form-item label="昵称">
-              <el-input v-model="userInfo.nickname" autocomplete="off"></el-input>
+              <el-input v-model="newUserInfo.nickname" autocomplete="off"></el-input>
             </el-form-item>
             <el-form-item label="性别">
-              <el-input v-model="userInfo.gender" autocomplete="off"></el-input>
+              <el-input v-model="newUserInfo.gender" autocomplete="off"></el-input>
             </el-form-item>
             <el-form-item label="手机号">
-              <el-input v-model="userInfo.telephone" autocomplete="off"></el-input>
+              <el-input v-model="newUserInfo.telephone" autocomplete="off"></el-input>
             </el-form-item>
             <el-form-item label="立志信息">
-              <el-input v-model="userInfo.info" autocomplete="off" :rows="4"></el-input>
+              <el-input v-model="newUserInfo.info" autocomplete="off" :rows="4"></el-input>
             </el-form-item>
             <el-form-item label="创建时间">
-              <el-input v-model="userInfo.createDate" autocomplete="off" disabled></el-input>
+              <el-input v-model="newUserInfo.createDate" autocomplete="off"></el-input>
             </el-form-item>
           </el-form>
           <div slot="footer" class="dialog-footer">
@@ -115,6 +118,7 @@
 import axios from "axios"
 import XLSX from 'xlsx'
 import FileSaver from 'file-saver'
+import qs from "qs";
 
 export default {
   data() {
@@ -123,6 +127,17 @@ export default {
       delDialogVisible: false,
       editDialogVisible: false,
       userInfo: {
+        id : '',
+        name  : '',
+        identityCard: '',
+        nickname: '',
+        gender: '',
+        telephone: '',
+        info: '',
+        createDate: '',
+      },
+      newUserInfo: {
+        id : '',
         name  : '',
         identityCard: '',
         nickname: '',
@@ -147,13 +162,13 @@ export default {
     getData() {
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/get",
+        url: "http://htzchina.org:8080/getAll",
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
         this.tableData = res.data
-      });
+      })
     },
     checkLogin() {
       let login = this.$store.getters.getSortage
@@ -180,7 +195,8 @@ export default {
     editUser(index, item) {
       this.userIndex = index
       console.log("index:" + index)
-      this.userInfo = {
+      this.newUserInfo = {
+        id: item.id,
         name: item.name,
         identityCard: item.identityCard,
         nickname: item.nickname,
@@ -191,14 +207,58 @@ export default {
       }
       this.editDialogVisible = true
     },
+    saveUser() {
+      this.editDialogVisible = false;
+      this.$set(this.tableData, this.userIndex, this.newUserInfo);
+      axios({
+        method: "POST",
+        url: "http://htzchina.org:8080/update",
+        data: this.newUserInfo,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then(() => {
+        this.$message.success("已更新")
+      })
+    },
     delUser(index) {
       this.$confirm('确认删除？')
           .then(() => {
-            this.UserList.splice(index, 1)
+            console.log("delete:" + this.tableData[index].unionid)
+            let data = qs.stringify({
+              id: this.tableData[index].unionid,
+            })
+            axios({
+              method: "POST",
+              url: "http://htzchina.org:8080/delete",
+              data: data,
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+              }
+            }).then((res) => {
+              axios({
+                method: "GET",
+                url: "http://htzchina.org:8080/getById?id=" + this.unionid,
+                data: null,
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded'
+                }
+              }).then((res) => {
+                console.log(res)
+                console.log(res.data)
+                if (res != null && res.data != null) {
+                  this.$message.warning('删除失败！')
+                } else {
+                  this.$message.success('已删除！')
+                  this.tableData.splice(index, 1)
+                }
+              })
+              console.log(res)
+            })
           })
           .catch(() => { });
     }
 
   }
-};
+}
 </script>
