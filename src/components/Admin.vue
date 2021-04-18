@@ -12,7 +12,7 @@
           <el-submenu index="3">
             <template slot="title"><i class="el-icon-setting"></i>设置</template>
             <el-menu-item-group>
-              <template slot="title">退出</template>
+              <template slot="title">关于</template>
             </el-menu-item-group>
           </el-submenu>
         </el-menu>
@@ -25,7 +25,7 @@
           <el-dropdown>
             <i class="el-icon-setting" style="margin-right: 15px"></i>
             <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item>关于</el-dropdown-item>
+              <el-dropdown-item @click.native="gotoLogin">退出</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
           <span>Admin</span>
@@ -183,8 +183,12 @@ export default {
       }
       return false
     },
+    gotoLogin() {
+      this.$store.commit('$_setStorage', "")
+      this.$router.push("/admin")
+    },
     searchData() {
-      alert("search:" + this.search)
+      this.$message.warning("暂不支持！")
     },
     outTab () {
       let xlsxParam = {raw: true}
