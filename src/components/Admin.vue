@@ -172,9 +172,13 @@ export default {
       })
     },
     checkLogin() {
-      let login = this.$store.getters.getSortage
-      console.log(login)
-      return login === 'login' || login.replaceAll("\"", "") === 'login'
+      let loginDate = this.$store.getters.getSortage
+      if (loginDate != null && loginDate !== '') {
+        if ((Date.now() - loginDate) < 3600000) {
+          return true
+        }
+      }
+      return false
     },
     outTab () {
       let xlsxParam = {raw: true}

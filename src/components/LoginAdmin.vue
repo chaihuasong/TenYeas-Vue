@@ -58,7 +58,7 @@ export default {
     },
     login() {
       if (this.form.username === 'admin' && this.form.password === 'admin') {
-        this.$store.commit('$_setStorage', "login")
+        this.$store.commit('$_setStorage', Date.now())
         return true;
       }
       this.$message({
