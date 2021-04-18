@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-container style="height: 500px; border: 1px solid #eee">
-      <el-aside width="100px" style="background-color: rgb(238, 241, 246)">
+      <el-aside width="10%" style="background-color: rgb(238, 241, 246)">
         <el-menu :default-openeds="['1', '3']">
           <el-submenu index="1">
             <template slot="title"><i class="el-icon-menu"></i>导航</template>
@@ -32,6 +32,8 @@
         </el-header>
 
         <el-main>
+          <el-input v-model="search" placeholder="请输入内容" style="width: 200px"></el-input>
+          <el-button type="primary" icon="el-icon-search" style="margin-left: 20px; margin-right: 60%" @click="searchData">搜索</el-button>
           <el-table :data="tableData" id="out-table">
             <el-table-column prop="id" label="id" width="150">
             </el-table-column>
@@ -124,6 +126,7 @@ export default {
   data() {
     return {
       tableData: [],
+      search: '',
       delDialogVisible: false,
       editDialogVisible: false,
       userInfo: {
@@ -179,6 +182,9 @@ export default {
         }
       }
       return false
+    },
+    searchData() {
+      alert("search:" + this.search)
     },
     outTab () {
       let xlsxParam = {raw: true}
