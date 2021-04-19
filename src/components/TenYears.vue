@@ -90,7 +90,7 @@
     <br/>
     <br/>
     <br/>
-    <el-radio-group v-model="daixie" >
+    <el-radio-group :disabled="daixieDisabled" v-model="daixie" >
       <el-radio label="1">是</el-radio>
       <el-radio label="0">否</el-radio>
     </el-radio-group>
@@ -169,6 +169,7 @@ export default {
       language: '',
       groupId: '',
       submitDisable: false,
+      daixieDisabled: false
 
     };
   },
@@ -228,14 +229,22 @@ export default {
               this.wechatid = res.data.wechatid
               this.province = res.data.province
 
-              let createTime = Date.parse(this.createDate)
-              console.log("remaining time:" + (Date.now() - createTime))
-              if ((Date.now() - createTime) > 3600000 * 24) {
-                this.$message({
-                  message: '数据已被锁定，无法修改！',
-                  type: 'warning'
-                })
-                this.submitDisable = true
+              // let createTime = Date.parse(this.createDate)
+              // console.log("remaining time:" + (Date.now() - createTime))
+              // if ((Date.now() - createTime) > 3600000 * 24) {
+              //   this.$message({
+              //     message: '数据已被锁定，无法修改！',
+              //     type: 'warning'
+              //   })
+              //   this.submitDisable = true
+              // }
+
+              let endTime = Date.parse("2021-05-1T00:00:00.000Z")
+              console.log("endTime:" + endTime)
+              console.log("remaining:" + (Date.now() - endTime))
+              if (Date.now() - endTime > 0) {
+                this.daixieDisabled = true
+                this.daixie = '0'
               }
             }
           });
