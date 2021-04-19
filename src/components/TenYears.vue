@@ -39,12 +39,12 @@
     <br/>
     <div class="titleNameStyle"><span class='req'>*</span> 3. 你所在的黄庭书院（黄庭禅）相关的微信群</div>
     <br/>
-    <el-input placeholder="请输入" prefix-icon="el-icon-office-building" v-model="wechatgroup" class="inputStyle" clearable></el-input>
+    <el-input placeholder="请输入" prefix-icon="el-icon-chat-line-square" v-model="wechatgroup" class="inputStyle" clearable></el-input>
     <br/>
     <br/>
     <div class="titleNameStyle"><span class='req'>*</span> 4. 微信号（能联系到您的微信，建议用捆绑的手机）</div>
     <br/>
-    <el-input placeholder="请输入" prefix-icon="el-icon-office-building" v-model="wechatid" class="inputStyle" clearable></el-input>
+    <el-input placeholder="请输入" prefix-icon="el-icon-user" v-model="wechatid" class="inputStyle" clearable></el-input>
     <br/>
     <div class="titleNameStyle"><p>&nbsp;</p>  5. 手机号（若与微信号相同，可不填）</div>
     <br/>
