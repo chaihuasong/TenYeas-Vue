@@ -13,13 +13,13 @@
       <br/>
       您若无法参与线下填写活动，又想参与此项活动，请打开下方链接填写相关内容，会有志工代您填写立志卡统一邮寄到黄庭书院。<br>
       <br/>
-      链接：<a href="http://lizhi.neixinchan.com">http://lizhi.neixinchan.com</a><br>
+      链接：<a href="http://lizhi.neixinchan.com" target="_blank" rel="noopener">http://lizhi.neixinchan.com</a><br>
       <br/>
       立志卡填写信息收集截止日期：2021/04/30<br>
       <br/>
       <br/>
       <br/>
-      PS：此项活动免费，开放给看完直播内容（<a href="https://r.wjx.com/redirect.aspx?url=http%3A%2F%2F30.htz.org.cn&amp;activity=114312622" target="_blank" data-url="http://30.htz.org.cn">http://30.htz.org.cn</a>）的所有朋友。
+      PS：此项活动免费，开放给看完直播内容（<a href="http://30.htz.org.cn" target="_blank" rel="noopener">http://30.htz.org.cn</a>）的所有朋友。
     </span>
 
     <br/>
@@ -35,7 +35,7 @@
     <div class="titleNameStyle"><span class='req'>*</span> 2. 居住城市</div>
     <br/>
     <br/>
-    <el-input placeholder="请输入" prefix-icon="el-icon-office-building" v-model="city" class="inputStyle" clearable></el-input>
+    <el-input placeholder="请输入" prefix-icon="el-icon-office-building" v-model="province" class="inputStyle" clearable></el-input>
     <br/>
     <div class="titleNameStyle"><span class='req'>*</span> 3. 你所在的黄庭书院（黄庭禅）相关的微信群</div>
     <br/>
@@ -87,6 +87,7 @@
     <br/>
     <br/>
     <div class="sexTitleStyle"><span class='req'>*</span> 9. 确认是否需要代为填写，能参加线下填写的同学，请尽量线下填写活动</div>
+    <br/>
     <br/>
     <br/>
     <el-radio-group v-model="daixie" >
@@ -197,8 +198,8 @@ export default {
           this.openid = res.data.openid
           this.headimgurl = res.data.headimgurl
           this.country = res.data.country
-          this.province = res.data.province
           this.city = res.data.city
+          this.province = res.data.province + this.city
           this.language = res.data.language
           this.groupId = res.data.groupId
           this.gender = res.data.sex + ''
@@ -225,6 +226,7 @@ export default {
               this.daixie = res.data.daixie
               this.chujie = res.data.chujie
               this.wechatid = res.data.wechatid
+              this.province = res.data.province
 
               let createTime = Date.parse(this.createDate)
               console.log("remaining time:" + (Date.now() - createTime))
@@ -252,7 +254,7 @@ export default {
         this.$message.warning("请输入您完整姓名")
         return;
       }
-      if (this.city.trim() === '') {
+      if (this.province.trim() === '') {
         this.$message.warning("请输入您的居住城市！")
         return;
       }
@@ -284,7 +286,7 @@ export default {
         this.$message.warning("立志信息字数超过100个字！")
         return;
       }
-      if (this.birthday.trim() === '') {
+      if ( this.birthday === null || this.birthday === '') {
         this.$message.warning("请输入您的生日！")
         return;
       }
@@ -304,11 +306,18 @@ export default {
       if (time == null || time === '') {
         time = new Date(Date.now() + 8 * 3600000)
       }
+
       let data = qs.stringify({
         id: this.unionid,
         name: this.name,
         gender: this.gender,
-        identityCard: this.identityCard,
+        wechatid: this.wechatid,
+        wechatgroup: this.wechatgroup,
+        birthday: this.birthday,
+        open: this.open,
+        daixie: this.daixie,
+        chujie: this.chujie,
+
         telephone: this.telephone,
         info: this.info,
         unionid: this.unionid,

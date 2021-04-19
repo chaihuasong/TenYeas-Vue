@@ -47,15 +47,17 @@
             </el-table-column>
             <el-table-column prop="birthday" label="生日" width="80">
             </el-table-column>
-            <el-table-column prop="gender" label="性别" width="40">
+            <el-table-column prop="gender" label="性别" width="60" :formatter="genderFormatter">
+            </el-table-column>
+            <el-table-column prop="province" label="城市" width="60">
             </el-table-column>
             <el-table-column prop="telephone" label="手机" width="120">
             </el-table-column>
-            <el-table-column prop="chujie" label="初阶" width="40">
+            <el-table-column prop="chujie" label="初阶" width="60" :formatter="chujieFormatter">
             </el-table-column>
-            <el-table-column prop="daixie" label="代写" width="40">
+            <el-table-column prop="daixie" label="代写" width="60" :formatter="daixieFormatter">
             </el-table-column>
-            <el-table-column prop="gongkai" label="公开" width="40">
+            <el-table-column prop="open" label="公开" width="60" :formatter="gongkaiFormatter">
             </el-table-column>
             <el-table-column prop="info" label="立志信息">
             </el-table-column>
@@ -75,15 +77,17 @@
             </el-table-column>
             <el-table-column prop="birthday" label="生日" width="80">
             </el-table-column>
-            <el-table-column prop="gender" label="性别" width="40">
+            <el-table-column prop="gender" label="性别" width="60" :formatter="genderFormatter">
+            </el-table-column>
+            <el-table-column prop="province" label="城市" width="60">
             </el-table-column>
             <el-table-column prop="telephone" label="手机" width="120">
             </el-table-column>
-            <el-table-column prop="chujie" label="初阶" width="40">
+            <el-table-column prop="chujie" label="初阶" width="60" :formatter="chujieFormatter">
             </el-table-column>
-            <el-table-column prop="daixie" label="代写" width="40">
+            <el-table-column prop="daixie" label="代写" width="60" :formatter="daixieFormatter">
             </el-table-column>
-            <el-table-column prop="gongkai" label="公开" width="40">
+            <el-table-column prop="open" label="公开" width="60" :formatter="gongkaiFormatter">
             </el-table-column>
             <el-table-column prop="info" label="立志信息">
             </el-table-column>
@@ -132,6 +136,9 @@
             </el-form-item>
             <el-form-item label="手机号">
               <el-input v-model="newUserInfo.telephone" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="城市">
+              <el-input v-model="newUserInfo.province" autocomplete="off"></el-input>
             </el-form-item>
             <el-form-item label="初阶">
               <el-input v-model="newUserInfo.chujie" autocomplete="off"></el-input>
@@ -200,6 +207,7 @@ export default {
         nickname: '',
         gender: '',
         telephone: '',
+        province: '',
         wechatgroup: '',
         birthday: '',
         chujie: '',
@@ -215,6 +223,7 @@ export default {
         nickname: '',
         gender: '',
         telephone: '',
+        province: '',
         wechatgroup: '',
         birthday: '',
         chujie: '',
@@ -237,6 +246,34 @@ export default {
     document.title = this.$route.meta.title
   },
   methods: {
+    genderFormatter(row) {
+      if (row.gender == 1) {
+        return "男";
+      } else {
+        return "女";
+      }
+    },
+    chujieFormatter(row) {
+      if (row.chujie == 1) {
+        return "是";
+      } else {
+        return "否";
+      }
+    },
+    daixieFormatter(row) {
+      if (row.daixie == 1) {
+        return "是";
+      } else {
+        return "否";
+      }
+    },
+    gongkaiFormatter(row) {
+      if (row.open == 1) {
+        return "是";
+      } else {
+        return "否";
+      }
+    },
     getData() {
       axios({
         method: "GET",
@@ -291,6 +328,7 @@ export default {
         nickname: item.nickname,
         gender: item.gender,
         telephone: item.telephone,
+        province: item.province,
         wechatgroup: item.wechatgroup,
         birthday: item.birthday,
         chujie: item.chujie,
