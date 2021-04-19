@@ -39,13 +39,23 @@
             </el-table-column>
             <el-table-column prop="name" label="姓名" width="80">
             </el-table-column>
-            <el-table-column prop="identityCard" label="身份证号" width="180">
+            <el-table-column prop="wechatid" label="微信号" width="100">
             </el-table-column>
             <el-table-column prop="nickname" label="昵称" width="80">
             </el-table-column>
-            <el-table-column prop="gender" label="性别" width="60">
+            <el-table-column prop="wechatgroup" label="微信群" width="80">
+            </el-table-column>
+            <el-table-column prop="birthday" label="生日" width="80">
+            </el-table-column>
+            <el-table-column prop="gender" label="性别" width="40">
             </el-table-column>
             <el-table-column prop="telephone" label="手机" width="120">
+            </el-table-column>
+            <el-table-column prop="chujie" label="初阶" width="40">
+            </el-table-column>
+            <el-table-column prop="daixie" label="代写" width="40">
+            </el-table-column>
+            <el-table-column prop="gongkai" label="公开" width="40">
             </el-table-column>
             <el-table-column prop="info" label="立志信息">
             </el-table-column>
@@ -57,13 +67,23 @@
             </el-table-column>
             <el-table-column prop="name" label="姓名" width="80">
             </el-table-column>
-            <el-table-column prop="identityCard" label="身份证号" width="180">
+            <el-table-column prop="wechatid" label="微信号" width="100">
             </el-table-column>
             <el-table-column prop="nickname" label="昵称" width="80">
             </el-table-column>
-            <el-table-column prop="gender" label="性别" width="60">
+            <el-table-column prop="wechatgroup" label="微信群" width="80">
+            </el-table-column>
+            <el-table-column prop="birthday" label="生日" width="80">
+            </el-table-column>
+            <el-table-column prop="gender" label="性别" width="40">
             </el-table-column>
             <el-table-column prop="telephone" label="手机" width="120">
+            </el-table-column>
+            <el-table-column prop="chujie" label="初阶" width="40">
+            </el-table-column>
+            <el-table-column prop="daixie" label="代写" width="40">
+            </el-table-column>
+            <el-table-column prop="gongkai" label="公开" width="40">
             </el-table-column>
             <el-table-column prop="info" label="立志信息">
             </el-table-column>
@@ -95,17 +115,32 @@
             <el-form-item label="姓名">
               <el-input v-model="newUserInfo.name" autocomplete="off"></el-input>
             </el-form-item>
-            <el-form-item label="身份证号">
-              <el-input v-model="newUserInfo.identityCard" autocomplete="off"></el-input>
+            <el-form-item label="微信号">
+              <el-input v-model="newUserInfo.wechatid" autocomplete="off"></el-input>
             </el-form-item>
             <el-form-item label="昵称">
               <el-input v-model="newUserInfo.nickname" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="微信群">
+              <el-input v-model="newUserInfo.wechatgroup" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="生日">
+              <el-input v-model="newUserInfo.birthday" autocomplete="off"></el-input>
             </el-form-item>
             <el-form-item label="性别">
               <el-input v-model="newUserInfo.gender" autocomplete="off"></el-input>
             </el-form-item>
             <el-form-item label="手机号">
               <el-input v-model="newUserInfo.telephone" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="初阶">
+              <el-input v-model="newUserInfo.chujie" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="代写">
+              <el-input v-model="newUserInfo.daixie" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="公开">
+              <el-input v-model="newUserInfo.open" autocomplete="off"></el-input>
             </el-form-item>
             <el-form-item label="立志信息">
               <el-input v-model="newUserInfo.info" autocomplete="off" :rows="4"></el-input>
@@ -161,20 +196,30 @@ export default {
       userInfo: {
         id : '',
         name  : '',
-        identityCard: '',
+        wechatid: '',
         nickname: '',
         gender: '',
         telephone: '',
+        wechatgroup: '',
+        birthday: '',
+        chujie: '',
+        daixie: '',
+        open: '',
         info: '',
         createDate: '',
       },
       newUserInfo: {
         id : '',
         name  : '',
-        identityCard: '',
+        wechatid: '',
         nickname: '',
         gender: '',
         telephone: '',
+        wechatgroup: '',
+        birthday: '',
+        chujie: '',
+        daixie: '',
+        open: '',
         info: '',
         createDate: '',
       },
@@ -242,10 +287,15 @@ export default {
       this.newUserInfo = {
         id: item.id,
         name: item.name,
-        identityCard: item.identityCard,
+        wechatid: item.wechatid,
         nickname: item.nickname,
         gender: item.gender,
         telephone: item.telephone,
+        wechatgroup: item.wechatgroup,
+        birthday: item.birthday,
+        chujie: item.chujie,
+        daixie: item.daixie,
+        open: item.open,
         info: item.info,
         createDate: item.createDate,
       }
