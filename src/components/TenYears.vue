@@ -11,36 +11,54 @@
     <br/>
     <br/>
 
-    <div class="titleNameStyle"><span class='req'>*</span> 1. 姓名</div>
+    <div class="titleNameStyle"><span class='req'>*</span> 1.姓名</div>
     <br/>
     <br/>
     <el-input placeholder="请输入" prefix-icon="el-icon-s-custom" v-model="name" class="inputStyle" clearable></el-input>
     <br/>
 
-    <div class="titleNameStyle"><span class='req'>*</span> 2. 居住城市</div>
+    <div class="titleNameStyle"><span class='req'>*</span> 2.居住城市</div>
     <br/>
     <br/>
     <el-input placeholder="请输入" prefix-icon="el-icon-office-building" v-model="province" class="inputStyle"
               clearable></el-input>
     <br/>
-    <div class="titleNameStyle"><span class='req'>*</span> 3. 你所在的黄庭书院（黄庭禅）相关的微信群</div>
+    <div class="titleNameStyle"><span class='req'>*</span> 3.你所在的黄庭书院（黄庭禅）相关的微信群</div>
     <br/>
     <el-input placeholder="请输入" prefix-icon="el-icon-chat-line-square" v-model="wechatgroup" class="inputStyle"
               clearable></el-input>
     <br/>
     <br/>
-    <div class="titleNameStyle"><span class='req'>*</span> 4. 微信号（能联系到您的微信，建议用捆绑的手机）</div>
+    <div class="titleNameStyle"><span class='req'>*</span> 4.微信号（能联系到您的微信，建议用捆绑的手机）</div>
     <br/>
     <el-input placeholder="请输入" prefix-icon="el-icon-user" v-model="wechatid" class="inputStyle" clearable></el-input>
     <br/>
-    <div class="titleNameStyle"><p>&nbsp;</p> 5. 手机号（若与微信号相同，可不填）</div>
+    <div class="titleNameStyle"><p>&nbsp;</p> 5.手机号（若与微信号相同，可不填）</div>
     <br/>
     <br/>
     <el-input placeholder="请输入" prefix-icon="el-icon-mobile-phone" v-model="telephone" class="inputStyle" clearable
               pattern="[0-9]*"></el-input>
     <br/>
 
-    <div class="titleNameStyle"><span class='req'>*</span> 6. 十年立志内容（不超过100字，请谨慎填写）</div>
+    <div class="titleNameStyle"><span class='req'>*</span> 6.十年立志内容（不超过40字）</div>
+    <br/>
+    <el-image
+        style="width: 90%; height: 10%"
+        :src="require('../assets/img/lizhi_demo.jpg')"
+        :fit="none" />
+    <br/>
+    <el-input
+        type="textarea"
+        :rows="6"
+        placeholder="请输入"
+        style="width: 90%"
+        maxlength="40"
+        show-word-limit
+        v-model="info">
+    </el-input>
+    <br/>
+    <br/>
+    <div class="titleNameStyle"><span class='req'>*</span> 7.为达到十年立志的目标，您会有哪些具体的实施步骤？</div>
     <br/>
     <br/>
     <el-input
@@ -48,13 +66,11 @@
         :rows="6"
         placeholder="请输入"
         style="width: 90%"
-        maxlength="100"
-        show-word-limit
-        v-model="info">
+        v-model="stepInfo">
     </el-input>
     <br/>
     <br/>
-    <div class="titleNameStyle"><span class='req'>*</span> 7. 生日</div>
+    <div class="titleNameStyle"><span class='req'>*</span> 8.生日</div>
     <br/>
     <br/>
     <el-date-picker
@@ -64,7 +80,7 @@
     </el-date-picker>
     <br/>
     <br/>
-    <div class="sexTitleStyle"><span class='req'>*</span> 8. 是否上过黄庭禅初阶课程</div>
+    <div class="sexTitleStyle"><span class='req'>*</span> 9.是否上过黄庭禅初阶课程</div>
     <br/>
     <br/>
     <br/>
@@ -74,7 +90,7 @@
     </el-radio-group>
     <br/>
     <br/>
-    <div class="sexTitleStyle"><span class='req'>*</span> 9. 确认是否需要代为填写，能参加线下填写的同学，请尽量线下填写活动</div>
+    <div class="sexTitleStyle"><span class='req'>*</span> 10.确认是否需要代为填写，能参加线下填写的同学，请尽量线下填写活动</div>
     <br/>
     <br/>
     <br/>
@@ -84,7 +100,7 @@
     </el-radio-group>
     <br/>
     <br/>
-    <div class="sexTitleStyle"><span class='req'>*</span> 10. 立志内容能否公开</div>
+    <div class="sexTitleStyle"><span class='req'>*</span> 11.立志内容能否公开</div>
     <br/>
     <br/>
     <el-radio-group v-model="open">
@@ -140,6 +156,7 @@ export default {
       telephone: '',
       wechatgroup: '',
       info: '',
+      stepInfo: '',
       createDate: '',
       birthday: '',
       open: '',
@@ -165,7 +182,7 @@ export default {
     document.title = this.$route.meta.title
     console.log("getData")
     this.getHeaderHtml()
-    this.getData()
+    //this.getData()
   },
   methods: {
     getHeaderHtml() {
@@ -178,21 +195,23 @@ export default {
       }).then((res) => {
         if (res == null || res.data === '') {
           this.htmls = '<span style="text-align: left; display:inline-block">\n' +
-              '  各位同学好<br/>\n' +
+              '  各位同学好，<br/>\n' +
               '  <br/>\n' +
-              '  4月17日黄庭书院「炼30」直播活动已圆满结束此次推出了十年立志卡填写活动，待书院收齐同学的立志卡后，会将其密封于时间胶囊中，埋在中岭山上，十年后再开封！<br>\n' +
+              '  4月17日，黄庭书院进行了一场「炼30」直播，同时推出“十年立志”活动。<br>\n' +
               '  <br/>\n' +
-              '  为此，内地同步推出十年立志卡填写活动，请各位同学尽量在当地生活禅亲手填写立志卡（黄庭会比较有感觉哟）。<br>\n' +
+              '  在此诚邀各位跟着张庆祥先生学习的同学，给自己立个十年的“志”，将“立志”内容填写在一张立志卡上。我们将会把大家填好的立志卡统一打包寄回黄庭书院，密封于时间胶囊，埋藏在中岭山顶峰，待十年后启封。<br>\n' +
               '  <br/>\n' +
-              '  您若无法参与线下填写活动，又想参与此项活动，请打开下方链接填写相关内容，会有志工代您填写立志卡统一邮寄到黄庭书院。<br>\n' +
+              '  为方便无法参加亲手填写立志卡的同学参加此项活动，黄庭书院将安排志工为您代填写立志卡内容，并统一邮寄到黄庭书院。<br>\n' +
               '  <br/>\n' +
               '  链接：<a href="http://lizhi.neixinchan.com" target="_blank" rel="noopener">http://lizhi.neixinchan.com</a><br>\n' +
               '  <br/>\n' +
-              '  立志卡填写信息收集截止日期：2021/04/30<br>\n' +
+              '  有意参与者，请在2021/05/05 完成填写。<br>\n' +
               '  <br/>\n' +
               '  <br/>\n' +
               '  <br/>\n' +
               '  PS：此项活动免费，开放给看完直播内容（<a href="http://30.htz.org.cn" target="_blank" rel="noopener">http://30.htz.org.cn</a>）的所有朋友。\n' +
+              '  <br/>\n' +
+              '  【让我们一起 预约十年后更好的自己】\n' +
               '</span>'
         } else {
           this.htmls = res.data
@@ -241,6 +260,7 @@ export default {
               this.wechatgroup = res.data.wechatgroup
               this.telephone = res.data.telephone
               this.info = res.data.info
+              this.stepInfo = res.data.stepInfo
               this.createDate = res.data.createDate
               this.birthday = res.data.birthday
               this.open = res.data.open
@@ -311,8 +331,16 @@ export default {
         this.$message.warning("立志信息字数过少！")
         return;
       }
-      if (this.info.length > 100) {
-        this.$message.warning("立志信息字数超过100个字！")
+      if (this.info.length > 40) {
+        this.$message.warning("立志信息字数超过40字!")
+        return;
+      }
+      if (this.stepInfo.trim() === '') {
+        this.$message.warning("请输入您的具体实施步骤！")
+        return;
+      }
+      if (this.stepInfo.length < 2) {
+        this.$message.warning("具体实施步骤字数过少！")
         return;
       }
       if (this.birthday === null || this.birthday === '') {
@@ -349,6 +377,7 @@ export default {
 
         telephone: this.telephone,
         info: this.info,
+        stepInfo: this.stepInfo,
         unionid: this.unionid,
         nickname: this.nickname,
         openid: this.openid,
