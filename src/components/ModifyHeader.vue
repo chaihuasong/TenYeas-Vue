@@ -27,7 +27,9 @@ export default {
       }
     }).then((res) => {
       if (res == null || res.data === '') {
-        this.headerHtml = '<span style="text-align: left; display:inline-block">\n' +
+        this.headerHtml = '  <br/>\n' +
+            '  <br/>\n' +
+            '<span style="text-align: left; display:inline-block">\n' +
             '  各位同学好，<br/>\n' +
             '  <br/>\n' +
             '  4月17日，黄庭书院进行了一场「炼30」直播，同时推出“十年立志”活动。<br>\n' +
@@ -45,6 +47,7 @@ export default {
             '  PS：此项活动免费，开放给看完直播内容（<a href="http://30.htz.org.cn" target="_blank" rel="noopener">http://30.htz.org.cn</a>）的所有朋友。\n' +
             '  <br/>\n' +
             '  【让我们一起 预约十年后更好的自己】\n' +
+            '  <br/>\n' +
             '</span>'
       } else {
         this.headerHtml = res.data
