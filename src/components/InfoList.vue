@@ -30,6 +30,8 @@
       </el-table-column>
       <el-table-column prop="info" label="立志信息">
       </el-table-column>
+      <el-table-column prop="stepInfo" label="实施步骤">
+      </el-table-column>
       <el-table-column prop="createDate" label="创建时间" width="200">
       </el-table-column>
     </el-table>
@@ -59,6 +61,8 @@
       <el-table-column prop="open" label="公开" width="60" :formatter="gongkaiFormatter">
       </el-table-column>
       <el-table-column prop="info" label="立志信息">
+      </el-table-column>
+      <el-table-column prop="stepInfo" label="实施步骤">
       </el-table-column>
       <el-table-column prop="createDate" label="创建时间" width="200">
       </el-table-column>
@@ -121,6 +125,9 @@
         <el-form-item label="立志信息">
           <el-input v-model="newUserInfo.info" autocomplete="off" :rows="4"></el-input>
         </el-form-item>
+        <el-form-item label="实施步骤">
+          <el-input v-model="newUserInfo.stepInfo" autocomplete="off" :rows="4"></el-input>
+        </el-form-item>
         <el-form-item label="创建时间">
           <el-input v-model="newUserInfo.createDate" autocomplete="off"></el-input>
         </el-form-item>
@@ -181,6 +188,7 @@ export default {
         daixie: '',
         open: '',
         info: '',
+        stepInfo: '',
         createDate: '',
       },
       newUserInfo: {
@@ -197,6 +205,7 @@ export default {
         daixie: '',
         open: '',
         info: '',
+        stepInfo: '',
         createDate: '',
       },
       userIndex: 0,
@@ -298,6 +307,7 @@ export default {
         daixie: item.daixie,
         open: item.open,
         info: item.info,
+        stepInfo: item.stepInfo,
         createDate: item.createDate,
       }
       this.editDialogVisible = true

@@ -117,13 +117,6 @@
     <br/>
     <br/>
     <br/>
-    <ul>
-      <li><a href="http://htz.org.cn" target="_blank" rel="noopener">黄庭禅台湾</a></li>
-      <li><a href="https://neixinchan.com" target="_blank" rel="noopener">黄庭禅官网</a></li>
-    </ul>
-    <br/>
-    <br/>
-    <br/>
   </div>
 </template>
 
