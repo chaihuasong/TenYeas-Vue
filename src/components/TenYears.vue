@@ -4,23 +4,8 @@
 
     <br/><br/>
 
-    <span style="text-align: left; display:inline-block">
-      各位同学好<br/>
-      <br/>
-      4月17日黄庭书院「炼30」直播活动已圆满结束此次推出了十年立志卡填写活动，待书院收齐同学的立志卡后，会将其密封于时间胶囊中，埋在中岭山上，十年后再开封！<br>
-      <br/>
-      为此，内地同步推出十年立志卡填写活动，请各位同学尽量在当地生活禅亲手填写立志卡（黄庭会比较有感觉哟）。<br>
-      <br/>
-      您若无法参与线下填写活动，又想参与此项活动，请打开下方链接填写相关内容，会有志工代您填写立志卡统一邮寄到黄庭书院。<br>
-      <br/>
-      链接：<a href="http://lizhi.neixinchan.com" target="_blank" rel="noopener">http://lizhi.neixinchan.com</a><br>
-      <br/>
-      立志卡填写信息收集截止日期：2021/04/30<br>
-      <br/>
-      <br/>
-      <br/>
-      PS：此项活动免费，开放给看完直播内容（<a href="http://30.htz.org.cn" target="_blank" rel="noopener">http://30.htz.org.cn</a>）的所有朋友。
-    </span>
+    <p v-html="htmls"></p>
+
 
     <br/>
     <br/>
@@ -35,21 +20,24 @@
     <div class="titleNameStyle"><span class='req'>*</span> 2. 居住城市</div>
     <br/>
     <br/>
-    <el-input placeholder="请输入" prefix-icon="el-icon-office-building" v-model="province" class="inputStyle" clearable></el-input>
+    <el-input placeholder="请输入" prefix-icon="el-icon-office-building" v-model="province" class="inputStyle"
+              clearable></el-input>
     <br/>
     <div class="titleNameStyle"><span class='req'>*</span> 3. 你所在的黄庭书院（黄庭禅）相关的微信群</div>
     <br/>
-    <el-input placeholder="请输入" prefix-icon="el-icon-chat-line-square" v-model="wechatgroup" class="inputStyle" clearable></el-input>
+    <el-input placeholder="请输入" prefix-icon="el-icon-chat-line-square" v-model="wechatgroup" class="inputStyle"
+              clearable></el-input>
     <br/>
     <br/>
     <div class="titleNameStyle"><span class='req'>*</span> 4. 微信号（能联系到您的微信，建议用捆绑的手机）</div>
     <br/>
     <el-input placeholder="请输入" prefix-icon="el-icon-user" v-model="wechatid" class="inputStyle" clearable></el-input>
     <br/>
-    <div class="titleNameStyle"><p>&nbsp;</p>  5. 手机号（若与微信号相同，可不填）</div>
+    <div class="titleNameStyle"><p>&nbsp;</p> 5. 手机号（若与微信号相同，可不填）</div>
     <br/>
     <br/>
-    <el-input placeholder="请输入" prefix-icon="el-icon-mobile-phone" v-model="telephone" class="inputStyle" clearable pattern="[0-9]*"></el-input>
+    <el-input placeholder="请输入" prefix-icon="el-icon-mobile-phone" v-model="telephone" class="inputStyle" clearable
+              pattern="[0-9]*"></el-input>
     <br/>
 
     <div class="titleNameStyle"><span class='req'>*</span> 6. 十年立志内容（不超过100字，请谨慎填写）</div>
@@ -80,7 +68,7 @@
     <br/>
     <br/>
     <br/>
-    <el-radio-group v-model="chujie" >
+    <el-radio-group v-model="chujie">
       <el-radio label="1">是</el-radio>
       <el-radio label="0">否</el-radio>
     </el-radio-group>
@@ -90,7 +78,7 @@
     <br/>
     <br/>
     <br/>
-    <el-radio-group :disabled="daixieDisabled" v-model="daixie" >
+    <el-radio-group :disabled="daixieDisabled" v-model="daixie">
       <el-radio label="1">是</el-radio>
       <el-radio label="0">否</el-radio>
     </el-radio-group>
@@ -99,7 +87,7 @@
     <div class="sexTitleStyle"><span class='req'>*</span> 10. 立志内容能否公开</div>
     <br/>
     <br/>
-    <el-radio-group v-model="open" >
+    <el-radio-group v-model="open">
       <el-radio label="1">是</el-radio>
       <el-radio label="0">否</el-radio>
     </el-radio-group>
@@ -145,7 +133,7 @@ export default {
   props: {
     msg: String
   },
-  data () {
+  data() {
     return {
       name: '',
       gender: '1',
@@ -169,16 +157,48 @@ export default {
       language: '',
       groupId: '',
       submitDisable: false,
-      daixieDisabled: false
-
+      daixieDisabled: false,
+      htmls: ''
     };
   },
   mounted: function () {
     document.title = this.$route.meta.title
     console.log("getData")
+    this.getHeaderHtml()
     this.getData()
   },
   methods: {
+    getHeaderHtml() {
+      axios({
+        method: "GET",
+        url: "http://htzchina.org:8080/getHeader",
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        if (res == null || res.data === '') {
+          this.htmls = '<span style="text-align: left; display:inline-block">\n' +
+              '  各位同学好<br/>\n' +
+              '  <br/>\n' +
+              '  4月17日黄庭书院「炼30」直播活动已圆满结束此次推出了十年立志卡填写活动，待书院收齐同学的立志卡后，会将其密封于时间胶囊中，埋在中岭山上，十年后再开封！<br>\n' +
+              '  <br/>\n' +
+              '  为此，内地同步推出十年立志卡填写活动，请各位同学尽量在当地生活禅亲手填写立志卡（黄庭会比较有感觉哟）。<br>\n' +
+              '  <br/>\n' +
+              '  您若无法参与线下填写活动，又想参与此项活动，请打开下方链接填写相关内容，会有志工代您填写立志卡统一邮寄到黄庭书院。<br>\n' +
+              '  <br/>\n' +
+              '  链接：<a href="http://lizhi.neixinchan.com" target="_blank" rel="noopener">http://lizhi.neixinchan.com</a><br>\n' +
+              '  <br/>\n' +
+              '  立志卡填写信息收集截止日期：2021/04/30<br>\n' +
+              '  <br/>\n' +
+              '  <br/>\n' +
+              '  <br/>\n' +
+              '  PS：此项活动免费，开放给看完直播内容（<a href="http://30.htz.org.cn" target="_blank" rel="noopener">http://30.htz.org.cn</a>）的所有朋友。\n' +
+              '</span>'
+        } else {
+          this.htmls = res.data
+        }
+      })
+    },
     getData() {
       let openid = getOpenId()
       console.log("openid:" + openid)
@@ -295,7 +315,7 @@ export default {
         this.$message.warning("立志信息字数超过100个字！")
         return;
       }
-      if ( this.birthday === null || this.birthday === '') {
+      if (this.birthday === null || this.birthday === '') {
         this.$message.warning("请输入您的生日！")
         return;
       }
@@ -362,7 +382,7 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 
-/deep/ .el-radio{
+/deep/ .el-radio {
   white-space: normal;
 }
 
@@ -406,10 +426,12 @@ ul {
   list-style-type: none;
   padding: 0;
 }
+
 li {
   display: inline-block;
   margin: 0 10px;
 }
+
 a {
   color: #42b983;
 }

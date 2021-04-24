@@ -4,7 +4,9 @@ import TenYears from '@/components/TenYears'
 import LoginAdmin from '@/components/LoginAdmin'
 import Login from '@/components/Login'
 import Redirect from '@/components/Redirect'
-import Home from '@/components/Admin'
+import Admin from '@/components/Admin'
+import ModifyHeader from '@/components/ModifyHeader'
+import InfoList from '@/components/InfoList'
 
 Vue.use(Router)
 
@@ -37,10 +39,22 @@ export default new Router({
     {
       path: '/home',
       name: 'home',
-      component: Home,
+      component: Admin,
       meta: {
         title: '管理后台'
-      }
+      },
+      children: [
+        {
+          path: 'modifyHeader',
+          name: 'modifyHeader',
+          component: ModifyHeader,
+        },
+        {
+          path: 'infoList',
+          name: 'infoList',
+          component: InfoList,
+        }
+      ]
     },
     {
       path: '/login',
