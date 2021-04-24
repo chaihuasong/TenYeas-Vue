@@ -43,10 +43,10 @@ export default {
             '  有意参与者，请在2021/05/05 完成填写。<br>\n' +
             '  <br/>\n' +
             '  <br/>\n' +
-            '  <br/>\n' +
             '  PS：此项活动免费，开放给看完直播内容（<a href="http://30.htz.org.cn" target="_blank" rel="noopener">http://30.htz.org.cn</a>）的所有朋友。\n' +
             '  <br/>\n' +
             '  【让我们一起 预约十年后更好的自己】\n' +
+            '  <br/>\n' +
             '  <br/>\n' +
             '</span>'
       } else {
