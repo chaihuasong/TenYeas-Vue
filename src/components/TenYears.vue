@@ -175,7 +175,7 @@ export default {
     document.title = this.$route.meta.title
     console.log("getData")
     this.getHeaderHtml()
-    //this.getData()
+    this.getData()
   },
   methods: {
     getHeaderHtml() {
