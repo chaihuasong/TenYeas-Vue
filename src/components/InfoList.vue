@@ -351,7 +351,7 @@ export default {
               }).then((res) => {
                 console.log(res)
                 console.log(res.data)
-                if (res != null && res.data != null) {
+                if (res.data != null && res.data !== '') {
                   this.$message.warning('删除失败！')
                 } else {
                   this.$message.success('已删除！')
