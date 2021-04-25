@@ -53,8 +53,8 @@
     <el-button type="text" @click="dialogVisible = true">点击预览</el-button>
     <el-dialog
         :visible.sync="dialogVisible"
-        width="30%"
-        height="50%">
+        width="100%"
+        height="100%">
       <div style="position: relative; width: 100%; height: 100%;">
         <img src="../assets/img/lizhi_card.png" width="100%" height="100%" alt="" oncontextmenu="return false;">
         <span class="line1">{{ this.info.substring(0, this.info.length > 20 ? 20 : this.info.length) }}</span>
@@ -425,9 +425,13 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 
-.line1 { width: 50px; font-size: 30px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 100px; right: 90px; }
-.line2 { width: 50px; font-size: 30px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 100px; right: 180px; }
-.signName { width: 50px; font-size: 30px; word-wrap: break-word; letter-spacing: 20px; position: absolute; bottom: 100px; right: 220px; }
+.line1 { width: 50px; font-size: 26px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 10%; right: 20%; }
+.line2 { width: 50px; font-size: 26px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 10%; right: 40%; }
+.signName { width: 50px; font-size: 26px; word-wrap: break-word; letter-spacing: 20px; position: absolute; bottom: 8%; right: 55%; }
+
+img {
+  pointer-events:none;
+}
 
 /deep/ .el-radio {
   white-space: normal;
