@@ -36,7 +36,7 @@
     <div class="titleNameStyle"><span class='req'>*</span> 6.十年立志内容（不超过40字）</div>
     <br/>
     <el-image
-        style="width: 90%; height: 10%"
+        style="width: 100%; height: 10%"
         :src="require('../assets/img/lizhi.png')"
         :fit="none" />
     <br/>
