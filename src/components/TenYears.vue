@@ -37,7 +37,7 @@
     <br/>
     <el-image
         style="width: 90%; height: 10%"
-        :src="require('../assets/img/lizhi_demo.jpg')"
+        :src="require('../assets/img/lizhi.png')"
         :fit="none" />
     <br/>
     <el-input
@@ -51,7 +51,7 @@
     </el-input>
     <br/>
     <br/>
-    <div class="titleNameStyle"><span class='req'>*</span> 7.为达到十年立志的目标，您会有哪些具体的实施步骤？</div>
+    <div class="titleNameStyle"> 7.为达到十年立志的目标，您会有哪些具体的实施步骤？</div>
     <br/>
     <br/>
     <el-input
