@@ -324,14 +324,6 @@ export default {
         this.$message.warning("立志信息字数超过40字!")
         return;
       }
-      if (this.stepInfo.trim() === '') {
-        this.$message.warning("请输入您的具体实施步骤！")
-        return;
-      }
-      if (this.stepInfo.length < 2) {
-        this.$message.warning("具体实施步骤字数过少！")
-        return;
-      }
       if (this.birthday === null || this.birthday === '') {
         this.$message.warning("请输入您的生日！")
         return;
