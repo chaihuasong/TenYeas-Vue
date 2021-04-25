@@ -48,11 +48,17 @@ export default new Router({
           path: 'modifyHeader',
           name: 'modifyHeader',
           component: ModifyHeader,
+          meta: {
+            title: '管理后台'
+          },
         },
         {
           path: 'infoList',
           name: 'infoList',
           component: InfoList,
+          meta: {
+            title: '管理后台'
+          },
         }
       ]
     },
