@@ -6,6 +6,7 @@ import Login from '@/components/Login'
 import Redirect from '@/components/Redirect'
 import Admin from '@/components/Admin'
 import ModifyHeader from '@/components/ModifyHeader'
+import ModifyFooter from '@/components/ModifyFooter'
 import InfoList from '@/components/InfoList'
 
 Vue.use(Router)
@@ -48,6 +49,14 @@ export default new Router({
           path: 'modifyHeader',
           name: 'modifyHeader',
           component: ModifyHeader,
+          meta: {
+            title: '管理后台'
+          },
+        },
+        {
+          path: 'modifyFooter',
+          name: 'modifyFooter',
+          component: ModifyFooter,
           meta: {
             title: '管理后台'
           },

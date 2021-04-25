@@ -14,6 +14,9 @@
             <el-menu-item-group>
               <el-menu-item index="/home/modifyHeader">修改Header</el-menu-item>
             </el-menu-item-group>
+            <el-menu-item-group>
+              <el-menu-item index="/home/modifyFooter">修改Footer</el-menu-item>
+            </el-menu-item-group>
           </el-submenu>
         </el-menu>
       </el-aside>

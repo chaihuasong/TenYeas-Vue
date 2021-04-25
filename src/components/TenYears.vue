@@ -2,7 +2,7 @@
   <div>
     <span style="color: #3a8ee6; font-size: 22px;text-align: center">黄庭书院”十年立志“收集</span>
 
-    <p v-html="htmls"></p>
+    <p v-html="htmlsHeader"></p>
 
     <div class="titleNameStyle"><span class='req'>*</span> 1.姓名</div>
     <br/>
@@ -108,8 +108,7 @@
     <el-button :disabled="submitDisable" type="primary" class="submitStyle" @click="submit">提交</el-button>
     <br/>
     <br/>
-    <br/>
-    <br/>
+    <p v-html="htmlsFooter"></p>
   </div>
 </template>
 
@@ -161,13 +160,15 @@ export default {
       groupId: '',
       submitDisable: false,
       daixieDisabled: false,
-      htmls: ''
+      htmlsHeader: '',
+      htmlsFooter: ''
     };
   },
   mounted: function () {
     document.title = this.$route.meta.title
     console.log("getData")
     this.getHeaderHtml()
+    this.getFooterHtml()
     this.getData()
   },
   methods: {
@@ -180,7 +181,7 @@ export default {
         }
       }).then((res) => {
         if (res == null || res.data === '') {
-          this.htmls = '  <br/>\n' +
+          this.htmlsHeader = '  <br/>\n' +
               '  <br/>\n' +
               '<span style="text-align: left; display:inline-block">\n' +
               '  各位同学好，<br/>\n' +
@@ -203,7 +204,23 @@ export default {
               '  <br/>\n' +
               '</span>'
         } else {
-          this.htmls = res.data
+          this.htmlsHeader = res.data
+        }
+      })
+    },
+    getFooterHtml() {
+      axios({
+        method: "GET",
+        url: "http://htzchina.org:8080/getFooter",
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        if (res == null || res.data === '') {
+          this.htmlsFooter = '  <br/>\n' +
+              '  <br/>\n'
+        } else {
+          this.htmlsFooter = res.data
         }
       })
     },
