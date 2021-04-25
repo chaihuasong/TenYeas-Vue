@@ -55,12 +55,22 @@
         :visible.sync="dialogVisible"
         width="100%"
         height="100%">
-      <div style="position: relative; width: 100%; height: 100%;">
+      <div ref="imageWrapper" style="position: relative; width: 100%; height: 100%;">
         <img src="../assets/img/lizhi_card.png" width="100%" height="100%" alt="" oncontextmenu="return false;">
         <span class="line1">{{ this.info.substring(0, this.info.length > 20 ? 20 : this.info.length) }}</span>
         <span class="line2">{{ this.info.length > 20 ? this.info.substring(20) : "" }}</span>
         <span class="signName">{{ this.name }}</span>
       </div>
+      <el-button type="primary" @click="capture">制作图片</el-button>
+    </el-dialog>
+    <el-dialog
+        :visible.sync="dialogTableVisible"
+        width="100%"
+        height="100%">
+      <el-image
+          style="width: 100%; height: 10%"
+          :src="imgUrl"
+          :fit="none" />
     </el-dialog>
     <br/>
     <br/>
@@ -128,6 +138,7 @@
 import axios from 'axios'
 import qs from 'qs'
 import wx from 'weixin-js-sdk'
+import html2canvas from "html2canvas";
 
 function getOpenId() {
   const str = window.location.href
@@ -174,7 +185,9 @@ export default {
       daixieDisabled: false,
       htmlsHeader: '',
       htmlsFooter: '',
-      dialogVisible: false
+      dialogVisible: false,
+      dialogTableVisible: false,
+      imgUrl: ''
     };
   },
   mounted: function () {
@@ -186,6 +199,19 @@ export default {
     this.configWechat()
   },
   methods: {
+    capture() {
+      html2canvas(this.$refs.imageWrapper, {
+        scrollY: 0,
+        scrollX: 0,
+      }).then(canvas => {
+        let dataURL = canvas.toDataURL("image/png")
+        this.imgUrl = dataURL
+        if (this.imgUrl !== "") {
+          this.dialogTableVisible = true
+          this.dialogVisible = false
+        }
+      });
+    },
     configWechat() {
       axios({
         method: "GET",
@@ -475,9 +501,9 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 
-.line1 { width: 50px; font-size: 26px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 10%; right: 20%; }
-.line2 { width: 50px; font-size: 26px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 10%; right: 40%; }
-.signName { width: 50px; font-size: 26px; word-wrap: break-word; letter-spacing: 20px; position: absolute; bottom: 8%; right: 55%; }
+.line1 { width: 50px; font-size: 26px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 10%; right: 20%; color: blue}
+.line2 { width: 50px; font-size: 26px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 10%; right: 40%; color: blue }
+.signName { width: 50px; font-size: 26px; word-wrap: break-word; letter-spacing: 20px; position: absolute; bottom: 8%; right: 55%; color: blue }
 
 img {
   pointer-events:none;
