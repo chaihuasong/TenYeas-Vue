@@ -50,6 +50,19 @@
         v-model="info">
     </el-input>
     <br/>
+    <el-button type="text" @click="dialogVisible = true">点击预览</el-button>
+    <el-dialog
+        :visible.sync="dialogVisible"
+        width="30%"
+        height="50%">
+      <div style="position: relative; width: 100%; height: 100%;">
+        <img src="../assets/img/lizhi_card.png" width="100%" height="100%" alt="" oncontextmenu="return false;">
+        <span class="line1">{{ this.info.substring(0, this.info.length > 20 ? 20 : this.info.length) }}</span>
+        <span class="line2">{{ this.info.length > 20 ? this.info.substring(20) : "" }}</span>
+        <span class="signName">{{ this.name }}</span>
+      </div>
+    </el-dialog>
+    <br/>
     <br/>
     <div class="titleNameStyle"> 7.为达到十年立志的目标，您会有哪些具体的实施步骤？</div>
     <br/>
@@ -100,7 +113,6 @@
       <el-radio label="1">是</el-radio>
       <el-radio label="0">否</el-radio>
     </el-radio-group>
-    <br/>
     <br/>
     <br/>
     <br/>
@@ -161,7 +173,8 @@ export default {
       submitDisable: false,
       daixieDisabled: false,
       htmlsHeader: '',
-      htmlsFooter: ''
+      htmlsFooter: '',
+      dialogVisible: false
     };
   },
   mounted: function () {
@@ -411,6 +424,10 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+
+.line1 { width: 50px; font-size: 30px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 100px; right: 90px; }
+.line2 { width: 50px; font-size: 30px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 100px; right: 180px; }
+.signName { width: 50px; font-size: 30px; word-wrap: break-word; letter-spacing: 20px; position: absolute; bottom: 100px; right: 220px; }
 
 /deep/ .el-radio {
   white-space: normal;
