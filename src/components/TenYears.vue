@@ -127,7 +127,7 @@
 <script>
 import axios from 'axios'
 import qs from 'qs'
-
+import wx from 'weixin-js-sdk'
 
 function getOpenId() {
   const str = window.location.href
@@ -183,8 +183,58 @@ export default {
     this.getHeaderHtml()
     this.getFooterHtml()
     this.getData()
+    this.configWechat()
   },
   methods: {
+    configWechat() {
+      axios({
+        method: "GET",
+        url: "http://htzchina.org:8080/getAccessToken?url=" + window.location.href,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        if (res != null && res.data != null && res.data !== '') {
+          wx.config({
+            debug: false, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
+            appId: 'wx83aec75c3ca58f0e', // 必填，公众号的唯一标识
+            timestamp: res.data.timestamp, // 必填，生成签名的时间戳
+            nonceStr: res.data.nonceStr, // 必填，生成签名的随机串
+            signature: res.data.signature,// 必填，签名
+            jsApiList: [
+              'onMenuShareTimeline',
+              'onMenuShareAppMessage',
+              'onMenuShareQQ',
+              'onMenuShareWeibo',
+              'onMenuShareQZone'
+            ] // 必填，需要使用的JS接口列表
+          });
+        }
+      });
+
+      wx.ready(function () {   //需在用户可能点击分享按钮前就先调用
+        wx.onMenuShareAppMessage({
+          title: '黄庭书院"十年立志"收集', // 分享标题
+          desc: '让我们一起 预约十年后更好的自己', // 分享描述
+          link: "http://htzchina.org/tenyears/#/login", // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
+          imgUrl: 'http://htzchina.org/imgs/huangtingshuyuan.png', // 分享图标
+          success: function () {
+            // 设置成功
+            console.log("1234234 设置成功");
+          }
+        })
+        wx.onMenuShareTimeline({
+          title: '黄庭书院"十年立志"收集', // 分享标题
+          desc: '让我们一起 预约十年后更好的自己', // 分享描述
+          link: "http://htzchina.org/tenyears/#/login", // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
+          imgUrl: 'http://htzchina.org/imgs/huangtingshuyuan.png', // 分享图标
+          success: function () {
+            // 用户点击了分享后执行的回调函数
+            console.log("asdfasdf 设置成功");
+          }
+        })
+      });
+    },
     getHeaderHtml() {
       axios({
         method: "GET",
