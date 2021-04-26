@@ -8,6 +8,8 @@ import Admin from '@/components/Admin'
 import ModifyHeader from '@/components/ModifyHeader'
 import ModifyFooter from '@/components/ModifyFooter'
 import InfoList from '@/components/InfoList'
+import UploadRole from "@/components/UploadRole";
+import LoginRole from "@/components/LoginRole";
 
 Vue.use(Router)
 
@@ -70,6 +72,22 @@ export default new Router({
           },
         }
       ]
+    },
+    {
+      path: '/roleHome',
+      name: 'roleHome',
+      component: UploadRole,
+      meta: {
+        title: '上传后台'
+      },
+    },
+    {
+      path: '/role',
+      name: 'role',
+      component: LoginRole,
+      meta: {
+        title: '登录'
+      },
     },
     {
       path: '/login',
