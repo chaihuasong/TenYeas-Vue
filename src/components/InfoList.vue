@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-input v-model="search" placeholder="请输入内容" style="width: 200px"></el-input>
+    <el-input v-model="search" placeholder="请输入姓名或昵称" style="width: 200px"></el-input>
     <el-button type="primary" icon="el-icon-search" style="margin-left: 20px; margin-right: 60%" @click="searchData">搜索</el-button>
     <el-button type="primary" icon="el-icon-download" @click="outTab" style="margin-right: 20px; text-align: center">导出</el-button>
     <el-table :data="tableData" id="out-table" style="height: 0px;width: 0px">
@@ -33,6 +33,8 @@
       <el-table-column prop="info" label="立志信息">
       </el-table-column>
       <el-table-column prop="stepInfo" label="实施步骤">
+      </el-table-column>
+      <el-table-column prop="path" label="文件名" width="100">
       </el-table-column>
       <el-table-column prop="createDate" label="创建时间" width="200">
       </el-table-column>
@@ -67,6 +69,8 @@
       <el-table-column prop="info" label="立志信息">
       </el-table-column>
       <el-table-column prop="stepInfo" label="实施步骤">
+      </el-table-column>
+      <el-table-column prop="path" label="文件名" width="100">
       </el-table-column>
       <el-table-column prop="createDate" label="创建时间" width="100">
       </el-table-column>
@@ -135,6 +139,9 @@
         <el-form-item label="实施步骤">
           <el-input v-model="newUserInfo.stepInfo" autocomplete="off" :rows="4"></el-input>
         </el-form-item>
+        <el-form-item label="文件名称">
+          <el-input v-model="newUserInfo.path" autocomplete="off" :rows="4"></el-input>
+        </el-form-item>
         <el-form-item label="创建时间">
           <el-input v-model="newUserInfo.createDate" autocomplete="off"></el-input>
         </el-form-item>
@@ -197,6 +204,7 @@ export default {
         open: '',
         info: '',
         stepInfo: '',
+        path: '',
         createDate: '',
       },
       newUserInfo: {
@@ -215,6 +223,7 @@ export default {
         open: '',
         info: '',
         stepInfo: '',
+        path: '',
         createDate: '',
       },
       userIndex: 0,
@@ -280,7 +289,35 @@ export default {
       return false
     },
     searchData() {
-      this.$message.warning("暂不支持！")
+      if (this.search ==='') {
+        this.$message.warning("请输入要查询的姓名或昵称！")
+        return
+      }
+      axios({
+        method: "GET",
+        url: "http://htzchina.org:8080/getByName?name=" + this.search,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        console.log(res.data)
+        if (res.data !== null && res.data !== '') {
+          this.tableData = res.data
+        } else {
+          axios({
+            method: "GET",
+            url: "http://htzchina.org:8080/getByNameOrNicknameLike?name=" + this.search,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          }).then((res) => {
+            console.log(res.data)
+            if (res.data !== null && res.data !== '') {
+              this.tableData = res.data
+            }
+          })
+        }
+      })
     },
     outTab () {
       let xlsxParam = {raw: true}
@@ -318,6 +355,7 @@ export default {
         open: item.open,
         info: item.info,
         stepInfo: item.stepInfo,
+        path: item.path,
         createDate: item.createDate,
       }
       this.editDialogVisible = true
@@ -337,7 +375,7 @@ export default {
       })
     },
     delUser(index) {
-      this.$confirm('确认删除？')
+      this.$confirm('确认删除' + this.tableData[index].number + ':' + this.tableData[index].name + '？')
           .then(() => {
             console.log("delete:" + this.tableData[index].unionid)
             let data = qs.stringify({
