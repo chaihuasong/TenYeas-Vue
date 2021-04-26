@@ -4,18 +4,20 @@
       <el-container>
         <el-header style="text-align: right; font-size: 12px">
           <span style="text-align: center; font-size: 30px; margin-right: 45%">上传后台</span>
-          <el-dropdown>
-            <i class="el-icon-setting" style="margin-right: 15px"></i>
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item @click.native="gotoLogin">退出</el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
-          <span>Role</span>
+          <div style="float: right">
+            <el-dropdown>
+              <i class="el-icon-setting" style="margin-right: 15px; font-size: 20px"></i>
+              <el-dropdown-menu slot="dropdown">
+                <el-dropdown-item @click.native="gotoLogin">退出</el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
+            <span style="font-size: 16px; color: #c63574">Role</span>
+          </div>
         </el-header>
 
         <el-main>
           <el-input v-model="search" placeholder="请输入姓名" style="width: 200px"></el-input>
-          <el-button type="primary" icon="el-icon-search" style="margin-left: 20px; margin-right: 60%" @click="searchData">搜索</el-button>
+          <el-button type="primary" icon="el-icon-search" style="margin-left: 20px;" @click="searchData">搜索</el-button>
           <el-table :data="tableData">
             <el-table-column prop="number" label="NO." width="80">
             </el-table-column>
