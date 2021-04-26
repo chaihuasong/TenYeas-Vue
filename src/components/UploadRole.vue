@@ -29,17 +29,20 @@
             </el-table-column>
             <el-table-column label="操作">
 
+              <template slot-scope="scope">
               <el-upload
                   action="http://htzchina.org:8080/uploadFile/"
                   accept="image/jpeg,image/gif,image/png"
                   :on-remove="handleRemove"
                   :before-remove="beforeRemove"
                   :on-success="success"
+                  :data="{number: scope.row.number}"
                   :limit="1"
                   list-type="picture">
                 <el-button size="small" type="primary">点击上传图片</el-button>
                 <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过5M</div>
               </el-upload>
+              </template>
             </el-table-column>
           </el-table>
         </el-main>
