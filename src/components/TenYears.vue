@@ -50,7 +50,7 @@
         v-model="info">
     </el-input>
     <br/>
-    <el-button type="text" @click="dialogVisible = true">点击预览（建议先提交再点击）</el-button>
+    <el-button type="text" @click="dialogVisible = true">生成图片存档（建议先提交再点击）</el-button>
     <el-dialog
         :visible.sync="dialogVisible"
         width="100%"
