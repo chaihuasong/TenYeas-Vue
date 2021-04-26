@@ -4,11 +4,11 @@
     <el-button type="primary" icon="el-icon-search" style="margin-left: 20px; margin-right: 60%" @click="searchData">搜索</el-button>
     <el-button type="primary" icon="el-icon-download" @click="outTab" style="margin-right: 20px; text-align: center">导出</el-button>
     <el-table :data="tableData" id="out-table" style="height: 0px;width: 0px">
-      <el-table-column prop="id" label="id" width="100">
+      <el-table-column prop="id" label="id" width="80">
       </el-table-column>
-      <el-table-column prop="number" label="NO." width="50">
+      <el-table-column prop="number" label="NO." width="60">
       </el-table-column>
-      <el-table-column prop="name" label="姓名" width="80">
+      <el-table-column prop="name" label="姓名" width="70">
       </el-table-column>
       <el-table-column prop="wechatid" label="微信号" width="110">
       </el-table-column>
@@ -16,9 +16,9 @@
       </el-table-column>
       <el-table-column prop="wechatgroup" label="微信群" width="80">
       </el-table-column>
-      <el-table-column prop="birthday" label="生日" width="80">
+      <el-table-column prop="birthday" label="生日" width="60" :formatter="birthdayFormatter">
       </el-table-column>
-      <el-table-column prop="gender" label="性别" width="60" :formatter="genderFormatter">
+      <el-table-column prop="gender" label="性别" width="40" :formatter="genderFormatter">
       </el-table-column>
       <el-table-column prop="province" label="城市" width="60">
       </el-table-column>
@@ -40,11 +40,11 @@
       </el-table-column>
     </el-table>
     <el-table :data="tableData.slice((currentPage-1)*pageSize,currentPage*pageSize)">
-      <el-table-column prop="id" label="id" width="100">
+      <el-table-column prop="id" label="id" width="80">
       </el-table-column>
-      <el-table-column prop="number" label="NO." width="80">
+      <el-table-column prop="number" label="NO." width="60">
       </el-table-column>
-      <el-table-column prop="name" label="姓名" width="80">
+      <el-table-column prop="name" label="姓名" width="70">
       </el-table-column>
       <el-table-column prop="wechatid" label="微信号" width="110">
       </el-table-column>
@@ -52,19 +52,19 @@
       </el-table-column>
       <el-table-column prop="wechatgroup" label="微信群" width="80">
       </el-table-column>
-      <el-table-column prop="birthday" label="生日" width="80">
+      <el-table-column prop="birthday" label="生日" width="60" :formatter="birthdayFormatter">
       </el-table-column>
-      <el-table-column prop="gender" label="性别" width="60" :formatter="genderFormatter">
+      <el-table-column prop="gender" label="性别" width="40" :formatter="genderFormatter">
       </el-table-column>
       <el-table-column prop="province" label="城市" width="60">
       </el-table-column>
       <el-table-column prop="telephone" label="手机" width="70">
       </el-table-column>
-      <el-table-column prop="chujie" label="初阶" width="60" :formatter="chujieFormatter">
+      <el-table-column prop="chujie" label="初阶" width="40" :formatter="chujieFormatter">
       </el-table-column>
-      <el-table-column prop="daixie" label="代写" width="60" :formatter="daixieFormatter">
+      <el-table-column prop="daixie" label="代写" width="40" :formatter="daixieFormatter">
       </el-table-column>
-      <el-table-column prop="open" label="公开" width="60" :formatter="gongkaiFormatter">
+      <el-table-column prop="open" label="公开" width="40" :formatter="gongkaiFormatter">
       </el-table-column>
       <el-table-column prop="info" label="立志信息">
       </el-table-column>
@@ -251,6 +251,9 @@ export default {
     document.title = this.$route.meta.title
   },
   methods: {
+    birthdayFormatter(row) {
+        return row.birthday.substring(0, row.birthday.indexOf("T"));
+    },
     genderFormatter(row) {
       if (row.gender == 1) {
         return "男";
