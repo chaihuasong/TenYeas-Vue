@@ -27,21 +27,30 @@
             </el-table-column>
             <el-table-column prop="path" label="文件名" width="120">
             </el-table-column>
+            <el-table-column label="图片" width="120">
+              <template slot-scope="scope">
+                <el-image
+                    style="width: 60px; height: 120px"
+                    :src="'http://htzchina.org/imgs/tenyears/' + scope.row.path"
+                    :preview-src-list="['http://htzchina.org/imgs/tenyears/' + scope.row.path]"
+                    :fit="none" />
+              </template>
+            </el-table-column>
             <el-table-column label="操作">
 
               <template slot-scope="scope">
-              <el-upload
-                  action="http://htzchina.org:8080/uploadFile/"
-                  accept="image/jpeg,image/gif,image/png"
-                  :on-remove="handleRemove"
-                  :before-remove="beforeRemove"
-                  :on-success="success"
-                  :data="{number: scope.row.number}"
-                  :limit="1"
-                  list-type="picture">
-                <el-button size="small" type="primary">点击上传图片</el-button>
-                <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过5M</div>
-              </el-upload>
+                <el-upload
+                    action="http://htzchina.org:8080/uploadFile/"
+                    accept="image/jpeg,image/gif,image/png"
+                    :on-remove="handleRemove"
+                    :before-remove="beforeRemove"
+                    :on-success="success"
+                    :data="{number: scope.row.number}"
+                    :limit="1"
+                    list-type="picture">
+                  <el-button size="small" type="primary">点击上传图片</el-button>
+                  <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过5M</div>
+                </el-upload>
               </template>
             </el-table-column>
           </el-table>

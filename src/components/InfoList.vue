@@ -74,9 +74,20 @@
       </el-table-column>
       <el-table-column prop="createDate" label="创建时间" width="100">
       </el-table-column>
+      <el-table-column label="图片" width="120">
+        <template slot-scope="scope">
+          <el-image
+              style="width: 60px; height: 120px"
+              :src="'http://htzchina.org/imgs/tenyears/' + scope.row.path"
+              :preview-src-list="['http://htzchina.org/imgs/tenyears/' + scope.row.path]"
+              :fit="none" />
+        </template>
+      </el-table-column>
       <el-table-column label="操作">
         <template slot-scope="scope">
           <el-button size="mini" @click="editUser(scope.$index, scope.row)">编辑</el-button>
+          <br/>
+          <br/>
           <el-button size="mini" type="danger" @click="delUser(scope.$index)">删除</el-button>
         </template>
       </el-table-column>

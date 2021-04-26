@@ -9,31 +9,39 @@
     <br/>
     <el-input placeholder="请输入" prefix-icon="el-icon-s-custom" v-model="name" class="inputStyle" clearable></el-input>
     <br/>
+    <div class="sexTitleStyle"><span class='req'>*</span> 2.性别</div>
+    <br/>
+    <br/>
+    <el-radio-group v-model="gender">
+      <el-radio label="1">男</el-radio>
+      <el-radio label="0">女</el-radio>
+    </el-radio-group>
+    <br/>
 
-    <div class="titleNameStyle"><span class='req'>*</span> 2.居住城市</div>
+    <div class="titleNameStyle"><span class='req'>*</span> 3.居住城市</div>
     <br/>
     <br/>
     <el-input placeholder="请输入" prefix-icon="el-icon-office-building" v-model="province" class="inputStyle"
               clearable></el-input>
     <br/>
-    <div class="titleNameStyle"><span class='req'>*</span> 3.您所在的黄庭书院（黄庭禅）微信群 （请填写完整的群名，一个即可）</div>
+    <div class="titleNameStyle"><span class='req'>*</span> 4.您所在的黄庭书院（黄庭禅）微信群 （请填写完整的群名，一个即可）</div>
     <br/>
     <br/>
     <el-input placeholder="请输入" prefix-icon="el-icon-chat-line-square" v-model="wechatgroup" class="inputStyle"
               clearable></el-input>
     <br/>
-    <div class="titleNameStyle"><span class='req'>*</span> 4.微信号（需要能够联系到您，建议用捆绑的手机号）</div>
+    <div class="titleNameStyle"><span class='req'>*</span> 5.微信号（需要能够联系到您，建议用捆绑的手机号）</div>
     <br/>
     <br/>
     <el-input placeholder="请输入" prefix-icon="el-icon-user" v-model="wechatid" class="inputStyle" clearable></el-input>
     <br/>
-    <div class="titleNameStyle"><span style="margin-left: 10px"/> 5.手机号（若与微信号相同，可不填）</div>
+    <div class="titleNameStyle"><span style="margin-left: 10px"/> 6.手机号（若与微信号相同，可不填）</div>
     <br/>
     <br/>
     <el-input placeholder="请输入" prefix-icon="el-icon-mobile-phone" v-model="telephone" class="inputStyle" clearable
               pattern="[0-9]*"></el-input>
     <br/>
-    <div class="titleNameStyle"><span class='req'>*</span> 6.十年立志内容（不超过40字）</div>
+    <div class="titleNameStyle"><span class='req'>*</span> 7.十年立志内容（不超过80字）</div>
     <br/>
     <el-image
         style="width: 100%; height: 10%"
@@ -45,7 +53,7 @@
         :rows="6"
         placeholder="请输入"
         style="width: 90%"
-        maxlength="40"
+        maxlength="80"
         show-word-limit
         v-model="info">
     </el-input>
@@ -58,7 +66,10 @@
       <div ref="imageWrapper" style="position: relative; width: 100%; height: 100%;">
         <img src="../assets/img/lizhi_card.png" width="100%" height="100%" alt="" oncontextmenu="return false;">
         <span class="line1">{{ this.info.substring(0, this.info.length > 20 ? 20 : this.info.length) }}</span>
-        <span class="line2">{{ this.info.length > 20 ? this.info.substring(20) : "" }}</span>
+        <span class="line2">{{ this.info.length > 20 ? this.info.substring(20, this.info.length > 40 ? 40 : this.info.length) : "" }}</span>
+        <span class="line3">{{ this.info.length > 40 ? this.info.substring(40, this.info.length > 60 ? 60 : this.info.length) : "" }}</span>
+        <span class="line4">{{ this.info.length > 60 ? this.info.substring(60, this.info.length > 72 ? 72 : this.info.length) : "" }}</span>
+        <span class="line5">{{ this.info.length > 72 ? this.info.substring(72) : "" }}</span>
         <span class="signName">{{ this.name }}</span>
       </div>
       <br/>
@@ -78,7 +89,7 @@
     </el-dialog>
     <br/>
     <br/>
-    <div class="titleNameStyle"><span style="margin-left: 10px"/> 7.为达到十年立志的目标，您会有哪些具体的实施步骤？</div>
+    <div class="titleNameStyle"><span style="margin-left: 10px"/> 8.为达到十年立志的目标，您会有哪些具体的实施步骤？</div>
     <br/>
     <br/>
     <el-input
@@ -90,7 +101,7 @@
     </el-input>
     <br/>
     <br/>
-    <div class="titleNameStyle"><span class='req'>*</span> 8.生日</div>
+    <div class="titleNameStyle"><span class='req'>*</span> 9.生日</div>
     <br/>
     <br/>
     <el-date-picker
@@ -101,7 +112,7 @@
     </el-date-picker>
     <br/>
     <br/>
-    <div class="sexTitleStyle"><span class='req'>*</span> 9.是否参加过黄庭禅初阶课程？</div>
+    <div class="sexTitleStyle"><span class='req'>*</span> 10.是否参加过黄庭禅初阶课程？</div>
     <br/>
     <br/>
     <el-radio-group v-model="chujie">
@@ -110,7 +121,7 @@
     </el-radio-group>
     <br/>
     <br/>
-    <div class="sexTitleStyle"><span class='req'>*</span> 10.确认是否需要代为填写（参加线下填写的同学，此处选择“不用代写”）</div>
+    <div class="sexTitleStyle"><span class='req'>*</span> 11.确认是否需要代为填写（参加线下填写的同学，此处选择“不用代写”）</div>
     <br/>
     <br/>
     <br/>
@@ -120,7 +131,7 @@
     </el-radio-group>
     <br/>
     <br/>
-    <div class="sexTitleStyle"><span class='req'>*</span> 11.立志内容能否公开</div>
+    <div class="sexTitleStyle"><span class='req'>*</span> 12.立志内容能否公开</div>
     <br/>
     <br/>
     <el-radio-group v-model="open">
@@ -502,10 +513,13 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 
-.line1 { width: 45px; font-size: 26px; word-wrap: break-word; letter-spacing: 22px; position: absolute; top: 10%; right: 20%; color: #3a8ee6
+.line1 { width: 40px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 10%; right: 15%; color: #3a8ee6
 }
-.line2 { width: 45px; font-size: 26px; word-wrap: break-word; letter-spacing: 22px; position: absolute; top: 10%; right: 40%; color: #3a8ee6 }
-.signName { width: 45px; font-size: 26px; word-wrap: break-word; letter-spacing: 22px; position: absolute; bottom: 8%; right: 55%; color: #3a8ee6 }
+.line2 { width: 40px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 10%; right: 30%; color: #3a8ee6 }
+.line3 { width: 40px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 10%; right: 45%; color: #3a8ee6 }
+.line4 { width: 40px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 10%; right: 60%; color: #3a8ee6 }
+.line5 { width: 40px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 10%; right: 75%; color: #3a8ee6 }
+.signName { width: 40px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; bottom: 8%; right: 60%; color: #3a8ee6 }
 
 img {
   pointer-events:none;
