@@ -6,6 +6,8 @@
     <el-table :data="tableData" id="out-table" style="height: 0px;width: 0px">
       <el-table-column prop="id" label="id" width="150">
       </el-table-column>
+      <el-table-column prop="number" label="NO." width="50">
+      </el-table-column>
       <el-table-column prop="name" label="姓名" width="80">
       </el-table-column>
       <el-table-column prop="wechatid" label="微信号" width="110">
@@ -38,6 +40,8 @@
     <el-table :data="tableData.slice((currentPage-1)*pageSize,currentPage*pageSize)">
       <el-table-column prop="id" label="id" width="150">
       </el-table-column>
+      <el-table-column prop="number" label="NO." width="80">
+      </el-table-column>
       <el-table-column prop="name" label="姓名" width="80">
       </el-table-column>
       <el-table-column prop="wechatid" label="微信号" width="110">
@@ -64,7 +68,7 @@
       </el-table-column>
       <el-table-column prop="stepInfo" label="实施步骤">
       </el-table-column>
-      <el-table-column prop="createDate" label="创建时间" width="200">
+      <el-table-column prop="createDate" label="创建时间" width="100">
       </el-table-column>
       <el-table-column label="操作">
         <template slot-scope="scope">
@@ -88,6 +92,9 @@
       <el-form ref="form" :model="newUserInfo" label-width="80px">
         <el-form-item label="ID">
           <el-input v-model="newUserInfo.id" autocomplete="off" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="NO.">
+          <el-input v-model="newUserInfo.number" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="姓名">
           <el-input v-model="newUserInfo.name" autocomplete="off"></el-input>
@@ -176,6 +183,7 @@ export default {
       editDialogVisible: false,
       userInfo: {
         id : '',
+        number: '',
         name  : '',
         wechatid: '',
         nickname: '',
@@ -193,6 +201,7 @@ export default {
       },
       newUserInfo: {
         id : '',
+        number: '',
         name  : '',
         wechatid: '',
         nickname: '',
@@ -295,6 +304,7 @@ export default {
       console.log("index:" + index)
       this.newUserInfo = {
         id: item.id,
+        number: item.number,
         name: item.name,
         wechatid: item.wechatid,
         nickname: item.nickname,
