@@ -1,10 +1,10 @@
 <template>
   <div>
-    <el-input v-model="search" placeholder="请输入姓名或昵称" style="width: 200px"></el-input>
+    <el-input v-model="search" placeholder="请输入姓名" style="width: 200px"></el-input>
     <el-button type="primary" icon="el-icon-search" style="margin-left: 20px; margin-right: 60%" @click="searchData">搜索</el-button>
     <el-button type="primary" icon="el-icon-download" @click="outTab" style="margin-right: 20px; text-align: center">导出</el-button>
     <el-table :data="tableData" id="out-table" style="height: 0px;width: 0px">
-      <el-table-column prop="id" label="id" width="150">
+      <el-table-column prop="id" label="id" width="100">
       </el-table-column>
       <el-table-column prop="number" label="NO." width="50">
       </el-table-column>
@@ -22,7 +22,7 @@
       </el-table-column>
       <el-table-column prop="province" label="城市" width="60">
       </el-table-column>
-      <el-table-column prop="telephone" label="手机" width="110">
+      <el-table-column prop="telephone" label="手机" width="70">
       </el-table-column>
       <el-table-column prop="chujie" label="初阶" width="60" :formatter="chujieFormatter">
       </el-table-column>
@@ -34,13 +34,13 @@
       </el-table-column>
       <el-table-column prop="stepInfo" label="实施步骤">
       </el-table-column>
-      <el-table-column prop="path" label="文件名" width="100">
+      <el-table-column prop="path" label="文件名" width="80">
       </el-table-column>
       <el-table-column prop="createDate" label="创建时间" width="200">
       </el-table-column>
     </el-table>
     <el-table :data="tableData.slice((currentPage-1)*pageSize,currentPage*pageSize)">
-      <el-table-column prop="id" label="id" width="150">
+      <el-table-column prop="id" label="id" width="100">
       </el-table-column>
       <el-table-column prop="number" label="NO." width="80">
       </el-table-column>
@@ -58,7 +58,7 @@
       </el-table-column>
       <el-table-column prop="province" label="城市" width="60">
       </el-table-column>
-      <el-table-column prop="telephone" label="手机" width="110">
+      <el-table-column prop="telephone" label="手机" width="70">
       </el-table-column>
       <el-table-column prop="chujie" label="初阶" width="60" :formatter="chujieFormatter">
       </el-table-column>
@@ -70,7 +70,7 @@
       </el-table-column>
       <el-table-column prop="stepInfo" label="实施步骤">
       </el-table-column>
-      <el-table-column prop="path" label="文件名" width="100">
+      <el-table-column prop="path" label="文件名" width="80">
       </el-table-column>
       <el-table-column prop="createDate" label="创建时间" width="100">
       </el-table-column>
@@ -290,12 +290,12 @@ export default {
     },
     searchData() {
       if (this.search ==='') {
-        this.$message.warning("请输入要查询的姓名或昵称！")
+        this.getData()
         return
       }
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getByName?name=" + this.search,
+        url: "http://htzchina.org:8080/getByNameLike?name=" + this.search,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -306,7 +306,7 @@ export default {
         } else {
           axios({
             method: "GET",
-            url: "http://htzchina.org:8080/getByNameOrNicknameLike?name=" + this.search,
+            url: "http://htzchina.org:8080/getByNicknameLike?name=" + this.search,
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded'
             }
