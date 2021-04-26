@@ -34,6 +34,7 @@
                   accept="image/jpeg,image/gif,image/png"
                   :on-remove="handleRemove"
                   :before-remove="beforeRemove"
+                  :on-success="success"
                   :limit="1"
                   list-type="picture">
                 <el-button size="small" type="primary">点击上传图片</el-button>
@@ -75,6 +76,10 @@ export default {
     gotoLogin() {
       this.$store.commit('$_setStorage', "")
       this.$router.push("/role")
+    },
+    success() {
+      this.searchData()
+      this.$message.success("上传成功")
     },
     genderFormatter(row) {
       if (row.gender == 1) {
