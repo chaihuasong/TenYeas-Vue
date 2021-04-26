@@ -8,7 +8,7 @@
       </el-table-column>
       <el-table-column prop="name" label="姓名" width="80">
       </el-table-column>
-      <el-table-column prop="wechatid" label="微信号" width="100">
+      <el-table-column prop="wechatid" label="微信号" width="110">
       </el-table-column>
       <el-table-column prop="nickname" label="昵称" width="80">
       </el-table-column>
@@ -20,7 +20,7 @@
       </el-table-column>
       <el-table-column prop="province" label="城市" width="60">
       </el-table-column>
-      <el-table-column prop="telephone" label="手机" width="120">
+      <el-table-column prop="telephone" label="手机" width="110">
       </el-table-column>
       <el-table-column prop="chujie" label="初阶" width="60" :formatter="chujieFormatter">
       </el-table-column>
@@ -40,7 +40,7 @@
       </el-table-column>
       <el-table-column prop="name" label="姓名" width="80">
       </el-table-column>
-      <el-table-column prop="wechatid" label="微信号" width="100">
+      <el-table-column prop="wechatid" label="微信号" width="110">
       </el-table-column>
       <el-table-column prop="nickname" label="昵称" width="80">
       </el-table-column>
@@ -52,7 +52,7 @@
       </el-table-column>
       <el-table-column prop="province" label="城市" width="60">
       </el-table-column>
-      <el-table-column prop="telephone" label="手机" width="120">
+      <el-table-column prop="telephone" label="手机" width="110">
       </el-table-column>
       <el-table-column prop="chujie" label="初阶" width="60" :formatter="chujieFormatter">
       </el-table-column>
