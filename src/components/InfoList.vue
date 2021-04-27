@@ -389,11 +389,12 @@ export default {
       })
     },
     delUser(index) {
-      this.$confirm('确认删除' + this.tableData[index].number + ':' + this.tableData[index].name + '？')
+      let id = (this.currentPage - 1) * this.pageSize + index
+      this.$confirm('确认删除' + this.tableData[id].number + ':' + this.tableData[id].name + '？')
           .then(() => {
-            console.log("delete:" + this.tableData[index].unionid)
+            console.log("delete:" + this.tableData[id].unionid)
             let data = qs.stringify({
-              id: this.tableData[index].unionid,
+              id: this.tableData[id].unionid,
             })
             axios({
               method: "POST",

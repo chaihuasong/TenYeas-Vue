@@ -58,12 +58,15 @@
         v-model="info">
     </el-input>
     <br/>
-    <el-button type="text" @click="dialogVisible = true">生成图片存档（建议先提交再点击）</el-button>
+<!--    <el-button type="text" @click="dialogVisible = true">生成图片存档（建议先提交再点击）</el-button>-->
     <el-dialog
         :visible.sync="dialogVisible"
+        title="信息已成功提交！"
         width="100%"
         height="100%">
       <div ref="imageWrapper" style="position: relative; width: 100%; height: 100%;">
+        <span>您可以点击下方'生成图片'按钮将图片保存。</span>
+        <br/><br/>
         <img src="../assets/img/lizhi_card.png" width="100%" height="100%" alt="" oncontextmenu="return false;">
         <span class="line1">{{ this.info.substring(0, this.info.length > 20 ? 20 : this.info.length) }}</span>
         <span class="line2">{{ this.info.length > 20 ? this.info.substring(20, this.info.length > 40 ? 40 : this.info.length) : "" }}</span>
@@ -112,7 +115,19 @@
     </el-date-picker>
     <br/>
     <br/>
-    <div class="sexTitleStyle"><span class='req'>*</span> 10.是否参加过黄庭禅初阶课程？</div>
+    <div v-show="!isTimeout">
+      <div class="sexTitleStyle"><span class='req'>*</span> 10.确认是否需要代为填写（参加线下填写的同学，此处选择“不用代写”）</div>
+      <br/>
+      <br/>
+      <br/>
+      <el-radio-group :disabled="daixieDisabled" v-model="daixie">
+        <el-radio label="1">需代写</el-radio>
+        <el-radio label="0">不用代写</el-radio>
+      </el-radio-group>
+      <br/>
+      <br/>
+    </div>
+    <div class="sexTitleStyle"><span class='req'>*</span> {{this.chujieIndex}}.是否参加过黄庭禅初阶课程？</div>
     <br/>
     <br/>
     <el-radio-group v-model="chujie">
@@ -121,17 +136,7 @@
     </el-radio-group>
     <br/>
     <br/>
-    <div class="sexTitleStyle"><span class='req'>*</span> 11.确认是否需要代为填写（参加线下填写的同学，此处选择“不用代写”）</div>
-    <br/>
-    <br/>
-    <br/>
-    <el-radio-group :disabled="daixieDisabled" v-model="daixie">
-      <el-radio label="1">需代写</el-radio>
-      <el-radio label="0">不用代写</el-radio>
-    </el-radio-group>
-    <br/>
-    <br/>
-    <div class="sexTitleStyle"><span class='req'>*</span> 12.立志内容能否公开</div>
+    <div class="sexTitleStyle"><span class='req'>*</span> {{this.openIndex}}.立志内容能否公开</div>
     <br/>
     <br/>
     <el-radio-group v-model="open">
@@ -202,7 +207,10 @@ export default {
       htmlsFooter: '',
       dialogVisible: false,
       dialogTableVisible: false,
-      imgUrl: ''
+      imgUrl: '',
+      isTimeout: false,
+      chujieIndex: '11',
+      openIndex: '12'
     };
   },
   mounted: function () {
@@ -212,8 +220,16 @@ export default {
     this.getFooterHtml()
     this.getData()
     this.configWechat()
+    this.configDiv()
   },
   methods: {
+    configDiv() {
+      if (Date.now() - Date.parse('2021-5-6') > 0) {
+        this.isTimeout = true
+        this.chujieIndex = '10'
+        this.openIndex = '11'
+      }
+    },
     capture() {
       html2canvas(this.$refs.imageWrapper, {
         scrollY: 0,
@@ -444,8 +460,8 @@ export default {
         this.$message.warning("立志信息字数过少！")
         return;
       }
-      if (this.info.length > 40) {
-        this.$message.warning("立志信息字数超过40字!")
+      if (this.info.length > 80) {
+        this.$message.warning("立志信息字数超过80字!")
         return;
       }
       if (this.birthday === '1988') {
@@ -503,6 +519,7 @@ export default {
         }
       }).then((res) => {
         this.$message.success('信息已成功提交！')
+        this.dialogVisible = true
         console.log(res)
       });
     }
@@ -513,13 +530,13 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 
-.line1 { width: 40px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 10%; right: 15%; color: #3a8ee6
+.line1 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 15%; right: 16%; color: #3a8ee6
 }
-.line2 { width: 40px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 10%; right: 30%; color: #3a8ee6 }
-.line3 { width: 40px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 10%; right: 45%; color: #3a8ee6 }
-.line4 { width: 40px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 10%; right: 60%; color: #3a8ee6 }
-.line5 { width: 40px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 10%; right: 75%; color: #3a8ee6 }
-.signName { width: 40px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; bottom: 8%; right: 60%; color: #3a8ee6 }
+.line2 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 15%; right: 32%; color: #3a8ee6 }
+.line3 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 15%; right: 48%; color: #3a8ee6 }
+.line4 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 15%; right: 64%; color: #3a8ee6 }
+.line5 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 15%; right: 80%; color: #3a8ee6 }
+.signName { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; bottom: 8%; right: 64%; color: #3a8ee6 }
 
 img {
   pointer-events:none;
