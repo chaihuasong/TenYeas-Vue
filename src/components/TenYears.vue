@@ -64,16 +64,16 @@
         title="信息已成功提交！"
         width="100%"
         height="100%">
+      <span>您可以点击下方'生成图片'按钮将图片保存。</span>
+      <br/><br/>
       <div ref="imageWrapper" style="position: relative; width: 100%; height: 100%;">
-        <span>您可以点击下方'生成图片'按钮将图片保存。</span>
-        <br/><br/>
         <img src="../assets/img/lizhi_card.png" width="100%" height="100%" alt="" oncontextmenu="return false;">
-        <span class="line1">{{ this.info.substring(0, this.info.length > 20 ? 20 : this.info.length) }}</span>
-        <span class="line2">{{ this.info.length > 20 ? this.info.substring(20, this.info.length > 40 ? 40 : this.info.length) : "" }}</span>
-        <span class="line3">{{ this.info.length > 40 ? this.info.substring(40, this.info.length > 60 ? 60 : this.info.length) : "" }}</span>
-        <span class="line4">{{ this.info.length > 60 ? this.info.substring(60, this.info.length > 72 ? 72 : this.info.length) : "" }}</span>
-        <span class="line5">{{ this.info.length > 72 ? this.info.substring(72) : "" }}</span>
-        <span class="signName">{{ this.name }}</span>
+        <div class="line1">{{ this.info.substring(0, this.info.length > 20 ? 20 : this.info.length) }}</div>
+        <div class="line2">{{ this.info.length > 20 ? this.info.substring(20, this.info.length > 40 ? 40 : this.info.length) : "" }}</div>
+        <div class="line3">{{ this.info.length > 40 ? this.info.substring(40, this.info.length > 60 ? 60 : this.info.length) : "" }}</div>
+        <div class="line4">{{ this.info.length > 60 ? this.info.substring(60, this.info.length > 72 ? 72 : this.info.length) : "" }}</div>
+        <div class="line5">{{ this.info.length > 72 ? this.info.substring(72) : "" }}</div>
+        <div class="signName">{{ this.name }}</div>
       </div>
       <br/>
       <el-button type="primary" @click="capture">生成图片</el-button>
@@ -359,10 +359,13 @@ export default {
           }
         }).then((res) => {
           if (res != null && res.data != null && res.data !== '') {
-            console.log(res)
-            console.log(res.data.unionid)
+            console.log("openid:" + res)
+            console.log("unionid:" + res.data.unionid)
             console.log("sex:" + res.data.sex)
             this.unionid = res.data.unionid
+            if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
+              alert("信息获取失败，请关注“黄庭书院”公众号后重试！")
+            }
             this.nickname = res.data.nickname
             this.openid = res.data.openid
             this.headimgurl = res.data.headimgurl
@@ -382,8 +385,8 @@ export default {
               }
             }).then((res) => {
               if (res != null && res.data != null && res.data !== '') {
-                console.log("res:" + res)
-                console.log("res.data:" + res.data)
+                console.log("getById res:" + res)
+                console.log("getById res.data:" + res.data)
                 this.name = res.data.name
                 this.gender = res.data.gender + ''
                 this.wechatgroup = res.data.wechatgroup
@@ -519,9 +522,26 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        this.$message.success('信息已成功提交！')
-        this.dialogVisible = true
-        console.log(res)
+        console.log(res.status)
+        if (res.status != 200) {
+          alert("error!")
+        }
+        axios({
+          method: "GET",
+          url: "http://htzchina.org:8080/getById?id=" + this.unionid,
+          data: null,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }).then((res) => {
+          if (res != null && res.data != null && res.data !== '') {
+            this.$message.success('信息已成功提交！')
+            this.dialogVisible = true
+            console.log(res)
+          } else {
+            alert('信息提交失败，请刷新页面后重试，注意刷新后数据会丢失！')
+          }
+        });
       });
     }
   },
@@ -531,13 +551,12 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 
-.line1 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 15%; right: 16%; color: #3a8ee6
-}
-.line2 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 15%; right: 32%; color: #3a8ee6 }
-.line3 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 15%; right: 48%; color: #3a8ee6 }
-.line4 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 15%; right: 64%; color: #3a8ee6 }
-.line5 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; top: 15%; right: 80%; color: #3a8ee6 }
-.signName { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 20px; position: absolute; bottom: 8%; right: 64%; color: #3a8ee6 }
+.line1 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; top: 15%; right: 16%; color: #3a8ee6 }
+.line2 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; top: 15%; right: 32%; color: #3a8ee6 }
+.line3 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; top: 15%; right: 48%; color: #3a8ee6 }
+.line4 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; top: 15%; right: 64%; color: #3a8ee6 }
+.line5 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; top: 15%; right: 80%; color: #3a8ee6 }
+.signName { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; bottom: 8%; right: 64%; color: #3a8ee6 }
 
 img {
   pointer-events:none;

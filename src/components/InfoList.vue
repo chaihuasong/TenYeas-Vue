@@ -55,7 +55,7 @@
           <el-image
               style="width: 60px; height: 60px"
               :src="tableData[(currentPage - 1) * pageSize + scope.$index].headimgurl"
-              :preview-src-list="[tableData[scope.$index].headimgurl.substring(0, tableData[scope.$index].headimgurl.lastIndexOf('/')) + '/0']"
+              :preview-src-list="[tableData[scope.$index].headimgurl != null ? tableData[scope.$index].headimgurl.substring(0, tableData[scope.$index].headimgurl.lastIndexOf('/')) + '/0' : null]"
               :fit="none" />
         </template>
       </el-table-column>
