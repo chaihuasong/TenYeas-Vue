@@ -25,6 +25,15 @@
             </el-table-column>
             <el-table-column prop="gender" label="性别" width="60" :formatter="genderFormatter">
             </el-table-column>
+            <el-table-column label="头像" width="80">
+              <template slot-scope="scope">
+                <el-image
+                    style="width: 60px; height: 60px"
+                    :src="tableData[scope.$index].headimgurl"
+                    :preview-src-list="[tableData[scope.$index].headimgurl.substring(0, tableData[scope.$index].headimgurl.lastIndexOf('/')) + '/0']"
+                    :fit="none" />
+              </template>
+            </el-table-column>
             <el-table-column prop="info" label="立志信息">
             </el-table-column>
             <el-table-column prop="path" label="文件名" width="120">

@@ -50,6 +50,15 @@
       </el-table-column>
       <el-table-column prop="nickname" label="昵称" width="80">
       </el-table-column>
+      <el-table-column label="头像" width="80">
+        <template slot-scope="scope">
+          <el-image
+              style="width: 60px; height: 60px"
+              :src="tableData[(currentPage - 1) * pageSize + scope.$index].headimgurl"
+              :preview-src-list="[tableData[scope.$index].headimgurl.substring(0, tableData[scope.$index].headimgurl.lastIndexOf('/')) + '/0']"
+              :fit="none" />
+        </template>
+      </el-table-column>
       <el-table-column prop="wechatgroup" label="微信群" width="80">
       </el-table-column>
       <el-table-column prop="birthday" label="生日" width="60" :formatter="birthdayFormatter">
