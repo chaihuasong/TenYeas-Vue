@@ -111,6 +111,7 @@
         v-model="birthday"
         type="date"
         :editable="false"
+        format="yyyy-MM-dd"
         placeholder="选择日期">
     </el-date-picker>
     <br/>

@@ -252,7 +252,13 @@ export default {
   },
   methods: {
     birthdayFormatter(row) {
-        return row.birthday.substring(0, row.birthday.indexOf("T"));
+      let date = new Date(Date.parse(row.birthday) + 8 * 3600 * 1000)
+      let year = date.getFullYear()
+      let month = date.getMonth() + 1
+      if (month < 10) month = "0" + month
+      let dates = date.getDate()
+      if (dates < 10) dates = "0" + dates
+      return year + "-" + month + "-" + dates
     },
     genderFormatter(row) {
       if (row.gender == 1) {
