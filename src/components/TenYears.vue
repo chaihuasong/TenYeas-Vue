@@ -68,12 +68,12 @@
       <br/><br/>
       <div ref="imageWrapper" style="position: relative; width: 100%; height: 100%;">
         <img src="../assets/img/lizhi_card.png" width="100%" height="100%" alt="" oncontextmenu="return false;">
-        <div class="line1">{{ this.info.substring(0, this.info.length > 20 ? 20 : this.info.length) }}</div>
-        <div class="line2">{{ this.info.length > 20 ? this.info.substring(20, this.info.length > 40 ? 40 : this.info.length) : "" }}</div>
-        <div class="line3">{{ this.info.length > 40 ? this.info.substring(40, this.info.length > 60 ? 60 : this.info.length) : "" }}</div>
-        <div class="line4">{{ this.info.length > 60 ? this.info.substring(60, this.info.length > 72 ? 72 : this.info.length) : "" }}</div>
-        <div class="line5">{{ this.info.length > 72 ? this.info.substring(72) : "" }}</div>
-        <div class="signName">{{ this.name }}</div>
+        <div class="one" v-bind:class="{'small': this.smallScreen}">{{ this.info }}</div>
+<!--        <div class="line2">{{ this.info.length > 20 ? this.info.substring(20, this.info.length > 40 ? 40 : this.info.length) : "" }}</div>-->
+<!--        <div class="line3">{{ this.info.length > 40 ? this.info.substring(40, this.info.length > 60 ? 60 : this.info.length) : "" }}</div>-->
+<!--        <div class="line4">{{ this.info.length > 60 ? this.info.substring(60, this.info.length > 72 ? 72 : this.info.length) : "" }}</div>-->
+<!--        <div class="line5">{{ this.info.length > 72 ? this.info.substring(72) : "" }}</div>-->
+        <div class="signName" v-bind:class="{'signNameSmall': this.smallScreen}">{{ this.name }}</div>
       </div>
       <br/>
       <el-button type="primary" @click="capture">生成图片</el-button>
@@ -211,7 +211,8 @@ export default {
       imgUrl: '',
       isTimeout: false,
       chujieIndex: '11',
-      openIndex: '12'
+      openIndex: '12',
+      smallScreen: false
     };
   },
   mounted: function () {
@@ -222,6 +223,7 @@ export default {
     this.getData()
     this.configWechat()
     this.configDiv()
+    this.smallScreen = (document.body.clientWidth < 350)
   },
   methods: {
     configDiv() {
@@ -551,12 +553,41 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 
+.one {
+  margin: 0 auto;
+  right: 18%;
+  top: 10%;
+  width: 80%;
+  height: 85%;
+  font-size: 28px;
+  position: absolute;
+  color: #3a8ee6;
+  letter-spacing: 15px;
+  word-wrap: break-word;
+  writing-mode: tb-rl;
+  -webkit-writing-mode: vertical-rl;
+}
+.small {
+  margin: 0 auto;
+  right: 15%;
+  top: 10%;
+  width: 80%;
+  height: 85%;
+  font-size: 25px;
+  position: absolute;
+  color: #3a8ee6;
+  letter-spacing: 10px;
+  word-wrap: break-word;
+  writing-mode: tb-rl;
+  -webkit-writing-mode: vertical-rl;
+}
 .line1 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; top: 15%; right: 16%; color: #3a8ee6 }
 .line2 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; top: 15%; right: 32%; color: #3a8ee6 }
 .line3 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; top: 15%; right: 48%; color: #3a8ee6 }
 .line4 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; top: 15%; right: 64%; color: #3a8ee6 }
 .line5 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; top: 15%; right: 80%; color: #3a8ee6 }
-.signName { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; bottom: 8%; right: 64%; color: #3a8ee6 }
+.signName { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; bottom: 6%; right: 65%; color: #3a8ee6 }
+.signNameSmall { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; bottom: 6%; right: 68%; color: #3a8ee6 }
 
 img {
   pointer-events:none;
