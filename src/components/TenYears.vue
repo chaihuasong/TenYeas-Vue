@@ -68,7 +68,7 @@
       <br/><br/>
       <div ref="imageWrapper" style="position: relative; width: 100%; height: 100%;">
         <img src="../assets/img/lizhi_card.png" width="100%" height="100%" alt="" oncontextmenu="return false;">
-        <div class="one" v-bind:class="{'small': this.smallScreen}">{{ this.info }}</div>
+        <div class="large" v-bind:class="{'small': this.smallScreen}">{{ this.info }}</div>
 <!--        <div class="line2">{{ this.info.length > 20 ? this.info.substring(20, this.info.length > 40 ? 40 : this.info.length) : "" }}</div>-->
 <!--        <div class="line3">{{ this.info.length > 40 ? this.info.substring(40, this.info.length > 60 ? 60 : this.info.length) : "" }}</div>-->
 <!--        <div class="line4">{{ this.info.length > 60 ? this.info.substring(60, this.info.length > 72 ? 72 : this.info.length) : "" }}</div>-->
@@ -223,7 +223,6 @@ export default {
     this.getData()
     this.configWechat()
     this.configDiv()
-    this.smallScreen = (document.body.clientWidth < 350)
   },
   methods: {
     configDiv() {
@@ -486,6 +485,11 @@ export default {
         this.$message.warning("请选择立志内容是否公开！")
         return;
       }
+      if (this.info.length < 50) {
+        this.smallScreen = false
+      } else {
+        this.smallScreen = (document.body.clientWidth < 350)
+      }
       let time = this.createDate
       if (time == null || time === '') {
         time = new Date(Date.now() + 8 * 3600000)
@@ -553,7 +557,7 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 
-.one {
+.large {
   margin: 0 auto;
   right: 18%;
   top: 10%;
@@ -562,7 +566,7 @@ export default {
   font-size: 28px;
   position: absolute;
   color: #3a8ee6;
-  letter-spacing: 15px;
+  letter-spacing: 12px;
   word-wrap: break-word;
   writing-mode: tb-rl;
   -webkit-writing-mode: vertical-rl;
