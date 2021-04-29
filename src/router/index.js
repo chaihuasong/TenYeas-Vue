@@ -10,6 +10,7 @@ import ModifyFooter from '@/components/ModifyFooter'
 import InfoList from '@/components/InfoList'
 import UploadRole from "@/components/UploadRole";
 import LoginRole from "@/components/LoginRole";
+import HomePage from "@/components/HomePage";
 
 Vue.use(Router)
 
@@ -37,6 +38,14 @@ export default new Router({
       component: LoginAdmin,
       meta: {
         title: '登录'
+      }
+    },
+    {
+      path: '/homePage',
+      name: 'homePage',
+      component: HomePage,
+      meta: {
+        title: '个人主页'
       }
     },
     {

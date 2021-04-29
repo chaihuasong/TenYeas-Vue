@@ -401,6 +401,7 @@ export default {
         }
       }).then(() => {
         this.$message.success("已更新")
+        this.getData()
       })
     },
     delUser(index) {

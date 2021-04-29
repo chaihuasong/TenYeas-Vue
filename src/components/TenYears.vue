@@ -68,7 +68,7 @@
       <br/><br/>
       <div ref="imageWrapper" style="position: relative; width: 100%; height: 100%;">
         <img src="../assets/img/lizhi_card.png" width="100%" height="100%" alt="" oncontextmenu="return false;">
-        <div class="large" v-bind:class="{'small': this.smallScreen}">{{ this.info }}</div>
+        <div style="text-align: left" class="large" v-bind:class="{'small': this.smallScreen}">{{ this.info }}</div>
 <!--        <div class="line2">{{ this.info.length > 20 ? this.info.substring(20, this.info.length > 40 ? 40 : this.info.length) : "" }}</div>-->
 <!--        <div class="line3">{{ this.info.length > 40 ? this.info.substring(40, this.info.length > 60 ? 60 : this.info.length) : "" }}</div>-->
 <!--        <div class="line4">{{ this.info.length > 60 ? this.info.substring(60, this.info.length > 72 ? 72 : this.info.length) : "" }}</div>-->
