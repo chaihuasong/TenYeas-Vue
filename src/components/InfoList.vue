@@ -115,7 +115,7 @@
     <el-dialog title="编辑" :visible.sync="editDialogVisible">
       <el-form ref="form" :model="newUserInfo" label-width="80px">
         <el-form-item label="ID">
-          <el-input v-model="newUserInfo.id" autocomplete="off" disabled></el-input>
+          <el-input v-model="newUserInfo.id" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="NO.">
           <el-input v-model="newUserInfo.number" autocomplete="off"></el-input>
