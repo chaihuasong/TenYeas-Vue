@@ -21,7 +21,8 @@ export default new Router({
       name: 'TenYears',
       redirect: '/index',
       meta: {
-        title: '十年立志'
+        title: '十年立志',
+        footShow: false,
       }
     },
     {
@@ -29,7 +30,8 @@ export default new Router({
       name: 'index',
       component: TenYears,
       meta: {
-        title: '十年立志'
+        title: '十年立志',
+        footShow: false,
       }
     },
     {
@@ -37,7 +39,8 @@ export default new Router({
       name: 'admin',
       component: LoginAdmin,
       meta: {
-        title: '登录'
+        title: '登录',
+        footShow: false,
       }
     },
     {
@@ -45,7 +48,8 @@ export default new Router({
       name: 'homePage',
       component: HomePage,
       meta: {
-        title: '个人主页'
+        title: '个人主页',
+        footShow: true,
       }
     },
     {
@@ -53,7 +57,8 @@ export default new Router({
       name: 'home',
       component: Admin,
       meta: {
-        title: '管理后台'
+        title: '管理后台',
+        footShow: false,
       },
       children: [
         {
@@ -61,7 +66,8 @@ export default new Router({
           name: 'modifyHeader',
           component: ModifyHeader,
           meta: {
-            title: '管理后台'
+            title: '管理后台',
+            footShow: false,
           },
         },
         {
@@ -69,7 +75,8 @@ export default new Router({
           name: 'modifyFooter',
           component: ModifyFooter,
           meta: {
-            title: '管理后台'
+            title: '管理后台',
+            footShow: false,
           },
         },
         {
@@ -77,7 +84,8 @@ export default new Router({
           name: 'infoList',
           component: InfoList,
           meta: {
-            title: '管理后台'
+            title: '管理后台',
+            footShow: false,
           },
         }
       ]
@@ -87,7 +95,8 @@ export default new Router({
       name: 'roleHome',
       component: UploadRole,
       meta: {
-        title: '上传后台'
+        title: '上传后台',
+        footShow: false,
       },
     },
     {
@@ -95,18 +104,27 @@ export default new Router({
       name: 'role',
       component: LoginRole,
       meta: {
-        title: '登录'
+        title: '登录',
+        footShow: false,
       },
     },
     {
       path: '/login',
       name: 'login',
-      component: Login
+      component: Login,
+      meta: {
+        title: '登录',
+        footShow: false,
+      },
     },
     {
       path: '/wc_redirect',
       name: 'wc_redirect',
-      component: Redirect
+      component: Redirect,
+      meta: {
+        title: 'loading...',
+        footShow: false,
+      },
     }
   ]
 })

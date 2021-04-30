@@ -2,13 +2,17 @@
   <div id="app">
 <!--    <img alt="Vue logo" src="./assets/logo.png">-->
     <router-view></router-view>
+    <main-tab-bar v-if="$route.meta.footShow"/>
   </div>
 </template>
 
 <script>
-
+import MainTabBar from './components/MainTabBar'
 export default {
   name: 'App',
+  components: {
+    MainTabBar
+  }
 }
 </script>
 
