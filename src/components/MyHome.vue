@@ -145,7 +145,7 @@ export default {
       openIndex: '12',
       smallScreen: false,
 
-      times: 0
+      times: 3600
     };
   },
   mounted: function () {

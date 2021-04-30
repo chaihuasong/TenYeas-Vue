@@ -11,6 +11,7 @@ import InfoList from '@/components/InfoList'
 import UploadRole from "@/components/UploadRole";
 import LoginRole from "@/components/LoginRole";
 import HomePage from "@/components/HomePage";
+import MyHome from "@/components/MyHome";
 
 Vue.use(Router)
 
@@ -48,7 +49,16 @@ export default new Router({
       name: 'homePage',
       component: HomePage,
       meta: {
-        title: '个人主页',
+        title: '主页',
+        footShow: true,
+      }
+    },
+    {
+      path: '/myHome',
+      name: 'myHome',
+      component: MyHome,
+      meta: {
+        title: '我的',
         footShow: true,
       }
     },
