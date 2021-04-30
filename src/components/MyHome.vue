@@ -1,30 +1,17 @@
 <template>
   <div>
-    <span style="color: #3a8ee6; font-size: 18px;text-align: center">{{this.nickname}} 欢迎回家！</span>
+    <div style="background: #303133;height: 200px">
+      <el-image
+          style="width: 60px; height: 60px;border-radius:50%;float: left;margin-left: 10%;margin-top: 80px"
+          :src="this.headimgurl"
+          :preview-src-list="[this.headimgurl.substr(0, this.headimgurl.lastIndexOf('/')) + '/0']"
+          fit="cover" />
+      <div style="float: left;color: white;font-weight: bold;margin-top: 100px">{{this.nickname}} 欢迎回家！</div>
+    </div>
 
     <br/>
     <br/>
     <table align="center" cellpadding="10">
-      <tr>
-        <th>
-          头像：
-        </th>
-        <td>
-          <el-image
-              style="width: 60px; height: 60px"
-              :src="this.headimgurl"
-              :preview-src-list="[this.headimgurl.substr(0, this.headimgurl.lastIndexOf('/')) + '/0']"
-              :fit="none" />
-        </td>
-      </tr>
-      <tr>
-        <th>
-          姓名：
-        </th>
-        <td>
-          {{this.nickname}}
-        </td>
-      </tr>
       <tr>
         <th>
           性别：

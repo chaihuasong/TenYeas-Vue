@@ -1,60 +1,61 @@
 <template>
   <div>
 
-    <div class="van-swipe-item">
-      <img
-          src="http://wechatapppro-1252524126.picsh.myqcloud.com/appw8Gkxo2j3844/image/kk0m31b50iadsj42fbb9.png?imageView2/q/70"
-          draggable="false">
+    <div>
+      <el-image style="width: 100%; height: 180px"
+                :src="'http://wechatapppro-1252524126.picsh.myqcloud.com/appw8Gkxo2j3844/image/kk0m31b50iadsj42fbb9.png?imageView2/q/70'"
+                fit="cover"/>
     </div>
 
-    <nav>
-      <div style="width: 25%">
-        <a href="">
+    <nav style="margin-top: 20px;margin-bottom: 20px">
+      <div style="width: 20%;margin-left: 4%">
+        <a href="http://neixinchan.org:9998/#/" style="text-decoration:none;">
           <img src="http://wechatappdev-10011692.picsh.myqcloud.com/image/column_kind/icon_9.png?imageView2/q/80"/>
-          <p>经典搜索</p>
+          <div>经典搜索</div>
         </a>
       </div>
-      <div style="width: 25%">
-        <a href="">
+      <div style="width: 20%;margin-left: 4%">
+        <a href="http://htzchina.org/tenyears/#/index" style="text-decoration:none;">
           <img src="http://wechatappdev-10011692.picsh.myqcloud.com/image/column_kind/icon_1.png?imageView2/q/80"/>
-          <p>十年立志</p>
+          <div>十年立志</div>
         </a>
       </div>
-      <div style="width: 25%">
-        <a href="">
+      <div style="width: 20%;margin-left: 4%">
+        <a href="http://htzchina.org/tenyears/#/error" style="text-decoration:none;">
           <img src="http://wechatappdev-10011692.picsh.myqcloud.com/image/column_kind/icon_8.png?imageView2/q/80"/>
-          <p>家长课堂</p>
+          <div>家长课堂</div>
         </a>
       </div>
-      <div style="width: 25%">
-        <a href="">
+      <div style="width: 20%;margin-left: 4%">
+        <a href="http://htzchina.org/tenyears/#/error" style="text-decoration:none;">
           <img src="http://wechatappdev-10011692.picsh.myqcloud.com/image/column_kind/icon_15.png?imageView2/q/80"/>
-          <p>线下课程</p>
+          <div>线下课程</div>
         </a>
       </div>
     </nav>
 
-    <div style="text-align: center;">
-      <div style="margin-left: 30%;float: left">
-        <img style="border-radius:50%; width: 100px;height: 100px"
-             src="http://wechatapppro-1252524126.picsh.myqcloud.com/appw8Gkxo2j3844/image/bWljcm9QYWdlRGVzaWduLW1pY3JvUGFnZURlc2lnbi04OTc3MzA0Ng.jpg?imageView2/q/80"
-             alt=""/>
-      </div>
-      <div style="float: left; height: 100px">
-        <div
-            style="font-size:20px;font-weight: bold;color:#000;float: left;width: 100%;height: 30px; text-align: left;margin-left: 20px;margin-top: 5px">
-          张庆祥
+    <el-card style="float: left; width: 100%;">
+      <div style="text-align: center;float: left;margin-bottom: 10px;margin-left: 10px">
+        <div style="float: left">
+          <img style="border-radius:50%; width: 70px;height: 70px;"
+               src="http://wechatapppro-1252524126.picsh.myqcloud.com/appw8Gkxo2j3844/image/bWljcm9QYWdlRGVzaWduLW1pY3JvUGFnZURlc2lnbi04OTc3MzA0Ng.jpg?imageView2/q/80"
+               alt=""/>
         </div>
-        <div
-            style="font-size:16px;color:#909399;float: left;width: 300px; height: 50px; text-align: left;margin-left: 20px;margin-top: 5px">
-          黄庭禅创办人，中岭山黄庭书院院主； 贯通三教经典、契悟心法精髓的禅师
+        <div style="float: left; height: 70px;margin-left: 10px">
+          <div style="width:100px;font-size:16px; font-weight: bold; color:#000; height: 25px; text-align: left;">
+            张庆祥
+          </div>
+          <div style="font-size:13px; color:#909399; width: 230px; height: 50px; text-align: left;">
+            黄庭禅创办人，中岭山黄庭书院院主； 贯通三教经典、契悟心法精髓的禅师
+          </div>
         </div>
       </div>
-    </div>
-    <div>
+    </el-card>
+
+    <div style="margin-top: 20px;float: left">
       <ul>
         <li style="width: 100%">
-          <span >
+          <span>
             专栏
           </span>
           张庆祥讲易经（一）

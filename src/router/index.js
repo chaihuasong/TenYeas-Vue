@@ -12,6 +12,7 @@ import UploadRole from "@/components/UploadRole";
 import LoginRole from "@/components/LoginRole";
 import HomePage from "@/components/HomePage";
 import MyHome from "@/components/MyHome";
+import Error from "@/components/Error";
 
 Vue.use(Router)
 
@@ -135,6 +136,15 @@ export default new Router({
         title: 'loading...',
         footShow: false,
       },
-    }
+    },
+    {
+      path: '/*',
+      name: 'error',
+      component: Error,
+      meta: {
+        title: '上传后台',
+        footShow: false,
+      },
+    },
   ]
 })
