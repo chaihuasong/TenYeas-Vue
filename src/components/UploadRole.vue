@@ -60,7 +60,7 @@
                     :limit="1"
                     list-type="picture">
                   <el-button size="small" type="primary">点击上传图片</el-button>
-                  <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过5M</div>
+<!--                  <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过5M</div>-->
                 </el-upload>
               </template>
             </el-table-column>
