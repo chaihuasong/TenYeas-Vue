@@ -1,78 +1,90 @@
 <template>
   <div>
+    <span style="color: #3a8ee6; font-size: 18px;text-align: center">{{this.nickname}} 欢迎回家！</span>
 
-    <div class="van-swipe-item">
-      <img
-          src="http://wechatapppro-1252524126.picsh.myqcloud.com/appw8Gkxo2j3844/image/kk0m31b50iadsj42fbb9.png?imageView2/q/70"
-          draggable="false">
-    </div>
+    <br/>
+    <br/>
+    <table align="center" cellpadding="10">
+      <tr>
+        <th>
+          头像：
+        </th>
+        <td>
+          <el-image
+              style="width: 60px; height: 60px"
+              :src="this.headimgurl"
+              :preview-src-list="[this.headimgurl.substr(0, this.headimgurl.lastIndexOf('/')) + '/0']"
+              :fit="none" />
+        </td>
+      </tr>
+      <tr>
+        <th>
+          姓名：
+        </th>
+        <td>
+          {{this.nickname}}
+        </td>
+      </tr>
+      <tr>
+        <th>
+          性别：
+        </th>
+        <td>
+          {{this.gender == 1 ? "男" : "女"}}
+        </td>
+      </tr>
+      <tr>
+        <th>
+          昵称：
+        </th>
+        <td>
+          {{this.nickname}}
+        </td>
+      </tr>
+      <tr>
+        <th>
+          城市：
+        </th>
+        <td>
+          {{this.province}}-{{this.city}}
+        </td>
+      </tr>
+      <tr>
+        <th>
+          生日：
+        </th>
+        <td>
+          {{this.birthday}}
+        </td>
+      </tr>
 
-    <nav>
-      <div style="width: 25%">
-        <a href="">
-          <img src="http://wechatappdev-10011692.picsh.myqcloud.com/image/column_kind/icon_9.png?imageView2/q/80"/>
-          <p>经典搜索</p>
-        </a>
-      </div>
-      <div style="width: 25%">
-        <a href="">
-          <img src="http://wechatappdev-10011692.picsh.myqcloud.com/image/column_kind/icon_1.png?imageView2/q/80"/>
-          <p>十年立志</p>
-        </a>
-      </div>
-      <div style="width: 25%">
-        <a href="">
-          <img src="http://wechatappdev-10011692.picsh.myqcloud.com/image/column_kind/icon_8.png?imageView2/q/80"/>
-          <p>家长课堂</p>
-        </a>
-      </div>
-      <div style="width: 25%">
-        <a href="">
-          <img src="http://wechatappdev-10011692.picsh.myqcloud.com/image/column_kind/icon_15.png?imageView2/q/80"/>
-          <p>线下课程</p>
-        </a>
-      </div>
-    </nav>
+      <tr>
+        <th>
+          立志信息：
+        </th>
+        <td>
+          {{this.info}}
+        </td>
+      </tr>
 
-    <div style="text-align: center;">
-      <div style="margin-left: 30%;float: left">
-        <img style="border-radius:50%; width: 100px;height: 100px"
-             src="http://wechatapppro-1252524126.picsh.myqcloud.com/appw8Gkxo2j3844/image/bWljcm9QYWdlRGVzaWduLW1pY3JvUGFnZURlc2lnbi04OTc3MzA0Ng.jpg?imageView2/q/80"
-             alt=""/>
-      </div>
-      <div style="float: left; height: 100px">
-        <div
-            style="font-size:20px;font-weight: bold;color:#000;float: left;width: 100%;height: 30px; text-align: left;margin-left: 20px;margin-top: 5px">
-          张庆祥
-        </div>
-        <div
-            style="font-size:16px;color:#909399;float: left;width: 300px; height: 50px; text-align: left;margin-left: 20px;margin-top: 5px">
-          黄庭禅创办人，中岭山黄庭书院院主； 贯通三教经典、契悟心法精髓的禅师
-        </div>
-      </div>
-    </div>
-    <div>
-      <ul>
-        <li style="width: 100%">
-          <span >
-            专栏
-          </span>
-          张庆祥讲易经（一）
-        </li>
-        <li style="width: 100%">
-          <span>
-            专栏
-          </span>
-          黄庭禅静心助眠养生（站桩静坐）
-        </li>
-        <li style="width: 100%">
-          <span>
-            专栏
-          </span>
-          张庆祥讲传习录（视频）
-        </li>
-      </ul>
-    </div>
+      <tr>
+        <th>
+          实施步骤：
+        </th>
+        <td>
+          {{this.stepInfo}}
+        </td>
+      </tr>
+
+      <tr>
+        <th>
+          十年倒计时：
+        </th>
+        <td>
+          {{ times }}
+        </td>
+      </tr>
+    </table>
   </div>
 </template>
 
@@ -145,13 +157,13 @@ export default {
   },
   methods: {
     timeCountDown() {
-      this.timer = setInterval(() => {
+      this.timer = setInterval(()=>{
         this.times--
-        if (this.times === 0) {
+        if(this.times===0){
           this.show = true
           clearInterval(this.timer)
         }
-      }, 1000)
+      },1000)
     },
     configDiv() {
       if (Date.now() - Date.parse('2021-5-6') > 0) {
@@ -259,36 +271,40 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.van-swipe-item {
-  width: 100%
-}
 
-nav {
-  display: flex;
-  flex-flow: row wrap;
-  /* 交叉轴上的分散对齐 */
-  align-content: space-around;
+.large {
+  margin: 0 auto;
+  right: 18%;
+  top: 10%;
+  width: 80%;
+  height: 85%;
+  font-size: 28px;
+  position: absolute;
+  color: #3a8ee6;
+  letter-spacing: 12px;
+  word-wrap: break-word;
+  writing-mode: tb-rl;
+  -webkit-writing-mode: vertical-rl;
 }
-
-nav > div {
-  display: flex;
-  flex-flow: column nowrap;
-  text-align: center;
-  width: 25vw;
-  margin: 10px 0;
+.small {
+  margin: 0 auto;
+  right: 15%;
+  top: 10%;
+  width: 80%;
+  height: 85%;
+  font-size: 25px;
+  position: absolute;
+  color: #3a8ee6;
+  letter-spacing: 10px;
+  word-wrap: break-word;
+  writing-mode: tb-rl;
+  -webkit-writing-mode: vertical-rl;
 }
-
-nav > div img {
-  width: 50%;
-}
-
-nav > div > a > p {
-  color: #666;
-  font-weight: 700;
-}
+.signName { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; bottom: 6%; right: 65%; color: #3a8ee6 }
+.signNameSmall { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; bottom: 6%; right: 68%; color: #3a8ee6 }
 
 img {
-  pointer-events: none;
+  pointer-events:none;
 }
 
 /deep/ .el-radio {
@@ -298,39 +314,38 @@ img {
 .req {
   color: red;
   font-size: 16px;
-  font-weight: bold;
+  font-weight:bold;
 }
 
-* {
-  -webkit-touch-callout: none; /*系统默认菜单被禁用*/
-  -webkit-user-select: none; /*webkit浏览器*/
-  -khtml-user-select: none; /*早期浏览器*/
-  -moz-user-select: none; /*火狐*/
-  -ms-user-select: none; /*IE10*/
-  user-select: none;
+*{
+  -webkit-touch-callout:none;  /*系统默认菜单被禁用*/
+  -webkit-user-select:none; /*webkit浏览器*/
+  -khtml-user-select:none; /*早期浏览器*/
+  -moz-user-select:none;/*火狐*/
+  -ms-user-select:none; /*IE10*/
+  user-select:none;
 }
-
-input, textarea {
-  -webkit-user-select: auto; /*webkit浏览器*/
+input,textarea {
+  -webkit-user-select:auto; /*webkit浏览器*/
   outline: none;
 }
 
 
 .sexTitleStyle {
   float: left;
-  width: 100%;
-  text-align: left;
+  width:100%;
+  text-align:left;
   font-size: 16px;
-  font-weight: bold;
+  font-weight:bold;
   margin-left: 10px;
 }
 
 .titleNameStyle {
   float: left;
-  width: 100%;
-  text-align: left;
+  width:100%;
+  text-align:left;
   font-size: 16px;
-  font-weight: bold;
+  font-weight:bold;
   margin-left: 10px;
   margin-bottom: 10px;
 }
