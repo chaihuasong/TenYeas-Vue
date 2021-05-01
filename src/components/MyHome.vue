@@ -129,16 +129,22 @@ export default {
     getRemainningTime() {
       let date = new Date(this.tenyearsLater - Date.now())
       let year = date.getFullYear() - 1970
+      if (year < 0) year = 0
       let month = date.getMonth() + 1
-      if (month < 10) month = "0" + month
+      if (month < 10 && month > 0) month = "0" + month
+      if (month <= 0) month = '00'
       let dates = date.getDate()
-      if (dates < 10) dates = "0" + dates
+      if (dates < 10 && dates > 0) dates = "0" + dates
+      if (dates <= 0) dates = '00'
       let hours = date.getHours()
-      if (hours < 10) hours = '0' + hours
+      if (hours < 10 && hours > 0) hours = '0' + hours
+      if (hours <= 0) hours = '00'
       let minutes = date.getMinutes();
-      if (minutes < 10) minutes = '0' + minutes
+      if (minutes < 10 && minutes > 0) minutes = '0' + minutes
+      if (minutes <= 0) minutes = '00'
       let seconds = date.getSeconds()
-      if (seconds < 10) seconds = '0' + seconds
+      if (seconds < 10 && seconds > 0) seconds = '0' + seconds
+      if (seconds <= 0) seconds = '00'
       // let milliseconds = date.getMilliseconds()
       // if (milliseconds < 99 && milliseconds > 10) milliseconds = '0' + milliseconds
       // if (milliseconds < 10 && milliseconds > 0) milliseconds = '00' + milliseconds
