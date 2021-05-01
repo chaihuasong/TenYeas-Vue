@@ -79,20 +79,8 @@
 </template>
 
 <script>
-import axios from 'axios'
 import html2canvas from "html2canvas";
-
-function getOpenId() {
-  const str = window.location.href
-  if (str == null || !(str.indexOf("?") > 0)) {
-    return null
-  }
-  const openid = window.location.href.split("?")[1].split("=")[1];
-  if (openid != null) {
-    return openid
-  }
-  return null
-}
+import axios from "axios";
 
 export default {
   name: 'TenYears',
@@ -140,12 +128,23 @@ export default {
   },
   mounted: function () {
     document.title = this.$route.meta.title
-    console.log("getData")
+    console.log("homePage getData")
     this.getData()
     this.configDiv()
     this.timeCountDown()
   },
   methods: {
+    getOpenId() {
+      const str = window.location.href
+      if (str == null || !(str.indexOf("?") > 0)) {
+        return null
+      }
+      let openid = window.location.href.split("?")[1].split("=")[1];
+      if (openid != null) {
+        return openid
+      }
+      return null
+    },
     timeCountDown() {
       this.timer = setInterval(() => {
         this.times--
@@ -176,8 +175,13 @@ export default {
       });
     },
     getData() {
-      let openid = getOpenId()
-      openid = "onuFi1qE_KG2W3T9YG6bv49cJjyQ"
+      let uid = this.$store.getters.getUnionid
+      if (uid != null && uid !== '') {
+        console.log("unionid:" + uid)
+        return;
+      }
+      let openid = this.getOpenId()
+      // openid = "onuFi1qE_KG2W3T9YG6bv49cJjyQ"
       console.log("openid:" + openid)
       if (openid !== "" && openid != null && openid.length > 0) {
         console.log("begin axios...")
@@ -190,10 +194,11 @@ export default {
           }
         }).then((res) => {
           if (res != null && res.data != null && res.data !== '') {
-            console.log("openid:" + res)
+            console.log("openid:" + res.data)
             console.log("unionid:" + res.data.unionid)
             console.log("sex:" + res.data.sex)
             this.unionid = res.data.unionid
+            this.$store.commit('$_setUnionid', this.unionid)
             if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
               alert("信息获取失败，请关注“黄庭书院”公众号后重试！")
             }
@@ -253,6 +258,8 @@ export default {
             });
           }
         });
+      } else {
+        window.location.href = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx83aec75c3ca58f0e&redirect_uri=http://htzchina.org/wc_redirect2&response_type=code&scope=snsapi_base&state=123#wechat_redirect"
       }
     },
   },

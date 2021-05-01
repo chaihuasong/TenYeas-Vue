@@ -6,7 +6,8 @@ const key ='token'
 const store =new Vuex.Store({
     state(){
         return{
-            token:localStorage.getItem('token') ? localStorage.getItem('token'):''
+            token:localStorage.getItem('token') ? localStorage.getItem('token'):'',
+            unionid:localStorage.getItem('unionid') ? localStorage.getItem('unionid'):''
         }
     },
     getters:{
@@ -15,6 +16,12 @@ const store =new Vuex.Store({
                 state.token =JSON.parse(localStorage.getItem(key))
             }
             return state.token
+        },
+        getUnionid:function (state) {
+            if(!state.unionid) {
+                state.unionid = JSON.parse(localStorage.getItem('unionid'))
+            }
+            return state.unionid
         }
     },
     mutations:{
@@ -25,6 +32,14 @@ const store =new Vuex.Store({
         $_removeStorage(state){
             state.token =null;
             localStorage.removeItem(key)
+        },
+        $_setUnionid(state,value){
+            state.unionid =value;
+            localStorage.setItem('unionid', JSON.stringify(value))
+        },
+        $_removeUnionid(state){
+            state.unionid =null;
+            localStorage.removeItem('unionid')
         }
     },
 })

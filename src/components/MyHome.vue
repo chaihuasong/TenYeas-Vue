@@ -2,18 +2,20 @@
   <div>
     <div style="background: #303133;height: 200px">
       <el-image
-          style="width: 60px; height: 60px;border-radius:50%;float: left;margin-left: 10%;margin-top: 80px"
+          style="width: 60px; height: 60px;border-radius:50%;float: left;margin-left: 10%;margin-top: 60px"
           :src="this.headimgurl"
           :preview-src-list="[this.headimgurl.substr(0, this.headimgurl.lastIndexOf('/')) + '/0']"
           fit="cover" />
-      <div style="float: left;color: white;font-weight: bold;margin-top: 100px">{{this.nickname}} 欢迎回家！</div>
+      <div style="float: left;color: white;font-weight: bold;margin-top: 100px">{{this.nickname}}</div>
+      <div style="float: right;color: white;font-weight: bold;margin-top: 20px;margin-right: 20px"><i class="el-icon-edit" @click="edit"></i></div>
+      <div style="float: left;margin-top:25px;color: white;width: 100%;font-size: 15px;font-weight: bold;">十年倒计时： <span style="color: red;font-size: 15px">{{remainningTime}}</span></div>
     </div>
 
     <br/>
     <br/>
-    <table align="center" cellpadding="10">
+    <table style="text-align: left" cellpadding="10">
       <tr>
-        <th>
+        <th style="width: 30%">
           性别：
         </th>
         <td>
@@ -41,7 +43,7 @@
           生日：
         </th>
         <td>
-          {{this.birthday}}
+          {{this.getBirthday()}}
         </td>
       </tr>
 
@@ -62,15 +64,6 @@
           {{this.stepInfo}}
         </td>
       </tr>
-
-      <tr>
-        <th>
-          十年倒计时：
-        </th>
-        <td>
-          {{ times }}
-        </td>
-      </tr>
     </table>
   </div>
 </template>
@@ -78,18 +71,6 @@
 <script>
 import axios from 'axios'
 import html2canvas from "html2canvas";
-
-function getOpenId() {
-  const str = window.location.href
-  if (str == null || !(str.indexOf("?") > 0)) {
-    return null
-  }
-  const openid = window.location.href.split("?")[1].split("=")[1];
-  if (openid != null) {
-    return openid
-  }
-  return null
-}
 
 export default {
   name: 'TenYears',
@@ -131,21 +112,54 @@ export default {
       chujieIndex: '11',
       openIndex: '12',
       smallScreen: false,
+      tenyearsLater: 0,
+      remainningTime: '',
 
       times: 3600
     };
   },
   mounted: function () {
     document.title = this.$route.meta.title
-    console.log("getData")
+    console.log("myHome getData")
     this.getData()
     this.configDiv()
     this.timeCountDown()
   },
   methods: {
+    getRemainningTime() {
+      let date = new Date(this.tenyearsLater - Date.now())
+      let year = date.getFullYear() - 1970
+      let month = date.getMonth() + 1
+      if (month < 10) month = "0" + month
+      let dates = date.getDate()
+      if (dates < 10) dates = "0" + dates
+      let hours = date.getHours()
+      if (hours < 10) hours = '0' + hours
+      let minutes = date.getMinutes();
+      if (minutes < 10) minutes = '0' + minutes
+      let seconds = date.getSeconds()
+      if (seconds < 10) seconds = '0' + seconds
+      // let milliseconds = date.getMilliseconds()
+      // if (milliseconds < 99 && milliseconds > 10) milliseconds = '0' + milliseconds
+      // if (milliseconds < 10 && milliseconds > 0) milliseconds = '00' + milliseconds
+      // if (milliseconds <= 0) milliseconds = '000'
+      return '剩余 ' + year + '年' + month + '月' + dates + '日' + hours + '时' + minutes + '分' + seconds + '秒';
+    },
+    getBirthday() {
+      let date = new Date(Date.parse(this.birthday) + 8 * 3600 * 1000)
+      let year = date.getFullYear()
+      let month = date.getMonth() + 1
+      if (month < 10) month = "0" + month
+      let dates = date.getDate()
+      if (dates < 10) dates = "0" + dates
+      return year + "-" + month + "-" + dates
+    },
+    edit() {
+      this.$router.push("/index");
+    },
     timeCountDown() {
       this.timer = setInterval(()=>{
-        this.times--
+        this.remainningTime = this.getRemainningTime()
         if(this.times===0){
           this.show = true
           clearInterval(this.timer)
@@ -173,84 +187,56 @@ export default {
       });
     },
     getData() {
-      let openid = getOpenId()
-      openid = "onuFi1qE_KG2W3T9YG6bv49cJjyQ"
-      console.log("openid:" + openid)
-      if (openid !== "" && openid != null && openid.length > 0) {
-        console.log("begin axios...")
-        axios({
-          method: "GET",
-          url: "http://htzchina.org:8080/getUserInfo?openid=" + openid,
-          data: null,
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
-        }).then((res) => {
-          if (res != null && res.data != null && res.data !== '') {
-            console.log("openid:" + res)
-            console.log("unionid:" + res.data.unionid)
-            console.log("sex:" + res.data.sex)
-            this.unionid = res.data.unionid
-            if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
-              alert("信息获取失败，请关注“黄庭书院”公众号后重试！")
-            }
-            this.nickname = res.data.nickname
-            this.openid = res.data.openid
-            this.headimgurl = res.data.headimgurl
-            this.country = res.data.country
-            this.city = res.data.city
-            this.province = res.data.province + this.city
-            this.language = res.data.language
-            this.groupId = res.data.groupId
-            this.gender = res.data.sex + ''
-
-            axios({
-              method: "GET",
-              url: "http://htzchina.org:8080/getById?id=" + this.unionid,
-              data: null,
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-              }
-            }).then((res) => {
-              if (res != null && res.data != null && res.data !== '') {
-                console.log("getById res:" + res)
-                console.log("getById res.data:" + res.data)
-                this.name = res.data.name
-                this.gender = res.data.gender + ''
-                this.wechatgroup = res.data.wechatgroup
-                this.telephone = res.data.telephone
-                this.info = res.data.info
-                this.stepInfo = res.data.stepInfo
-                this.createDate = res.data.createDate
-                this.birthday = res.data.birthday
-                this.open = res.data.open
-                this.daixie = res.data.daixie
-                this.chujie = res.data.chujie
-                this.wechatid = res.data.wechatid
-                this.province = res.data.province
-
-                // let createTime = Date.parse(this.createDate)
-                // console.log("remaining time:" + (Date.now() - createTime))
-                // if ((Date.now() - createTime) > 3600000 * 24) {
-                //   this.$message({
-                //     message: '数据已被锁定，无法修改！',
-                //     type: 'warning'
-                //   })
-                //   this.submitDisable = true
-                // }
-
-                let endTime = Date.parse("2021-05-1T00:00:00.000Z")
-                console.log("endTime:" + endTime)
-                console.log("remaining:" + (Date.now() - endTime))
-                if (Date.now() - endTime > 0) {
-                  this.daixieDisabled = true
-                  this.daixie = '0'
-                }
-              }
-            });
-          }
-        });
+      this.unionid = this.$store.getters.getUnionid
+      if (this.unionid != null) {
+        this.unionid = this.unionid.replaceAll("\"", "")
       }
+      console.log("getData unionid:" + this.unionid)
+      axios({
+        method: "GET",
+        url: "http://htzchina.org:8080/getById?id=" + this.unionid,
+        data: null,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        console.log("getById: res:" + res.data)
+        if (res.data != null && res.data !== '') {
+          console.log("getById res:" + res)
+          console.log("getById res.data:" + res.data)
+          this.name = res.data.name
+          this.headimgurl = res.data.headimgurl
+          this.gender = res.data.gender + ''
+          this.wechatgroup = res.data.wechatgroup
+          this.telephone = res.data.telephone
+          this.info = res.data.info
+          this.stepInfo = res.data.stepInfo
+          this.createDate = res.data.createDate
+          this.birthday = res.data.birthday
+          this.open = res.data.open
+          this.daixie = res.data.daixie
+          this.chujie = res.data.chujie
+          this.wechatid = res.data.wechatid
+          this.province = res.data.province
+
+          let createdDate = new Date(this.createDate)
+          this.tenyearsLater = new Date((createdDate.getFullYear() + 10) + this.createDate.substr(4))
+          this.remainningTime = this.getRemainningTime()
+          console.log("createdDate:" + createdDate)
+          console.log("tenyearsLater:" + (createdDate.getFullYear() + 10) + this.createDate.substr(4))
+
+          let endTime = Date.parse("2021-05-1T00:00:00.000Z")
+          console.log("endTime:" + endTime)
+          console.log("remaining:" + (Date.now() - endTime))
+          if (Date.now() - endTime > 0) {
+            this.daixieDisabled = true
+            this.daixie = '0'
+          }
+        } else {
+          alert("信息获取失败，请先填写立志信息！")
+          //this.$router.push("/index");
+        }
+      });
     },
   },
 }
