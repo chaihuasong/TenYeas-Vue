@@ -14,7 +14,7 @@
     <br/>
     <el-card style="float: left;width: 100%;margin-top: 5px">
       <div v-for="(data) in datas" :key='data'>
-        <div v-if="data.open === '1' && data.path !== null" style="float: left;width: 100%">
+        <div v-if="data.open === '1' && data.path !== null && data.path !== ''" style="float: left;width: 100%">
           <div style="float: left;width: 15%;height: 220px;">
             <el-image style="width: 50px; height: 50px"
             :src="data.headimgurl"></el-image>
