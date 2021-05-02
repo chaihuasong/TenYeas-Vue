@@ -148,7 +148,7 @@
     <br/>
     <br/>
     <br/>
-    <el-button :disabled="submitDisable" type="primary" class="submitStyle" @click="submit">提交</el-button>
+    <el-button :disabled="submitDisable" type="primary" class="submitStyle" @click="submit">{{buttonText}}</el-button>
     <br/>
     <br/>
     <p v-html="htmlsFooter"></p>
@@ -212,7 +212,8 @@ export default {
       isTimeout: false,
       chujieIndex: '11',
       openIndex: '12',
-      smallScreen: false
+      smallScreen: false,
+      buttonText: '提交'
     };
   },
   mounted: function () {
@@ -402,6 +403,8 @@ export default {
                 this.wechatid = res.data.wechatid
                 this.province = res.data.province
 
+                this.buttonText = '修改'
+
                 // let createTime = Date.parse(this.createDate)
                 // console.log("remaining time:" + (Date.now() - createTime))
                 // if ((Date.now() - createTime) > 3600000 * 24) {
@@ -541,8 +544,9 @@ export default {
           }
         }).then((res) => {
           if (res != null && res.data != null && res.data !== '') {
-            this.$message.success('信息已成功提交！')
+            this.$message.success('信息已成功' + this.buttonText + '！')
             this.dialogVisible = true
+            this.buttonText = '修改'
             console.log(res)
           } else {
             alert('信息提交失败，请刷新页面后重试，注意刷新后数据会丢失！')
