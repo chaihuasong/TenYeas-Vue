@@ -13,6 +13,7 @@ import LoginRole from "@/components/LoginRole";
 import HomePage from "@/components/HomePage";
 import MyHome from "@/components/MyHome";
 import Error from "@/components/Error";
+import HTQ from "@/components/HTQ";
 
 Vue.use(Router)
 
@@ -61,6 +62,15 @@ export default new Router({
       meta: {
         title: '我的',
         footShow: true,
+      }
+    },
+    {
+      path: '/htq',
+      name: 'htq',
+      component: HTQ,
+      meta: {
+        title: '立志圈',
+        footShow: false,
       }
     },
     {

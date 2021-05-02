@@ -13,58 +13,68 @@
 
     <br/>
     <br/>
-    <table style="text-align: left" cellpadding="10">
-      <tr>
-        <th style="width: 30%">
-          性别：
-        </th>
-        <td>
-          {{this.gender == 1 ? "男" : "女"}}
-        </td>
-      </tr>
-      <tr>
-        <th>
-          昵称：
-        </th>
-        <td>
-          {{this.nickname}}
-        </td>
-      </tr>
-      <tr>
-        <th>
-          城市：
-        </th>
-        <td>
-          {{this.province}}-{{this.city}}
-        </td>
-      </tr>
-      <tr>
-        <th>
-          生日：
-        </th>
-        <td>
-          {{this.getBirthday()}}
-        </td>
-      </tr>
+    <el-card style="float: left;width: 100%;margin-top: 5px" @click.native="PYQ">
+      <div style="float: left; margin-bottom: 20px;width: 15%">
+        立志圈
+      </div>
+      <div style="float: right; margin-bottom: 20px;width: 60%;text-align: left;margin-right: 10%">
+        <el-image v-if="this.lastImgUrl != ''" :src="lastImgUrl" style="width: 30px; height: 30px;"></el-image>
+      </div>
+    </el-card>
+    <el-card style="float: left">
+      <table style="text-align: left" cellpadding="10">
+        <tr>
+          <th style="width: 30%">
+            性别：
+          </th>
+          <td>
+            {{this.gender == 1 ? "男" : "女"}}
+          </td>
+        </tr>
+        <tr>
+          <th>
+            昵称：
+          </th>
+          <td>
+            {{this.nickname}}
+          </td>
+        </tr>
+        <tr>
+          <th>
+            城市：
+          </th>
+          <td>
+            {{this.province}}-{{this.city}}
+          </td>
+        </tr>
+        <tr>
+          <th>
+            生日：
+          </th>
+          <td>
+            {{this.getBirthday()}}
+          </td>
+        </tr>
 
-      <tr>
-        <th>
-          立志信息：
-        </th>
-        <td>
-          {{this.info}}
-        </td>
-      </tr>
+        <tr>
+          <th>
+            立志信息：
+          </th>
+          <td>
+            {{this.info}}
+          </td>
+        </tr>
 
-      <tr>
-        <th>
-          实施步骤：
-        </th>
-        <td>
-          {{this.stepInfo}}
-        </td>
-      </tr>
-    </table>
+        <tr>
+          <th>
+            实施步骤：
+          </th>
+          <td>
+            {{this.stepInfo}}
+          </td>
+        </tr>
+      </table>
+    </el-card>
   </div>
 </template>
 
@@ -114,8 +124,7 @@ export default {
       smallScreen: false,
       tenyearsLater: 0,
       remainningTime: '',
-
-      times: 3600
+      lastImgUrl: '',
     };
   },
   mounted: function () {
@@ -126,6 +135,9 @@ export default {
     this.timeCountDown()
   },
   methods: {
+    PYQ() {
+      this.$router.push("/htq")
+    },
     getRemainningTime() {
       let date = new Date(this.tenyearsLater - Date.now())
       let year = date.getFullYear() - 1970
@@ -166,10 +178,10 @@ export default {
     timeCountDown() {
       this.timer = setInterval(()=>{
         this.remainningTime = this.getRemainningTime()
-        if(this.times===0){
-          this.show = true
-          clearInterval(this.timer)
-        }
+        // if(this.times===0){
+        //   this.show = true
+        //   clearInterval(this.timer)
+        // }
       },1000)
     },
     configDiv() {
@@ -225,6 +237,8 @@ export default {
           this.wechatid = res.data.wechatid
           this.province = res.data.province
 
+          this.lastImgUrl = this.headimgurl
+
           let createdDate = new Date(this.createDate)
           this.tenyearsLater = new Date((createdDate.getFullYear() + 10) + this.createDate.substr(4))
           this.remainningTime = this.getRemainningTime()
@@ -251,49 +265,12 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 
-.large {
-  margin: 0 auto;
-  right: 18%;
-  top: 10%;
-  width: 80%;
-  height: 85%;
-  font-size: 28px;
-  position: absolute;
-  color: #3a8ee6;
-  letter-spacing: 12px;
-  word-wrap: break-word;
-  writing-mode: tb-rl;
-  -webkit-writing-mode: vertical-rl;
-}
-.small {
-  margin: 0 auto;
-  right: 15%;
-  top: 10%;
-  width: 80%;
-  height: 85%;
-  font-size: 25px;
-  position: absolute;
-  color: #3a8ee6;
-  letter-spacing: 10px;
-  word-wrap: break-word;
-  writing-mode: tb-rl;
-  -webkit-writing-mode: vertical-rl;
-}
-.signName { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; bottom: 6%; right: 65%; color: #3a8ee6 }
-.signNameSmall { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; bottom: 6%; right: 68%; color: #3a8ee6 }
-
 img {
   pointer-events:none;
 }
 
 /deep/ .el-radio {
   white-space: normal;
-}
-
-.req {
-  color: red;
-  font-size: 16px;
-  font-weight:bold;
 }
 
 *{
@@ -307,36 +284,6 @@ img {
 input,textarea {
   -webkit-user-select:auto; /*webkit浏览器*/
   outline: none;
-}
-
-
-.sexTitleStyle {
-  float: left;
-  width:100%;
-  text-align:left;
-  font-size: 16px;
-  font-weight:bold;
-  margin-left: 10px;
-}
-
-.titleNameStyle {
-  float: left;
-  width:100%;
-  text-align:left;
-  font-size: 16px;
-  font-weight:bold;
-  margin-left: 10px;
-  margin-bottom: 10px;
-}
-
-.inputStyle {
-  width: 90%;
-  margin-bottom: 20px;
-}
-
-.submitStyle {
-  width: 120px;
-  font-size: 18px;
 }
 
 ul {
