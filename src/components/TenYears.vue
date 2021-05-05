@@ -227,11 +227,11 @@ export default {
   },
   methods: {
     configDiv() {
-      if (Date.now() - Date.parse('2021-5-6') > 0) {
+      // if (Date.now() - Date.parse('2021-5-6') > 0) {
         this.isTimeout = true
         this.chujieIndex = '10'
         this.openIndex = '11'
-      }
+      // }
     },
     capture() {
       html2canvas(this.$refs.imageWrapper, {
@@ -415,13 +415,15 @@ export default {
                 //   this.submitDisable = true
                 // }
 
-                let endTime = Date.parse("2021-05-1T00:00:00.000Z")
-                console.log("endTime:" + endTime)
-                console.log("remaining:" + (Date.now() - endTime))
-                if (Date.now() - endTime > 0) {
-                  this.daixieDisabled = true
-                  this.daixie = '0'
-                }
+                // let endTime = Date.parse("2021-05-1T00:00:00.000Z")
+                // console.log("endTime:" + endTime)
+                // console.log("remaining:" + (Date.now() - endTime))
+                // if (Date.now() - endTime > 0) {
+                //   this.daixieDisabled = true
+                //   this.daixie = '0'
+                // }
+                this.daixieDisabled = true
+                this.daixie = '0'
               }
             });
           }
