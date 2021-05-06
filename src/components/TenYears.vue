@@ -431,6 +431,8 @@ export default {
       } else {
         window.location.href = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx83aec75c3ca58f0e&redirect_uri=http://htzchina.org/wc_redirect&response_type=code&scope=snsapi_base&state=123#wechat_redirect"
       }
+      this.daixieDisabled = true
+      this.daixie = '0'
     },
 
     submit() {
@@ -482,10 +484,10 @@ export default {
         this.$message.warning("请选择是否上过初阶课程！")
         return;
       }
-      if (this.daixie.trim() === '') {
-        this.$message.warning("请选择是否需要代写！")
-        return;
-      }
+      // if (this.daixie.trim() === '') {
+      //   this.$message.warning("请选择是否需要代写！")
+      //   return;
+      // }
       if (this.open.trim() === '') {
         this.$message.warning("请选择立志内容是否公开！")
         return;
