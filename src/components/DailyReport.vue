@@ -4,7 +4,16 @@
       <span style="font-size: 22px;color: #66b1ff">每日打卡</span>
       <br/>
       <br/>
-      <i :class="[editMode ?'el-icon-finished' : 'el-icon-edit']" style="float: right;margin-right: 30%" @click="changeMode"></i>
+      <br/>
+      <el-date-picker
+          v-model="date"
+          align="right"
+          type="date"
+          placeholder="选择日期"
+          style="margin-left: 30%;width: 150px"
+          :picker-options="pickerOptions">
+      </el-date-picker>
+      <i :class="[editMode ?'el-icon-finished' : 'el-icon-edit']" style="float: right;margin-right: 30%;margin-top: 20px" @click="changeMode"></i>
       <br/>
       <br/>
       <form action="" class="ready-form">
@@ -39,6 +48,7 @@ export default {
   },
   data() {
     return {
+      date: Date.now(),
       editMode: false,
       tables: [],
       lists: [
@@ -49,7 +59,32 @@ export default {
         { title: "运动",unit:'分钟'},
         { title: "善本",unit:'条'},
         { title: "款两秒",unit:'次'}
-      ]
+      ],
+      pickerOptions: {
+        disabledDate(time) {
+          return time.getTime() > Date.now();
+        },
+        shortcuts: [{
+          text: '今天',
+          onClick(picker) {
+            picker.$emit('pick', new Date());
+          }
+        }, {
+          text: '昨天',
+          onClick(picker) {
+            const date = new Date();
+            date.setTime(date.getTime() - 3600 * 1000 * 24);
+            picker.$emit('pick', date);
+          }
+        }, {
+          text: '前天',
+          onClick(picker) {
+            const date = new Date();
+            date.setTime(date.getTime() - 3600 * 1000 * 24 * 2);
+            picker.$emit('pick', date);
+          }
+        }]
+      },
     };
   },
   mounted: function () {
