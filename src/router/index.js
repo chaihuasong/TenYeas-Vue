@@ -14,6 +14,7 @@ import HomePage from "@/components/HomePage";
 import MyHome from "@/components/MyHome";
 import Error from "@/components/Error";
 import HTQ from "@/components/HTQ";
+import DailyReport from "@/components/DailyReport";
 
 Vue.use(Router)
 
@@ -62,6 +63,15 @@ export default new Router({
       meta: {
         title: '我的',
         footShow: true,
+      }
+    },
+    {
+      path: '/dailyReport',
+      name: 'dailyReport',
+      component: DailyReport,
+      meta: {
+        title: '每日打卡',
+        footShow: false,
       }
     },
     {
