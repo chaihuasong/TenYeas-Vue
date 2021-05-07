@@ -34,7 +34,7 @@
         <el-button v-if="editMode" icon="el-icon-plus" circle @click="addEl" style="background: lightcyan;margin-top: 10px"></el-button>
       </div>
       <div style="margin-top: 30px">
-        <el-button v-if="!editMode" type="primary">打卡</el-button>
+        <el-button v-if="!editMode" type="primary" @click="submit">打卡</el-button>
       </div>
     </el-card>
   </div>
@@ -42,6 +42,9 @@
 
 
 <script>
+
+import axios from "axios";
+import qs from "qs";
 
 export default {
   name: 'DailyReport',
@@ -53,6 +56,7 @@ export default {
       date: Date.now(),
       editMode: false,
       tables: [],
+      template: {},
       lists: [
         { title: "站桩",unit:'分钟', value: ''},
         { title: "静坐",unit:'分钟', value: ''},
@@ -60,7 +64,7 @@ export default {
         { title: "经典学习",unit:'分钟', value: ''},
         { title: "运动",unit:'分钟', value: ''},
         { title: "善本",unit:'条', value: ''},
-        { title: "款两秒",unit:'次', value: ''}
+        { title: "宽两秒",unit:'次', value: ''}
       ],
       pickerOptions: {
         disabledDate(time) {
@@ -96,6 +100,14 @@ export default {
     this.getData()
   },
   methods: {
+    submit() {
+      let data = {}
+      for (let i = 0; i < this.lists.length; i++) {
+        data['template' + i] = this.lists[i].title.trim() + this.lists[i].value.trim() + this.lists[i].unit.trim()
+      }
+
+      this.$message.success(qs.stringify(data))
+    },
     changeMode() {
       if (this.editMode) {
         for (let i = 0; i < this.lists.length; i++) {
@@ -107,14 +119,34 @@ export default {
           //   this.$message.warning("请输入单位")
           //   return
           // }
+          this.template['template' + i] = this.lists[i].title.trim() + "_" + this.lists[i].unit.trim()
         }
+
+        let data = qs.stringify(this.template)
+        axios({
+          method: "POST",
+          url: "http://localhost:8080/saveTemplate",
+          data: data,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }).then((res) => {
+          if (res.status != 200) {
+            this.$message.warning("保存出错！\n" + res.statusText)
+          }
+        });
       }
       this.editMode = !this.editMode
     },
     addEl: function () {
+      if (this.lists.length > 19) {
+        this.$message.warning("已达到上限！")
+        return
+      }
       let cope = {
-        title: "",
-        unit: ""
+        title: '',
+        unit: '',
+        value: ''
       }
       this.lists.push(cope);
     },
