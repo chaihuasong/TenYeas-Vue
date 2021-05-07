@@ -9,22 +9,24 @@
           v-model="date"
           align="right"
           type="date"
-          placeholder="选择日期"
-          style="margin-left: 30%;width: 150px"
+          :editable="false"
+          placeholder="选择打卡日期"
+          style="margin-left: 20%;width: 150px"
           :picker-options="pickerOptions">
       </el-date-picker>
-      <i :class="[editMode ?'el-icon-finished' : 'el-icon-edit']" style="float: right;margin-right: 30%;margin-top: 20px" @click="changeMode"></i>
+      <i :class="[editMode ?'el-icon-finished' : 'el-icon-edit']" style="float: right;margin-right: 10%;margin-top: 20px" @click="changeMode"></i>
       <br/>
       <br/>
       <form action="" class="ready-form">
         <ul v-for='(list,index) in lists' v-bind:key='list.id'>
           <li>
-            <span v-if="!editMode" style="display: inline-block;width: 120px;text-align: right">{{list.title}}</span>
-            <el-input v-if="editMode" style="display: inline-block;width: 120px;" v-model="list.title" placeholder="请输入项目"></el-input>
-            <el-input :disabled="editMode" v-model="input" placeholder="请输入" style="display: inline-block;width: 30%;margin: 0 20px"></el-input>
-            <el-input v-if="editMode" style="display: inline-block;width: 120px;" v-model="list.unit" placeholder="请输入单位"></el-input>
-            <span v-if="!editMode" style="display: inline-block;width: 100px;text-align: left">{{list.unit}}</span>
-            <el-button v-if="editMode" icon="el-icon-minus" circle @click="del(index)" style="background: hotpink;margin-left: 20px;display: inline-block"></el-button>
+            <span v-if="!editMode" style="display: inline-block;width: 20%;text-align: right">{{list.title}}</span>
+            <el-input v-if="editMode" style="display: inline-block;width: 30%;" v-model="list.title" placeholder="请输入项目"></el-input>
+            <el-input v-if="!editMode"  v-model="input" placeholder="请输入" style="display: inline-block;width: 30%;margin: 0 20px"></el-input>
+            <el-input :disabled="editMode" v-if="editMode" style="display: inline-block;width: 12%;margin: 0 20px"></el-input>
+            <el-input v-if="editMode" style="display: inline-block;width: 30%;" v-model="list.unit" placeholder="请输入单位"></el-input>
+            <span v-if="!editMode" style="display: inline-block;width: 20%;text-align: left">{{list.unit}}</span>
+            <el-button v-if="editMode" icon="el-icon-minus" circle @click="del(index)" style="background: hotpink;margin-left: 10px;display: inline-block"></el-button>
           </li>
         </ul>
       </form>
@@ -101,10 +103,10 @@ export default {
             this.$message.warning("请输入项目")
             return
           }
-          if(this.lists[i].unit.trim() === '') {
-            this.$message.warning("请输入单位")
-            return
-          }
+          // if(this.lists[i].unit.trim() === '') {
+          //   this.$message.warning("请输入单位")
+          //   return
+          // }
         }
       }
       this.editMode = !this.editMode
