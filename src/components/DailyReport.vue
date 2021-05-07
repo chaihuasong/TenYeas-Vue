@@ -22,7 +22,7 @@
           <li>
             <span v-if="!editMode" style="display: inline-block;width: 20%;text-align: right">{{list.title}}</span>
             <el-input v-if="editMode" style="display: inline-block;width: 30%;" v-model="list.title" placeholder="请输入项目"></el-input>
-            <el-input v-if="!editMode"  v-model="input" placeholder="请输入" style="display: inline-block;width: 30%;margin: 0 20px"></el-input>
+            <el-input v-if="!editMode"  v-model="list.value" placeholder="请输入" style="display: inline-block;width: 30%;margin: 0 20px"></el-input>
             <el-input :disabled="editMode" v-if="editMode" style="display: inline-block;width: 12%;margin: 0 20px"></el-input>
             <el-input v-if="editMode" style="display: inline-block;width: 30%;" v-model="list.unit" placeholder="请输入单位"></el-input>
             <span v-if="!editMode" style="display: inline-block;width: 20%;text-align: left">{{list.unit}}</span>
@@ -54,13 +54,13 @@ export default {
       editMode: false,
       tables: [],
       lists: [
-        { title: "站桩",unit:'分钟'},
-        { title: "静坐",unit:'分钟'},
-        { title: "诵读经典",unit:'分钟'},
-        { title: "经典学习",unit:'分钟'},
-        { title: "运动",unit:'分钟'},
-        { title: "善本",unit:'条'},
-        { title: "款两秒",unit:'次'}
+        { title: "站桩",unit:'分钟', value: ''},
+        { title: "静坐",unit:'分钟', value: ''},
+        { title: "诵读经典",unit:'分钟', value: ''},
+        { title: "经典学习",unit:'分钟', value: ''},
+        { title: "运动",unit:'分钟', value: ''},
+        { title: "善本",unit:'条', value: ''},
+        { title: "款两秒",unit:'次', value: ''}
       ],
       pickerOptions: {
         disabledDate(time) {
