@@ -3,45 +3,49 @@
     <el-table :data="tableData.slice((currentPage-1)*pageSize,currentPage*pageSize)">
       <el-table-column prop="id" label="id" width="80">
       </el-table-column>
-      <el-table-column prop="template1" label="项目1" width="100">
+      <el-table-column prop="userId" label="用户ID" width="100">
       </el-table-column>
-      <el-table-column prop="template2" label="项目2" width="100">
+      <el-table-column prop="date" label="日期" width="100">
       </el-table-column>
-      <el-table-column prop="template3" label="项目3" width="100">
+      <el-table-column prop="value1" label="项目1" width="100">
       </el-table-column>
-      <el-table-column prop="template4" label="项目4" width="100">
+      <el-table-column prop="value2" label="项目2" width="100">
       </el-table-column>
-      <el-table-column prop="template5" label="项目5" width="100">
+      <el-table-column prop="value3" label="项目3" width="100">
       </el-table-column>
-      <el-table-column prop="template6" label="项目6" width="100">
+      <el-table-column prop="value4" label="项目4" width="100">
       </el-table-column>
-      <el-table-column prop="template7" label="项目7" width="100">
+      <el-table-column prop="value5" label="项目5" width="100">
       </el-table-column>
-      <el-table-column prop="template8" label="项目8" width="100">
+      <el-table-column prop="value6" label="项目6" width="100">
       </el-table-column>
-      <el-table-column prop="template9" label="项目9" width="100">
+      <el-table-column prop="value7" label="项目7" width="100">
       </el-table-column>
-      <el-table-column prop="template10" label="项目10" width="100">
+      <el-table-column prop="value8" label="项目8" width="100">
       </el-table-column>
-      <el-table-column prop="template11" label="项目11" width="100">
+      <el-table-column prop="value9" label="项目9" width="100">
       </el-table-column>
-      <el-table-column prop="template12" label="项目12" width="100">
+      <el-table-column prop="value10" label="项目10" width="100">
       </el-table-column>
-      <el-table-column prop="template13" label="项目13" width="100">
+      <el-table-column prop="value11" label="项目11" width="100">
       </el-table-column>
-      <el-table-column prop="template14" label="项目14" width="100">
+      <el-table-column prop="value12" label="项目12" width="100">
       </el-table-column>
-      <el-table-column prop="template15" label="项目15" width="100">
+      <el-table-column prop="value13" label="项目13" width="100">
       </el-table-column>
-      <el-table-column prop="template16" label="项目16" width="100">
+      <el-table-column prop="value14" label="项目14" width="100">
       </el-table-column>
-      <el-table-column prop="template17" label="项目17" width="100">
+      <el-table-column prop="value15" label="项目15" width="100">
       </el-table-column>
-      <el-table-column prop="template18" label="项目18" width="100">
+      <el-table-column prop="value16" label="项目16" width="100">
       </el-table-column>
-      <el-table-column prop="template19" label="项目19" width="100">
+      <el-table-column prop="value17" label="项目17" width="100">
       </el-table-column>
-      <el-table-column prop="template20" label="项目20" width="100">
+      <el-table-column prop="value18" label="项目18" width="100">
+      </el-table-column>
+      <el-table-column prop="value19" label="项目19" width="100">
+      </el-table-column>
+      <el-table-column prop="value20" label="项目20" width="100">
       </el-table-column>
       <el-table-column label="操作">
         <template slot-scope="scope">
@@ -64,69 +68,72 @@
 
     <!-- 编辑 -->
     <el-dialog title="编辑" :visible.sync="editDialogVisible">
-      <el-form ref="form" :model="newTemplateInfo" label-width="80px">
+      <el-form ref="form" :model="newValueInfo" label-width="80px">
         <el-form-item label="ID">
-          <el-input v-model="newTemplateInfo.id" autocomplete="off" disabled></el-input>
+          <el-input v-model="newValueInfo.id" autocomplete="off" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="ID">
+          <el-input v-model="newValueInfo.userId" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="1.">
-          <el-input v-model="newTemplateInfo.template1" autocomplete="off"></el-input>
+          <el-input v-model="newValueInfo.value1" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="2.">
-          <el-input v-model="newTemplateInfo.template2" autocomplete="off"></el-input>
+          <el-input v-model="newValueInfo.value2" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="3.">
-          <el-input v-model="newTemplateInfo.template3" autocomplete="off"></el-input>
+          <el-input v-model="newValueInfo.value3" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="4.">
-          <el-input v-model="newTemplateInfo.template4" autocomplete="off"></el-input>
+          <el-input v-model="newValueInfo.value4" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="5.">
-          <el-input v-model="newTemplateInfo.template5" autocomplete="off"></el-input>
+          <el-input v-model="newValueInfo.value5" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="6.">
-          <el-input v-model="newTemplateInfo.template6" autocomplete="off"></el-input>
+          <el-input v-model="newValueInfo.value6" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="7.">
-          <el-input v-model="newTemplateInfo.template7" autocomplete="off"></el-input>
+          <el-input v-model="newValueInfo.value7" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="8.">
-          <el-input v-model="newTemplateInfo.template8" autocomplete="off"></el-input>
+          <el-input v-model="newValueInfo.value8" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="9.">
-          <el-input v-model="newTemplateInfo.template9" autocomplete="off"></el-input>
+          <el-input v-model="newValueInfo.value9" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="10.">
-          <el-input v-model="newTemplateInfo.template10" autocomplete="off"></el-input>
+          <el-input v-model="newValueInfo.value10" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="11.">
-          <el-input v-model="newTemplateInfo.template11" autocomplete="off"></el-input>
+          <el-input v-model="newValueInfo.value11" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="12.">
-          <el-input v-model="newTemplateInfo.template12" autocomplete="off"></el-input>
+          <el-input v-model="newValueInfo.value12" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="13.">
-          <el-input v-model="newTemplateInfo.template13" autocomplete="off" :rows="4"></el-input>
+          <el-input v-model="newValueInfo.value13" autocomplete="off" :rows="4"></el-input>
         </el-form-item>
         <el-form-item label="14.">
-          <el-input v-model="newTemplateInfo.template14" autocomplete="off" :rows="4"></el-input>
+          <el-input v-model="newValueInfo.value14" autocomplete="off" :rows="4"></el-input>
         </el-form-item>
         <el-form-item label="15.">
-          <el-input v-model="newTemplateInfo.template15" autocomplete="off" :rows="4"></el-input>
+          <el-input v-model="newValueInfo.value15" autocomplete="off" :rows="4"></el-input>
         </el-form-item>
         <el-form-item label="16.">
-          <el-input v-model="newTemplateInfo.template16" autocomplete="off"></el-input>
+          <el-input v-model="newValueInfo.value16" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="17.">
-          <el-input v-model="newTemplateInfo.template17" autocomplete="off"></el-input>
+          <el-input v-model="newValueInfo.value17" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="18.">
-          <el-input v-model="newTemplateInfo.template18" autocomplete="off"></el-input>
+          <el-input v-model="newValueInfo.value18" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="19.">
-          <el-input v-model="newTemplateInfo.template19" autocomplete="off"></el-input>
+          <el-input v-model="newValueInfo.value19" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="20.">
-          <el-input v-model="newTemplateInfo.template20" autocomplete="off"></el-input>
+          <el-input v-model="newValueInfo.value20" autocomplete="off"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -169,53 +176,57 @@ export default {
       search: '',
       delDialogVisible: false,
       editDialogVisible: false,
-      templateInfo: {
+      valueInfo: {
         id : '',
-        template1: '',
-        template2: '',
-        template3: '',
-        template4: '',
-        template5: '',
-        template6: '',
-        template7: '',
-        template8: '',
-        template9: '',
-        template10: '',
-        template11: '',
-        template12: '',
-        template13: '',
-        template14: '',
-        template15: '',
-        template16: '',
-        template17: '',
-        template18: '',
-        template19: '',
-        template20: ''
+        date: '',
+        userId: '',
+        value1: '',
+        value2: '',
+        value3: '',
+        value4: '',
+        value5: '',
+        value6: '',
+        value7: '',
+        value8: '',
+        value9: '',
+        value10: '',
+        value11: '',
+        value12: '',
+        value13: '',
+        value14: '',
+        value15: '',
+        value16: '',
+        value17: '',
+        value18: '',
+        value19: '',
+        value20: ''
       },
-      newTemplateInfo: {
+      newValueInfo: {
         id : '',
-        template1: '',
-        template2: '',
-        template3: '',
-        template4: '',
-        template5: '',
-        template6: '',
-        template7: '',
-        template8: '',
-        template9: '',
-        template10: '',
-        template11: '',
-        template12: '',
-        template13: '',
-        template14: '',
-        template15: '',
-        template16: '',
-        template17: '',
-        template18: '',
-        template19: '',
-        template20: ''
+        date: '',
+        userId: '',
+        value1: '',
+        value2: '',
+        value3: '',
+        value4: '',
+        value5: '',
+        value6: '',
+        value7: '',
+        value8: '',
+        value9: '',
+        value10: '',
+        value11: '',
+        value12: '',
+        value13: '',
+        value14: '',
+        value15: '',
+        value16: '',
+        value17: '',
+        value18: '',
+        value19: '',
+        value20: ''
       },
-      templateIndex: 0,
+      valueIndex: 0,
     }
   },
 
@@ -232,7 +243,7 @@ export default {
     getData() {
       axios({
         method: "GET",
-        url: "http://localhost:8080/getAllReportTemplate",
+        url: "http://localhost:8080/getAllReportInfo",
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -250,40 +261,40 @@ export default {
       return false
     },
     editUser(index, item) {
-      this.templateIndex = index
+      this.valueIndex = index
       console.log("index:" + index)
-      this.newTemplateInfo = {
+      this.newValueInfo = {
         id: item.id,
-        template1: item.template1,
-        template2: item.template2,
-        template3: item.template3,
-        template4: item.template4,
-        template5: item.template5,
-        template6: item.template6,
-        template7: item.template7,
-        template8: item.template8,
-        template9: item.template9,
-        template10: item.template10,
-        template11: item.template11,
-        template12: item.template12,
-        template13: item.template13,
-        template14: item.template14,
-        template15: item.template15,
-        template16: item.template16,
-        template17: item.template17,
-        template18: item.template18,
-        template19: item.template19,
-        template20: item.template20,
+        value1: item.value1,
+        value2: item.value2,
+        value3: item.value3,
+        value4: item.value4,
+        value5: item.value5,
+        value6: item.value6,
+        value7: item.value7,
+        value8: item.value8,
+        value9: item.value9,
+        value10: item.value10,
+        value11: item.value11,
+        value12: item.value12,
+        value13: item.value13,
+        value14: item.value14,
+        value15: item.value15,
+        value16: item.value16,
+        value17: item.value17,
+        value18: item.value18,
+        value19: item.value19,
+        value20: item.value20,
       }
       this.editDialogVisible = true
     },
     saveUser() {
       this.editDialogVisible = false;
-      this.$set(this.tableData, this.templateIndex, this.newTemplateInfo);
+      this.$set(this.tableData, this.valueIndex, this.newValueInfo);
       axios({
         method: "POST",
         url: "http://localhost:8080/updateReportTemplate",
-        data: qs.stringify(this.newTemplateInfo),
+        data: qs.stringify(this.newValueInfo),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }

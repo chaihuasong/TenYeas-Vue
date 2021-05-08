@@ -14,6 +14,9 @@
             <el-menu-item-group>
               <el-menu-item index="/home/templateList">打卡模板</el-menu-item>
             </el-menu-item-group>
+            <el-menu-item-group>
+              <el-menu-item index="/home/reportList">打卡列表</el-menu-item>
+            </el-menu-item-group>
           </el-submenu>
           <el-submenu index="2">
             <template slot="title"><i class="el-icon-setting"></i>设置</template>

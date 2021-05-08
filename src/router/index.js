@@ -16,6 +16,7 @@ import Error from "@/components/Error";
 import HTQ from "@/components/HTQ";
 import DailyReport from "@/components/DailyReport";
 import TemplateList from "@/components/TemplateList";
+import DailyReportList from "@/components/DailyReportList";
 
 Vue.use(Router)
 
@@ -119,6 +120,15 @@ export default new Router({
             title: '管理后台',
             footShow: false,
           },
+        },
+        {
+          path: '/reportList',
+          name: 'reportList',
+          component: DailyReportList,
+          meta: {
+            title: '管理后台',
+            footShow: false,
+          }
         },
         {
           path: 'templateList',
