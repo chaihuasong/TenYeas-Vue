@@ -17,6 +17,7 @@ import HTQ from "@/components/HTQ";
 import DailyReport from "@/components/DailyReport";
 import TemplateList from "@/components/TemplateList";
 import DailyReportList from "@/components/DailyReportList";
+import TenYearsHome from "@/components/TenYearsHome";
 
 Vue.use(Router)
 
@@ -65,6 +66,15 @@ export default new Router({
       meta: {
         title: '我的',
         footShow: true,
+      }
+    },
+    {
+      path: '/tenYearsHome',
+      name: 'tenYearsHome',
+      component: TenYearsHome,
+      meta: {
+        title: '十年持志',
+        footShow: false,
       }
     },
     {
