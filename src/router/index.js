@@ -132,7 +132,7 @@ export default new Router({
           },
         },
         {
-          path: '/reportList',
+          path: 'reportList',
           name: 'reportList',
           component: DailyReportList,
           meta: {

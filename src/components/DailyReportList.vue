@@ -313,7 +313,7 @@ export default {
             })
             axios({
               method: "POST",
-              url: "http://localhost:8080/deleteReportTemplateById",
+              url: "http://localhost:8080/deleteReportInfoById",
               data: data,
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -321,7 +321,7 @@ export default {
             }).then((res) => {
               axios({
                 method: "GET",
-                url: "http://localhost:8080/getReportTemplateById?id=" + this.id,
+                url: "http://localhost:8080/getReportInfoById?id=" + this.id,
                 data: null,
                 headers: {
                   'Content-Type': 'application/x-www-form-urlencoded'

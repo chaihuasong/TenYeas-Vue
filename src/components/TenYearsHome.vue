@@ -7,19 +7,19 @@
                 fit="cover"/>
     </div>
 
-    <el-card style="float: left; width: 100%;">
+    <el-card style="float: left; width: 100%;margin-top: 10px">
       <span>十年倒计时，离{{this.getTenYearsDate()}}，还有</span>
       <br/>
       <span style="font-size: 22px;color: #66b1ff">{{this.getTenYearsRemaining()}}</span> 天
     </el-card>
 
-    <el-card style="float: left; width: 100%;">
-      <div>生命倒计时，离生命终了 <el-input style="display: inline-block; width: 55px" v-model="remainYear"/> 岁，还有</div>
+    <el-card style="float: left; width: 100%;margin-top: 10px">
+      <div>生命倒计时，离生命终了 <el-input style="display: inline-block; width: 55px" v-model="maxAge"/> 岁，还有</div>
       <br/>
       <span style="font-size: 22px;color: #66b1ff">{{this.getYearsRemaining()}}</span> 天
     </el-card>
 
-    <el-card style="float: left; width: 100%;">
+    <el-card style="float: left; width: 100%;margin-top: 10px">
       <div style="float: left; margin-bottom: 10px;font-weight: bold">十年立志</div>
       <i :class="[editInfoMode ?'el-icon-finished' : 'el-icon-edit']"
          style="float: right; margin-bottom: 10px" @click="changeInfoMode"></i>
@@ -31,8 +31,8 @@
           v-model="info" />
     </el-card>
 
-    <el-card style="float: left; width: 100%;">
-      <div style="float: left; margin-bottom: 10px;font-weight: bold">2021年下班年践行计划</div>
+    <el-card style="float: left; width: 100%;margin-top: 10px">
+      <div style="float: left; margin-bottom: 10px;font-weight: bold">2021年下半年践行计划</div>
       <i :class="[editHalfYearInfoMode ?'el-icon-finished' : 'el-icon-edit']"
          style="float: right; margin-bottom: 10px" @click="changeHalfYearInfoMode"></i>
       <el-input
@@ -61,25 +61,25 @@
         slot-scope="{date, data}">
         <el-row>
           <div class="calendar-day" style="display:inline-block; font-size: 15px; margin-right: 5px">{{ data.day.split('-').slice(2).join('-') }}</div>
-          <span style="font-size: 10px">{{ getInfoFormat() }}</span>
+          <span style="font-size: 10px">{{ getDailyShareInfoFormat(data) }}</span>
         </el-row>
       </template>
     </el-calendar>
 
-    <el-card style="float: left; width: 100%;">
+    <el-card style="float: left; width: 100%;margin-top: 10px">
       <div style="float: left; margin-bottom: 10px;font-weight: bold;text-align: left">每日反省总结，今天精气神是长养的还是消耗的，心量是开阔了还是狭迫了，10个字以内表述</div>
       <el-input
           type="textarea"
           :rows="3"
           placeholder="请输入内容"
-          v-model="shortInfo" />
-      <el-button style="float: right;margin-top: 10px">提交</el-button>
+          v-model="dailyShare" />
+      <el-button style="float: right;margin-top: 10px;margin-bottom: 10px">提交</el-button>
     </el-card>
 
-    <el-card style="float: left; width: 100%;margin-bottom: 20px">
+    <el-card style="float: left; width: 100%;margin-bottom: 20px;margin-top: 10px">
       <div style="float: left; margin-bottom: 10px;font-weight: bold;text-align: left">每日养气功课 & 经典实践</div>
       <i :class="[editDailyReportMode ?'el-icon-finished' : 'el-icon-edit']"
-         style="float: right;" @click="changeDailyReportMode"></i>
+         style="float: right;" @click="changeDailyReportTemplateMode"></i>
       <el-date-picker
           v-model="reportDate"
           type="date"
@@ -105,7 +105,11 @@
                      style="background: hotpink;margin-left: 10px;display: inline-block"></el-button>
         </li>
       </ul>
-      <el-button style="float: right;margin-top: 10px;margin-bottom: 10px">提交</el-button>
+      <div style="position: relative;top: 5%;">
+        <el-button v-if="editDailyReportMode" icon="el-icon-plus" circle @click="addEl"
+                   style="background: lightcyan;margin-top: 10px"></el-button>
+      </div>
+      <el-button v-if="!editDailyReportMode" style="float: right;margin-top: 10px;margin-bottom: 10px" @click="submitDailyReport">提交</el-button>
     </el-card>
 
     <TabBar/>
@@ -114,6 +118,8 @@
 
 <script>
 import axios from "axios";
+import qs from "qs";
+import wx from 'weixin-js-sdk'
 
 export default {
   name: 'TenYears',
@@ -155,17 +161,19 @@ export default {
       chujieIndex: '11',
       openIndex: '12',
       smallScreen: false,
-      remainYear: 80,
+      maxAge: 80,
       halfYearInfo: '',
       editInfoMode: false,
       monthInfo: '',
       editHalfYearInfoMode: false,
       editMonthInfoMode: false,
       editDailyReportMode: false,
-      reportDate: Date.now(),
+      reportDate: new Date(),
       calendarValue: new Date(),
       share: '',
-      shortInfo: '',
+      dailyShare: '',
+      template: {},
+      templateId: '0',
       reportLists: [
         {title: "站桩", unit: '分钟', value: ''},
         {title: "静坐", unit: '分钟', value: ''},
@@ -206,18 +214,90 @@ export default {
     document.title = this.$route.meta.title
     console.log("TenYearsHome getData")
     this.getData()
+    this.configWechat()
   },
   methods: {
-    getInfoFormat() {
-      if (this.shortInfo.trim().length > 10) {
-        return this.shortInfo.trim().substring(0, 9) + '…'
-      } else if (this.shortInfo.trim().length < 10) {
-        return ' ' + this.shortInfo
+    submitDailyReport() {
+      let data = {}
+      for (let i = 0; i < this.reportLists.length; i++) {
+        data['value' + (i + 1)] = this.reportLists[i].title.trim() + this.reportLists[i].value.trim() + this.reportLists[i].unit.trim()
       }
-      return this.shortInfo
+
+      data['userId'] = this.unionid
+      data['templateId'] = this.templateId
+      data['date'] = this.reportDate.getFullYear() + "-" + (this.reportDate.getMonth() + 1) + "/" + this.reportDate.getDate()
+      data['share'] = this.share
+
+      axios({
+        method: "POST",
+        url: "http://localhost:8080/saveReportInfo",
+        data: qs.stringify(data),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        if (res.status !== 200) {
+          this.$message.warning("保存出错！\n" + res.statusText)
+        } else {
+          this.$message.success("提交成功！")
+        }
+      });
     },
-    changeDailyReportMode() {
+    getDailyShareInfoFormat(data) {
+      let selectedMonth = (this.reportDate.getMonth() + 1) < 10 ? '0' + (this.reportDate.getMonth() + 1) : (this.reportDate.getMonth() + 1)
+      let selectedDate = this.reportDate.getDate() < 10 ? '0' + this.reportDate.getDate() : this.reportDate.getDate()
+      if((data.day.split('-').slice(1).join('-')) === (selectedMonth + "-" + selectedDate)) {
+        if (this.dailyShare.trim().length > 10) {
+          return this.dailyShare.trim().substring(0, 9) + '…'
+        } else if (this.dailyShare.trim().length < 10) {
+          return ' ' + this.dailyShare
+        }
+        return this.dailyShare
+      }
+    },
+    changeDailyReportTemplateMode() {
+      if (this.editDailyReportMode) {
+        this.template = {}
+        for (let i = 0; i < this.reportLists.length; i++) {
+          if (this.reportLists[i].title.trim() === '') {
+            this.$message.warning("请输入项目")
+            return
+          }
+          this.template['template' + (i + 1)] = this.reportLists[i].title.trim() + "_" + this.reportLists[i].unit.trim()
+        }
+
+        let data = qs.stringify(this.template)
+        axios({
+          method: "POST",
+          url: "http://localhost:8080/saveTemplate",
+          data: data,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }).then((res) => {
+          if (res.status !== 200) {
+            this.$message.warning("保存出错！\n" + res.statusText)
+          } else {
+            this.templateId = res.data
+          }
+        });
+      }
       this.editDailyReportMode = !this.editDailyReportMode
+    },
+    addEl: function () {
+      if (this.reportLists.length > 19) {
+        this.$message.warning("已达到上限！")
+        return
+      }
+      let cope = {
+        title: '',
+        unit: '',
+        value: ''
+      }
+      this.reportLists.push(cope);
+    },
+    del: function (index) {
+      this.reportLists.splice(index, 1);
     },
     changeInfoMode() {
       this.editInfoMode = !this.editInfoMode
@@ -249,7 +329,7 @@ export default {
     getYearsRemaining() {
       if (this.createDate !== '') {
         let createdDate = new Date(this.createDate)
-        let tenYearsLater = new Date((createdDate.getFullYear() + parseInt(this.remainYear)) + this.createDate.substr(4))
+        let tenYearsLater = new Date((createdDate.getFullYear() + parseInt(this.maxAge)) + this.createDate.substr(4))
         let remaining = tenYearsLater.getTime() - Date.now()
         return parseInt(remaining / (24 * 3600 * 1000)+"")
       }
@@ -348,20 +428,53 @@ export default {
         }
       });
     },
+    configWechat() {
+      axios({
+        method: "GET",
+        url: "http://htzchina.org:8080/getAccessToken?url=" + window.location.href,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        if (res != null && res.data != null && res.data !== '') {
+          wx.config({
+            debug: false, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
+            appId: 'wx83aec75c3ca58f0e', // 必填，公众号的唯一标识
+            timestamp: res.data.timestamp, // 必填，生成签名的时间戳
+            nonceStr: res.data.nonceStr, // 必填，生成签名的随机串
+            signature: res.data.signature,// 必填，签名
+            jsApiList: [
+              'onMenuShareTimeline',
+              'onMenuShareAppMessage',
+              'onMenuShareQQ',
+              'onMenuShareWeibo',
+              'onMenuShareQZone'
+            ] // 必填，需要使用的JS接口列表
+          });
+        }
+      });
+
+      wx.ready(function () {   //需在用户可能点击分享按钮前就先调用
+        wx.onMenuShareAppMessage({
+          title: '黄庭书院"十年持志"', // 分享标题
+          desc: '让我们一起 抱团成长~', // 分享描述
+          link: "http://htzchina.org/tenyears/#/tenyearsHome", // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
+          imgUrl: 'http://htzchina.org/imgs/huangtingshuyuan.png', // 分享图标
+        })
+        wx.onMenuShareTimeline({
+          title: '黄庭书院"十年持志"', // 分享标题
+          desc: '让我们一起 抱团成长~', // 分享描述
+          link: "http://htzchina.org/tenyears/#/tenyearsHome", // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
+          imgUrl: 'http://htzchina.org/imgs/huangtingshuyuan.png', // 分享图标
+        })
+      });
+    },
   },
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.van-swipe-item {
-  width: 100%
-}
-
-.is-selected {
-  color: #1989FA;
-}
-
 nav {
   display: flex;
   flex-flow: row wrap;
@@ -390,16 +503,6 @@ img {
   pointer-events: none;
 }
 
-/deep/ .el-radio {
-  white-space: normal;
-}
-
-.req {
-  color: red;
-  font-size: 16px;
-  font-weight: bold;
-}
-
 * {
   -webkit-touch-callout: none; /*系统默认菜单被禁用*/
   -webkit-user-select: none; /*webkit浏览器*/
@@ -412,36 +515,6 @@ img {
 input, textarea {
   -webkit-user-select: auto; /*webkit浏览器*/
   outline: none;
-}
-
-
-.sexTitleStyle {
-  float: left;
-  width: 100%;
-  text-align: left;
-  font-size: 16px;
-  font-weight: bold;
-  margin-left: 10px;
-}
-
-.titleNameStyle {
-  float: left;
-  width: 100%;
-  text-align: left;
-  font-size: 16px;
-  font-weight: bold;
-  margin-left: 10px;
-  margin-bottom: 10px;
-}
-
-.inputStyle {
-  width: 90%;
-  margin-bottom: 20px;
-}
-
-.submitStyle {
-  width: 120px;
-  font-size: 18px;
 }
 
 ul {
