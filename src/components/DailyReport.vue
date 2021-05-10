@@ -208,7 +208,7 @@ export default {
         let data = qs.stringify(this.template)
         axios({
           method: "POST",
-          url: "http://localhost:8080/saveTemplate",
+          url: "http://htzchina.org:8080/saveTemplate",
           data: data,
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'

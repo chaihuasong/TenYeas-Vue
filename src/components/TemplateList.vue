@@ -232,7 +232,7 @@ export default {
     getData() {
       axios({
         method: "GET",
-        url: "http://localhost:8080/getAllReportTemplate",
+        url: "http://htzchina.org:8080/getAllReportTemplate",
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -282,7 +282,7 @@ export default {
       this.$set(this.tableData, this.templateIndex, this.newTemplateInfo);
       axios({
         method: "POST",
-        url: "http://localhost:8080/updateReportTemplate",
+        url: "http://htzchina.org:8080/updateReportTemplate",
         data: qs.stringify(this.newTemplateInfo),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -302,7 +302,7 @@ export default {
             })
             axios({
               method: "POST",
-              url: "http://localhost:8080/deleteReportTemplateById",
+              url: "http://htzchina.org:8080/deleteReportTemplateById",
               data: data,
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -310,7 +310,7 @@ export default {
             }).then((res) => {
               axios({
                 method: "GET",
-                url: "http://localhost:8080/getReportTemplateById?id=" + this.id,
+                url: "http://htzchina.org:8080/getReportTemplateById?id=" + this.id,
                 data: null,
                 headers: {
                   'Content-Type': 'application/x-www-form-urlencoded'

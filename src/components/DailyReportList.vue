@@ -7,6 +7,10 @@
       </el-table-column>
       <el-table-column prop="date" label="日期" width="100">
       </el-table-column>
+      <el-table-column prop="note" label="总结" width="100">
+      </el-table-column>
+      <el-table-column prop="templateId" label="模板" width="100">
+      </el-table-column>
       <el-table-column prop="value1" label="项目1" width="100">
       </el-table-column>
       <el-table-column prop="value2" label="项目2" width="100">
@@ -72,8 +76,17 @@
         <el-form-item label="ID">
           <el-input v-model="newValueInfo.id" autocomplete="off" disabled></el-input>
         </el-form-item>
-        <el-form-item label="ID">
+        <el-form-item label="用户ID">
           <el-input v-model="newValueInfo.userId" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="日期">
+          <el-input v-model="newValueInfo.date" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="总结">
+          <el-input v-model="newValueInfo.note" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="模板">
+          <el-input v-model="newValueInfo.templateId" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="1.">
           <el-input v-model="newValueInfo.value1" autocomplete="off"></el-input>
@@ -178,8 +191,10 @@ export default {
       editDialogVisible: false,
       valueInfo: {
         id : '',
-        date: '',
         userId: '',
+        date: '',
+        note: '',
+        templateId: '',
         value1: '',
         value2: '',
         value3: '',
@@ -203,8 +218,10 @@ export default {
       },
       newValueInfo: {
         id : '',
-        date: '',
         userId: '',
+        date: '',
+        note: '',
+        templateId: '',
         value1: '',
         value2: '',
         value3: '',
@@ -243,7 +260,7 @@ export default {
     getData() {
       axios({
         method: "GET",
-        url: "http://localhost:8080/getAllReportInfo",
+        url: "http://htzchina.org:8080/getAllReportInfo",
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -265,6 +282,10 @@ export default {
       console.log("index:" + index)
       this.newValueInfo = {
         id: item.id,
+        userId: item.userId,
+        date: item.date,
+        note: item.note,
+        templateId: item.templateId,
         value1: item.value1,
         value2: item.value2,
         value3: item.value3,
@@ -293,7 +314,7 @@ export default {
       this.$set(this.tableData, this.valueIndex, this.newValueInfo);
       axios({
         method: "POST",
-        url: "http://localhost:8080/updateReportTemplate",
+        url: "http://htzchina.org:8080/updateReportInfo",
         data: qs.stringify(this.newValueInfo),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -313,7 +334,7 @@ export default {
             })
             axios({
               method: "POST",
-              url: "http://localhost:8080/deleteReportInfoById",
+              url: "http://htzchina.org:8080/deleteReportInfoById",
               data: data,
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -321,7 +342,7 @@ export default {
             }).then((res) => {
               axios({
                 method: "GET",
-                url: "http://localhost:8080/getReportInfoById?id=" + this.id,
+                url: "http://htzchina.org:8080/getReportInfoById?id=" + this.id,
                 data: null,
                 headers: {
                   'Content-Type': 'application/x-www-form-urlencoded'

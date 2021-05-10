@@ -14,7 +14,7 @@
     </el-card>
 
     <el-card style="float: left; width: 100%;margin-top: 10px">
-      <div>生命倒计时，离生命终了 <el-input style="display: inline-block; width: 55px" v-model="maxAge"/> 岁，还有</div>
+      <div>生命倒计时，离生命终了 <el-input style="display: inline-block; width: 55px" v-model="maxAge" @change="onMaxAgeChange"/> 岁，还有</div>
       <br/>
       <span style="font-size: 22px;color: #66b1ff">{{this.getYearsRemaining()}}</span> 天
     </el-card>
@@ -32,7 +32,7 @@
     </el-card>
 
     <el-card style="float: left; width: 100%;margin-top: 10px">
-      <div style="float: left; margin-bottom: 10px;font-weight: bold">2021年下半年践行计划</div>
+      <div style="float: left; margin-bottom: 10px;font-weight: bold">{{ getDateFormat(this.calendarValue).split('-')[0] }}年{{ parseInt(getDateFormat(this.calendarValue).split('-')[1]) > 6 || parseInt(getDateFormat(this.calendarValue).split('-')[0]) === 2021 ? '下' : '上' }}半年践行计划</div>
       <i :class="[editHalfYearInfoMode ?'el-icon-finished' : 'el-icon-edit']"
          style="float: right; margin-bottom: 10px" @click="changeHalfYearInfoMode"></i>
       <el-input
@@ -44,7 +44,7 @@
     </el-card>
 
     <el-card style="float: left; width: 100%;">
-      <div style="float: left; margin-bottom: 10px;font-weight: bold">2021年5月计划</div>
+      <div style="float: left; margin-bottom: 10px;font-weight: bold">{{ getDateFormat(this.calendarValue).split('-')[0] }}年{{parseInt(getDateFormat(this.calendarValue).split('-')[1])}}月计划</div>
       <i :class="[editMonthInfoMode ?'el-icon-finished' : 'el-icon-edit']"
          style="float: right; margin-bottom: 10px" @click="changeMonthInfoMode"></i>
       <el-input
@@ -61,7 +61,7 @@
         slot-scope="{date, data}">
         <el-row>
           <div class="calendar-day" style="display:inline-block; font-size: 15px; margin-right: 5px">{{ data.day.split('-').slice(2).join('-') }}</div>
-          <span style="font-size: 10px">{{ getDailyShareInfoFormat(data) }}</span>
+          <span style="font-size: 10px">{{ getDailyNoteFormat(data) }}</span>
         </el-row>
       </template>
     </el-calendar>
@@ -72,8 +72,8 @@
           type="textarea"
           :rows="3"
           placeholder="请输入内容"
-          v-model="dailyShare" />
-      <el-button style="float: right;margin-top: 10px;margin-bottom: 10px">提交</el-button>
+          v-model="note" />
+      <el-button style="float: right;margin-top: 10px;margin-bottom: 10px" @click="submitDailyNote">提交</el-button>
     </el-card>
 
     <el-card style="float: left; width: 100%;margin-bottom: 20px;margin-top: 10px">
@@ -85,6 +85,9 @@
           type="date"
           :editable="false"
           placeholder="选择打卡日期"
+          :clearable="false"
+          align="center"
+          @change="dailyReportDateChanged"
           style="margin-left: 10%;width: 150px"
           :picker-options="pickerOptions">
       </el-date-picker>
@@ -109,6 +112,12 @@
         <el-button v-if="editDailyReportMode" icon="el-icon-plus" circle @click="addEl"
                    style="background: lightcyan;margin-top: 10px"></el-button>
       </div>
+      <div style="float: left; margin-bottom: 10px;font-weight: bold;text-align: left">每日分享（选填）</div>
+      <el-input
+          type="textarea"
+          :rows="3"
+          placeholder="请输入内容"
+          v-model="share" />
       <el-button v-if="!editDailyReportMode" style="float: right;margin-top: 10px;margin-bottom: 10px" @click="submitDailyReport">提交</el-button>
     </el-card>
 
@@ -171,18 +180,23 @@ export default {
       reportDate: new Date(),
       calendarValue: new Date(),
       share: '',
-      dailyShare: '',
+      note: '',
+      monthsNotes: [],
       template: {},
       templateId: '0',
-      reportLists: [
+      defaultReportLists: [
+        {title: "早起", unit: '', value: ''},
+        {title: "家人陪伴", unit: '分钟', value: ''},
         {title: "站桩", unit: '分钟', value: ''},
         {title: "静坐", unit: '分钟', value: ''},
         {title: "诵读经典", unit: '分钟', value: ''},
         {title: "经典学习", unit: '分钟', value: ''},
         {title: "运动", unit: '分钟', value: ''},
         {title: "善本", unit: '条', value: ''},
-        {title: "宽两秒", unit: '次', value: ''}
+        {title: "宽两秒", unit: '次', value: ''},
+        {title: "家务", unit: '分钟', value: ''},
       ],
+      reportLists: [],
       pickerOptions: {
         disabledDate(time) {
           return time.getTime() > Date.now();
@@ -214,23 +228,233 @@ export default {
     document.title = this.$route.meta.title
     console.log("TenYearsHome getData")
     this.getData()
+    this.getMonthNotes()
     this.configWechat()
+    this.dailyReportDateChanged(new Date())
   },
   methods: {
+    onMaxAgeChange() {
+      let data = {
+        id: this.unionid,
+        maxAge: this.maxAge,
+      }
+      axios({
+        method: "POST",
+        url: "http://htzchina.org:8080/updateMaxAge",
+        data: qs.stringify(data),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        if (res.status !== 200) {
+          this.$message.warning("保存出错！\n" + res.statusText)
+        } else {
+          this.$message.success("保存成功")
+        }
+      });
+    },
+    getMonthNotes() {
+      let currentDate = this.getDateFormat(this.calendarValue)
+      let monthDate = currentDate.substr(0, currentDate.lastIndexOf('-') + 1)
+      axios({
+        method: "GET",
+        url: "http://htzchina.org:8080/getReportInfoListByIdAndMonth?userId=" + this.unionid + "&monthDate=" + monthDate,
+        data: null,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        if (res.data !== '' && res.data.length > 0) {
+          this.monthsNotes = []
+          for (let i = 0; i < res.data.length; i++) {
+            let item = {
+              date: res.data[i].date,
+              note: res.data[i].note,
+              templateId: res.data[i].templateId,
+            }
+            this.monthsNotes.push(item)
+          }
+        } else {
+          //可能是新的月份，获取一次上个月的值
+          let lastDate = this.getLastMonthDateFormat(this.calendarValue)
+          let lastMonthDate = lastDate.substr(0, lastDate.lastIndexOf('-') + 1)
+          axios({
+            method: "GET",
+            url: "http://htzchina.org:8080/getReportInfoListByIdAndMonth?userId=" + this.unionid + "&monthDate=" + lastMonthDate,
+            data: null,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          }).then((res) => {
+            if (res.data !== '' && res.data.length > 0) {
+              this.monthsNotes = []
+              for (let i = 0; i < res.data.length; i++) {
+                let item = {
+                  date: res.data[i].date,
+                  note: res.data[i].note,
+                  templateId: res.data[i].templateId,
+                }
+                this.monthsNotes.push(item)
+              }
+            }
+          });
+        }
+      });
+    },
+    getDateFormat(date) {
+      let year = date.getFullYear()
+      let month = date.getMonth() + 1
+      if (month < 10) month = '0' + month
+      let day = date.getDate()
+      if (day < 10) day = '0' + day
+      return year + "-" + month + "-" + day
+    },
+    getLastMonthDateFormat(date) {
+      let year = date.getFullYear()
+      let month = date.getMonth()
+      if (month === 0) {
+        year = year - 1
+        month = 12
+      }
+      if (month < 10) month = '0' + month
+      let day = date.getDate()
+      if (day < 10) day = '0' + day
+      return year + "-" + month + "-" + day
+    },
+    dailyReportDateChanged(val) {
+      let date = this.getDateFormat(val)
+      axios({
+        method: "GET",
+        url: "http://htzchina.org:8080/getReportInfoByUserIdAndDate?userId=" + this.unionid + "&date=" + date,
+        data: null,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        this.note = res.data.note
+        console.log(res.data)
+        let reports = []
+        reports.push(res.data.value1)
+        reports.push(res.data.value2)
+        reports.push(res.data.value3)
+        reports.push(res.data.value4)
+        reports.push(res.data.value5)
+        reports.push(res.data.value6)
+        reports.push(res.data.value7)
+        reports.push(res.data.value8)
+        reports.push(res.data.value9)
+        reports.push(res.data.value10)
+        reports.push(res.data.value11)
+        reports.push(res.data.value12)
+        reports.push(res.data.value13)
+        reports.push(res.data.value14)
+        reports.push(res.data.value15)
+        reports.push(res.data.value16)
+        reports.push(res.data.value17)
+        reports.push(res.data.value18)
+        reports.push(res.data.value19)
+        reports.push(res.data.value20)
+        console.log(reports)
+        let templateId = 0
+        if (this.monthsNotes !== null && this.monthsNotes.length > 0) {
+          let index = 0
+          let temp = 0
+          for (let i = 0; i < this.monthsNotes.length; i++) {
+            let day = parseInt(this.monthsNotes[i].date.split('-')[2])
+            if (temp === 0) {
+              temp = day
+            } else if (day > temp) {
+              temp = day
+              index = i
+            }
+          }
+          templateId = this.monthsNotes[index].templateId
+          axios({
+            method: "GET",
+            url: "http://htzchina.org:8080/getReportTemplateById?id=" + templateId,
+            data: null,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          }).then((resp) => {
+            if (reports != null && reports.length > 0 && reports[0] !== undefined) {
+              this.reportLists = []
+              for (let i = 0; i < resp.data.length; i++) {
+                let title = resp.data[i].split('_')[0]
+                let unit = resp.data[i].split('_').length === 2 ? resp.data[i].split('_')[1] : ''
+                let value = reports[i].replace(title, '')
+                value = value.replace(unit, '')
+                let cope = {
+                  title: title,
+                  unit: unit,
+                  value: value
+                }
+                this.reportLists.push(cope);
+              }
+            } else {
+              this.reportLists = this.defaultReportLists
+            }
+          });
+        }
+      });
+    },
+    dateChanged(data) {
+      if (data.isSelected) {
+        this.reportDate = new Date(data.day)
+        axios({
+          method: "GET",
+          url: "http://htzchina.org:8080/getReportInfoByUserIdAndDate?userId=" + this.unionid + "&date=" + data.day,
+          data: null,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }).then((res) => {
+          this.note = res.data.note
+          this.dailyReportDateChanged(this.reportDate)
+        });
+      }
+      return ''
+    },
+    submitDailyNote() {
+      if (this.note === '' || this.note === undefined || this.note.trim().length === 0) {
+        this.$message.warning("请输入每日反省总结内容！")
+        return
+      }
+      let data = {}
+      data['userId'] = this.unionid
+      data['date'] = this.getDateFormat(this.reportDate)
+      data['note'] = this.note
+
+      axios({
+        method: "POST",
+        url: "http://htzchina.org:8080/saveDailyNote",
+        data: qs.stringify(data),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        if (res.status !== 200) {
+          this.$message.warning("保存出错！\n" + res.statusText)
+        } else {
+          this.getMonthNotes()
+          this.$message.success("提交成功！")
+        }
+      });
+    },
     submitDailyReport() {
       let data = {}
       for (let i = 0; i < this.reportLists.length; i++) {
-        data['value' + (i + 1)] = this.reportLists[i].title.trim() + this.reportLists[i].value.trim() + this.reportLists[i].unit.trim()
+        data['value' + (i + 1)] = this.reportLists[i].title.trim() + this.reportLists[i].value.trim() === '' ? 0 : this.reportLists[i].value.trim() + this.reportLists[i].unit.trim()
       }
 
       data['userId'] = this.unionid
       data['templateId'] = this.templateId
-      data['date'] = this.reportDate.getFullYear() + "-" + (this.reportDate.getMonth() + 1) + "/" + this.reportDate.getDate()
+      data['date'] = this.getDateFormat(this.reportDate)
       data['share'] = this.share
 
       axios({
         method: "POST",
-        url: "http://localhost:8080/saveReportInfo",
+        url: "http://htzchina.org:8080/saveReportInfo",
         data: qs.stringify(data),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -243,17 +467,20 @@ export default {
         }
       });
     },
-    getDailyShareInfoFormat(data) {
-      let selectedMonth = (this.reportDate.getMonth() + 1) < 10 ? '0' + (this.reportDate.getMonth() + 1) : (this.reportDate.getMonth() + 1)
-      let selectedDate = this.reportDate.getDate() < 10 ? '0' + this.reportDate.getDate() : this.reportDate.getDate()
-      if((data.day.split('-').slice(1).join('-')) === (selectedMonth + "-" + selectedDate)) {
-        if (this.dailyShare.trim().length > 10) {
-          return this.dailyShare.trim().substring(0, 9) + '…'
-        } else if (this.dailyShare.trim().length < 10) {
-          return ' ' + this.dailyShare
+    getDailyNoteFormat(data) {
+      this.dateChanged(data)
+      for (let i = 0; i < this.monthsNotes.length; i++) {
+        if (data.day === this.monthsNotes[i].date) {
+          if (this.monthsNotes[i].note === null || this.monthsNotes[i].note === '') return ''
+          if (this.monthsNotes[i].note.trim().length > 10) {
+            return this.monthsNotes[i].note.trim().substring(0, 9) + '…'
+          } else if (this.monthsNotes[i].note.trim().length < 10) {
+            return ' ' + this.monthsNotes[i].note
+          }
+          return this.monthsNotes[i].note
         }
-        return this.dailyShare
       }
+      return ''
     },
     changeDailyReportTemplateMode() {
       if (this.editDailyReportMode) {
@@ -269,7 +496,7 @@ export default {
         let data = qs.stringify(this.template)
         axios({
           method: "POST",
-          url: "http://localhost:8080/saveTemplate",
+          url: "http://htzchina.org:8080/saveTemplate",
           data: data,
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -300,12 +527,74 @@ export default {
       this.reportLists.splice(index, 1);
     },
     changeInfoMode() {
+      if (this.editInfoMode) {
+        let data = {
+          id: this.unionid,
+          info: this.info,
+        }
+        axios({
+          method: "POST",
+          url: "http://htzchina.org:8080/updateLiZhiInfo",
+          data: qs.stringify(data),
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }).then((res) => {
+          if (res.status !== 200) {
+            this.$message.warning("保存出错！\n" + res.statusText)
+          } else {
+            this.$message.success("保存成功")
+          }
+        });
+      }
       this.editInfoMode = !this.editInfoMode
     },
     changeHalfYearInfoMode() {
+      if (this.editHalfYearInfoMode) {
+        let data = {
+          date: this.getDateFormat(this.calendarValue),
+          userId: this.unionid,
+          halfYearInfo: this.halfYearInfo,
+        }
+        axios({
+          method: "POST",
+          url: "http://htzchina.org:8080/saveHalfYearInfo",
+          data: qs.stringify(data),
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }).then((res) => {
+          if (res.status !== 200) {
+            this.$message.warning("保存出错！\n" + res.statusText)
+          } else {
+            this.$message.success("保存成功")
+          }
+        });
+      }
       this.editHalfYearInfoMode = !this.editHalfYearInfoMode
     },
     changeMonthInfoMode() {
+      if (this.editMonthInfoMode) {
+        let data = {
+          date: this.getDateFormat(this.calendarValue),
+          userId: this.unionid,
+          monthInfo: this.monthInfo,
+        }
+        axios({
+          method: "POST",
+          url: "http://htzchina.org:8080/saveMonthInfo",
+          data: qs.stringify(data),
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }).then((res) => {
+          if (res.status !== 200) {
+            this.$message.warning("保存出错！\n" + res.statusText)
+          } else {
+            this.$message.success("保存成功")
+          }
+        });
+      }
       this.editMonthInfoMode = !this.editMonthInfoMode
     },
     getTenYearsDate() {
@@ -425,6 +714,9 @@ export default {
           this.chujie = res.data.chujie
           this.wechatid = res.data.wechatid
           this.province = res.data.province
+
+          let maxAge = res.data.maxAge
+          this.maxAge = maxAge !== undefined && maxAge !== '' ? maxAge : 80
         }
       });
     },
