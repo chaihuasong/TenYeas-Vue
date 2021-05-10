@@ -62,7 +62,7 @@
         <el-row>
           <div class="calendar-day" style="display:inline-block; font-size: 15px; margin-right: 5px">{{ data.day.split('-').slice(2).join('-') }}</div>
           <span style="font-size: 15px">{{ getState(data) }}</span><br/>
-          <span style="font-size: 10px">{{ getDailyNoteFormat(data) }}</span>
+          <span style="font-size: 8px">{{ getDailyNoteFormat(data) }}</span>
         </el-row>
       </template>
     </el-calendar>
@@ -284,6 +284,7 @@ export default {
               date: res.data[i].date,
               note: res.data[i].note,
               templateId: res.data[i].templateId,
+              state: res.data[i].state,
             }
             this.monthsNotes.push(item)
           }
@@ -306,6 +307,7 @@ export default {
                   date: res.data[i].date,
                   note: res.data[i].note,
                   templateId: res.data[i].templateId,
+                  state: res.data[i].state,
                 }
                 this.monthsNotes.push(item)
               }
@@ -348,9 +350,7 @@ export default {
       }).then((res) => {
         this.note = res.data.note
         this.share = res.data.share
-        if (res.data.state !== undefined && res.data.state !== null && res.data.state !== '') {
-          this.state = res.data.state
-        }
+        this.state = res.data.state
         console.log(res.data)
         let reports = []
         reports.push(res.data.value1)
@@ -430,6 +430,7 @@ export default {
           }
         }).then((res) => {
           this.note = res.data.note
+          this.state = res.data.state
           this.dailyReportDateChanged(this.reportDate)
         });
       }
@@ -443,6 +444,7 @@ export default {
       let data = {}
       data['userId'] = this.unionid
       data['date'] = this.getDateFormat(this.reportDate)
+      data['state'] = this.state
       data['note'] = this.note
 
       axios({
@@ -491,8 +493,8 @@ export default {
     getState(data) {
       for (let i = 0; i < this.monthsNotes.length; i++) {
         if (data.day === this.monthsNotes[i].date) {
-          if (this.monthsNotes[i].note === null || this.monthsNotes[i].note === '') return ''
-          let sign = this.state === 0 ? '-' : '+'
+          if (this.monthsNotes[i].state === null || this.monthsNotes[i].state === '') return ''
+          let sign = this.monthsNotes[i].state === '0' ? '-' : '+'
           return sign
         }
       }
@@ -503,9 +505,9 @@ export default {
       for (let i = 0; i < this.monthsNotes.length; i++) {
         if (data.day === this.monthsNotes[i].date) {
           if (this.monthsNotes[i].note === null || this.monthsNotes[i].note === '') return ''
-          if (this.monthsNotes[i].note.trim().length > 9) {
-            return this.monthsNotes[i].note.trim().substring(0, 8) + '…'
-          } else if (this.monthsNotes[i].note.trim().length < 9) {
+          if (this.monthsNotes[i].note.trim().length > 8) {
+            return this.monthsNotes[i].note.trim().substring(0, 7) + '…'
+          } else if (this.monthsNotes[i].note.trim().length < 8) {
             return this.monthsNotes[i].note
           }
           return this.monthsNotes[i].note
