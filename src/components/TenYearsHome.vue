@@ -502,6 +502,11 @@ export default {
           this.template['template' + (i + 1)] = this.reportLists[i].title.trim() + "_" + this.reportLists[i].unit.trim()
         }
 
+        if (this.template['template1'] === undefined) {
+          this.$message.warning("至少添加一项功课模板！")
+          return
+        }
+
         let data = qs.stringify(this.template)
         axios({
           method: "POST",
