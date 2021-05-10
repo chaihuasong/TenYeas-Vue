@@ -11,6 +11,8 @@
       </el-table-column>
       <el-table-column prop="templateId" label="模板" width="100">
       </el-table-column>
+      <el-table-column prop="state" label="状态" width="80">
+      </el-table-column>
       <el-table-column prop="value1" label="项目1" width="100">
       </el-table-column>
       <el-table-column prop="value2" label="项目2" width="100">
@@ -87,6 +89,9 @@
         </el-form-item>
         <el-form-item label="模板">
           <el-input v-model="newValueInfo.templateId" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-input v-model="newValueInfo.state" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="1.">
           <el-input v-model="newValueInfo.value1" autocomplete="off"></el-input>
@@ -195,6 +200,7 @@ export default {
         date: '',
         note: '',
         templateId: '',
+        state: '',
         value1: '',
         value2: '',
         value3: '',
@@ -222,6 +228,7 @@ export default {
         date: '',
         note: '',
         templateId: '',
+        state: '',
         value1: '',
         value2: '',
         value3: '',
@@ -286,6 +293,7 @@ export default {
         date: item.date,
         note: item.note,
         templateId: item.templateId,
+        state: item.state,
         value1: item.value1,
         value2: item.value2,
         value3: item.value3,

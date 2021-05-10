@@ -61,7 +61,7 @@
         slot-scope="{date, data}">
         <el-row>
           <div class="calendar-day" style="display:inline-block; font-size: 15px; margin-right: 5px">{{ data.day.split('-').slice(2).join('-') }}</div>
-          <span style="font-size: 18px">{{ getState(data) }}</span><br/>
+          <span style="font-size: 15px">{{ getState(data) }}</span><br/>
           <span style="font-size: 10px">{{ getDailyNoteFormat(data) }}</span>
         </el-row>
       </template>
@@ -348,7 +348,9 @@ export default {
       }).then((res) => {
         this.note = res.data.note
         this.share = res.data.share
-        this.state = res.data.state
+        if (res.data.state !== undefined && res.data.state !== null && res.data.state !== '') {
+          this.state = res.data.state
+        }
         console.log(res.data)
         let reports = []
         reports.push(res.data.value1)
@@ -386,6 +388,7 @@ export default {
             }
           }
           templateId = this.monthsNotes[index].templateId
+          if (templateId === null) templateId = 0
           axios({
             method: "GET",
             url: "http://htzchina.org:8080/getReportTemplateById?id=" + templateId,
@@ -486,7 +489,6 @@ export default {
       });
     },
     getState(data) {
-      this.dateChanged(data)
       for (let i = 0; i < this.monthsNotes.length; i++) {
         if (data.day === this.monthsNotes[i].date) {
           if (this.monthsNotes[i].note === null || this.monthsNotes[i].note === '') return ''
@@ -497,6 +499,7 @@ export default {
       return ''
     },
     getDailyNoteFormat(data) {
+      this.dateChanged(data)
       for (let i = 0; i < this.monthsNotes.length; i++) {
         if (data.day === this.monthsNotes[i].date) {
           if (this.monthsNotes[i].note === null || this.monthsNotes[i].note === '') return ''
