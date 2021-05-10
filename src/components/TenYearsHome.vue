@@ -876,3 +876,8 @@ a {
 }
 
 </style>
+<style>
+.el-input.is-disabled .el-input__inner,.el-textarea.is-disabled .el-textarea__inner,.el-checkbox__input.is-disabled+.el-checkbox__label{
+  color: black;
+}
+</style>
