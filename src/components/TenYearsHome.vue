@@ -296,6 +296,8 @@ export default {
                 }
                 this.monthsNotes.push(item)
               }
+            } else {
+              this.reportLists = this.defaultReportLists
             }
           });
         }
