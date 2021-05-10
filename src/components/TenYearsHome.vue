@@ -388,7 +388,10 @@ export default {
             }
           }
           templateId = this.monthsNotes[index].templateId
-          if (templateId === null) templateId = 0
+          if (templateId === null || templateId === undefined || templateId === '') {
+            this.reportLists = this.defaultReportLists
+            return
+          }
           axios({
             method: "GET",
             url: "http://htzchina.org:8080/getReportTemplateById?id=" + templateId,
