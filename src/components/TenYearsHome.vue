@@ -724,10 +724,10 @@ export default {
           this.wechatid = res.data.wechatid
           this.province = res.data.province
 
-          try {
-            let age = res.data.maxAge
+          let age = res.data.maxAge
+          if (age !== undefined && age !== null && age !== '') {
             this.maxAge = parseInt(age)
-          } catch (e) {
+          } else {
             this.maxAge = 80
           }
         } else {
