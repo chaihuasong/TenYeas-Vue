@@ -18,6 +18,8 @@ import DailyReport from "@/components/DailyReport";
 import TemplateList from "@/components/TemplateList";
 import DailyReportList from "@/components/DailyReportList";
 import TenYearsHome from "@/components/TenYearsHome";
+import HalfYearInfoList from "@/components/HalfYearInfoList";
+import MonthInfoList from "@/components/MonthInfoList";
 
 Vue.use(Router)
 
@@ -144,6 +146,24 @@ export default new Router({
           path: 'templateList',
           name: 'templateList',
           component: TemplateList,
+          meta: {
+            title: '管理后台',
+            footShow: false,
+          },
+        },
+        {
+          path: 'halfYearInfoList',
+          name: 'halfYearInfoList',
+          component: HalfYearInfoList,
+          meta: {
+            title: '管理后台',
+            footShow: false,
+          },
+        },
+        {
+          path: 'monthInfoList',
+          name: 'monthInfoList',
+          component: MonthInfoList,
           meta: {
             title: '管理后台',
             footShow: false,
