@@ -61,6 +61,7 @@
         slot-scope="{date, data}">
         <el-row>
           <div class="calendar-day" style="display:inline-block; font-size: 15px; margin-right: 5px">{{ data.day.split('-').slice(2).join('-') }}</div>
+          <span style="font-size: 18px">{{ getState(data) }}</span><br/>
           <span style="font-size: 10px">{{ getDailyNoteFormat(data) }}</span>
         </el-row>
       </template>
@@ -68,6 +69,10 @@
 
     <el-card style="float: left; width: 100%;margin-top: 10px">
       <div style="float: left; margin-bottom: 10px;font-weight: bold;text-align: left">每日反省总结，今天精气神是长养的还是消耗的，心量是开阔了还是狭迫了，10个字以内表述</div>
+      <el-radio-group v-model="state" style="margin-bottom: 10px">
+        <el-radio-button label="0">消耗的 - </el-radio-button>
+        <el-radio-button label="1">长养的 + </el-radio-button>
+      </el-radio-group>
       <el-input
           type="textarea"
           :rows="3"
@@ -184,6 +189,7 @@ export default {
       monthsNotes: [],
       template: {},
       templateId: '0',
+      state: '1',
       defaultReportLists: [
         {title: "早起", unit: '', value: ''},
         {title: "家人陪伴", unit: '分钟', value: ''},
@@ -341,6 +347,8 @@ export default {
         }
       }).then((res) => {
         this.note = res.data.note
+        this.share = res.data.share
+        this.state = res.data.state
         console.log(res.data)
         let reports = []
         reports.push(res.data.value1)
@@ -459,6 +467,7 @@ export default {
       data['userId'] = this.unionid
       data['templateId'] = this.templateId
       data['date'] = this.getDateFormat(this.reportDate)
+      data['state'] = this.state
       data['share'] = this.share
 
       axios({
@@ -476,15 +485,25 @@ export default {
         }
       });
     },
-    getDailyNoteFormat(data) {
+    getState(data) {
       this.dateChanged(data)
       for (let i = 0; i < this.monthsNotes.length; i++) {
         if (data.day === this.monthsNotes[i].date) {
           if (this.monthsNotes[i].note === null || this.monthsNotes[i].note === '') return ''
-          if (this.monthsNotes[i].note.trim().length > 10) {
-            return this.monthsNotes[i].note.trim().substring(0, 9) + '…'
-          } else if (this.monthsNotes[i].note.trim().length < 10) {
-            return ' ' + this.monthsNotes[i].note
+          let sign = this.state === 0 ? '-' : '+'
+          return sign
+        }
+      }
+      return ''
+    },
+    getDailyNoteFormat(data) {
+      for (let i = 0; i < this.monthsNotes.length; i++) {
+        if (data.day === this.monthsNotes[i].date) {
+          if (this.monthsNotes[i].note === null || this.monthsNotes[i].note === '') return ''
+          if (this.monthsNotes[i].note.trim().length > 9) {
+            return this.monthsNotes[i].note.trim().substring(0, 8) + '…'
+          } else if (this.monthsNotes[i].note.trim().length < 9) {
+            return this.monthsNotes[i].note
           }
           return this.monthsNotes[i].note
         }
