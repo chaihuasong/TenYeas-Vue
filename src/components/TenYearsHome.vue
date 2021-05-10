@@ -234,6 +234,13 @@ export default {
   },
   methods: {
     onMaxAgeChange() {
+      try {
+        parseInt(this.maxAge)
+      } catch (e) {
+        this.$message.warning("年龄输入有误，请重新输入！")
+        this.maxAge = 80
+        return
+      }
       let data = {
         id: this.unionid,
         maxAge: this.maxAge,
@@ -552,7 +559,7 @@ export default {
       this.editInfoMode = !this.editInfoMode
     },
     changeHalfYearInfoMode() {
-      if (this.editHalfYearInfoMode) {
+      if (this.editHalfYearInfoMode && this.halfYearInfo !== '') {
         let data = {
           date: this.getDateFormat(this.calendarValue),
           userId: this.unionid,
@@ -576,7 +583,7 @@ export default {
       this.editHalfYearInfoMode = !this.editHalfYearInfoMode
     },
     changeMonthInfoMode() {
-      if (this.editMonthInfoMode) {
+      if (this.editMonthInfoMode && this.monthInfo !== '') {
         let data = {
           date: this.getDateFormat(this.calendarValue),
           userId: this.unionid,
@@ -717,8 +724,12 @@ export default {
           this.wechatid = res.data.wechatid
           this.province = res.data.province
 
-          let maxAge = res.data.maxAge
-          this.maxAge = maxAge !== undefined && maxAge !== '' ? maxAge : 80
+          try {
+            let age = res.data.maxAge
+            this.maxAge = parseInt(age)
+          } catch (e) {
+            this.maxAge = 80
+          }
         } else {
           alert("您还未填写过立志卡，点击确定跳转到填写界面")
           this.$router.push("/index");
