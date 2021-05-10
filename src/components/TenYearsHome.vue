@@ -8,15 +8,15 @@
     </div>
 
     <el-card style="float: left; width: 100%;margin-top: 10px">
-      <span>十年倒计时，离{{this.getTenYearsDate()}}，还有</span>
+      <span style="font-weight: bold">十年倒计时，离{{this.getTenYearsDate()}}，还有</span>
       <br/>
-      <span style="font-size: 22px;color: #66b1ff">{{this.getTenYearsRemaining()}}</span> 天
+      <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{this.getTenYearsRemaining()}}</span> 天
     </el-card>
 
     <el-card style="float: left; width: 100%;margin-top: 10px">
-      <div>生命倒计时，离生命终了 <el-input style="display: inline-block; width: 55px" v-model="maxAge" @change="onMaxAgeChange"/> 岁，还有</div>
+      <span style="font-weight: bold">生命倒计时，离生命终了 <input class="ageInputStyle" style="border-left-width:0px;border-top-width:0px;border-right-width:0px;border-bottom-width:1px;border-bottom-color:lightgray; width: 25px;height: 20px;font-size: 15px;text-align: center;margin: 0 0" v-model="maxAge" @change="onMaxAgeChange"/> 岁，还有</span>
       <br/>
-      <span style="font-size: 22px;color: #66b1ff">{{this.getYearsRemaining()}}</span> 天
+      <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{this.getYearsRemaining()}}</span> 天
     </el-card>
 
     <el-card style="float: left; width: 100%;margin-top: 10px">
@@ -870,4 +870,9 @@ li {
 a {
   color: #42b983;
 }
+.el-radio-button:focus:not(.is-focus):not(:active) {
+  -webkit-box-shadow: 0 0 2px 2px #fff!important;
+  box-shadow: 0 0 2px 2px #fff!important;
+}
+
 </style>
