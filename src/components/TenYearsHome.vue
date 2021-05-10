@@ -717,6 +717,9 @@ export default {
 
           let maxAge = res.data.maxAge
           this.maxAge = maxAge !== undefined && maxAge !== '' ? maxAge : 80
+        } else {
+          alert("您还未填写过立志卡，点击确定跳转到填写界面")
+          this.$router.push("/index");
         }
       });
     },
