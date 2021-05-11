@@ -23,12 +23,23 @@
       <div style="float: left; margin-bottom: 10px;font-weight: bold">十年立志</div>
       <i :class="[editInfoMode ?'el-icon-finished' : 'el-icon-edit']"
          style="float: right; margin-bottom: 10px" @click="changeInfoMode"></i>
-      <el-input
-          type="textarea"
-          :rows="3"
-          :disabled="!editInfoMode"
-          placeholder="请输入内容"
-          v-model="info" />
+      <br/>
+      <br/>
+      <el-row :gutter="15">
+        <el-col :span="20">
+          <el-input
+              type="textarea"
+              :rows="3"
+              :disabled="!editInfoMode"
+              placeholder="请输入内容"
+              v-model="info" />
+        </el-col>
+        <el-col :span="4">
+          <el-image style="width: 40px; height: 80px"
+                    :src="'http://htzchina.org/imgs/tenyears/' + this.path"
+                    :preview-src-list="['http://htzchina.org/imgs/tenyears/' + this.path]"/>
+        </el-col>
+      </el-row>
     </el-card>
 
     <el-card style="float: left; width: 100%;margin-top: 10px">
@@ -164,6 +175,7 @@ export default {
       city: '',
       language: '',
       groupId: '',
+      path: '',
       submitDisable: false,
       daixieDisabled: false,
       htmlsHeader: '',
@@ -755,6 +767,7 @@ export default {
           this.chujie = res.data.chujie
           this.wechatid = res.data.wechatid
           this.province = res.data.province
+          this.path = res.data.path
 
           let age = res.data.maxAge
           if (age !== undefined && age !== null && age !== '') {
