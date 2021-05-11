@@ -19,64 +19,69 @@
       <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{this.getYearsRemaining()}}</span> 天
     </el-card>
 
-    <el-card style="float: left; width: 100%;margin-top: 10px">
-      <div style="float: left; margin-bottom: 10px;font-weight: bold">十年立志</div>
-      <i :class="[editInfoMode ?'el-icon-finished' : 'el-icon-edit']"
-         style="float: right; margin-bottom: 10px" @click="changeInfoMode"></i>
-      <br/>
-      <br/>
-      <el-row :gutter="15">
-        <el-col :span="20">
+    <el-collapse style="float: left; width: 100%;margin-top: 20px;margin-bottom: 20px">
+      <el-collapse-item title="十年立志信息" name="1">
+
+        <el-card style="float: left; width: 100%;margin-top: 10px">
+          <div style="float: left; margin-bottom: 10px;font-weight: bold">十年立志</div>
+          <i :class="[editInfoMode ?'el-icon-finished' : 'el-icon-edit']"
+             style="float: right; margin-bottom: 10px" @click="changeInfoMode"></i>
+          <br/>
+          <br/>
+          <el-row :gutter="15">
+            <el-col :span="20">
+              <el-input
+                  type="textarea"
+                  :rows="3"
+                  :disabled="!editInfoMode"
+                  placeholder="请输入内容"
+                  v-model="info" />
+            </el-col>
+            <el-col :span="4">
+              <el-image style="width: 40px; height: 80px;margin-top: 5px"
+                        :src="'http://htzchina.org/imgs/tenyears/' + this.path"
+                        :preview-src-list="['http://htzchina.org/imgs/tenyears/' + this.path]"/>
+            </el-col>
+          </el-row>
+        </el-card>
+        <el-card style="float: left; width: 100%;margin-top: 10px">
+          <div style="float: left; margin-bottom: 10px;font-weight: bold">{{ getDateFormat(this.calendarValue).split('-')[0] }}年{{ parseInt(getDateFormat(this.calendarValue).split('-')[1]) > 6 || parseInt(getDateFormat(this.calendarValue).split('-')[0]) === 2021 ? '下' : '上' }}半年践行计划</div>
+          <i :class="[editHalfYearInfoMode ?'el-icon-finished' : 'el-icon-edit']"
+             style="float: right; margin-bottom: 10px" @click="changeHalfYearInfoMode"></i>
           <el-input
               type="textarea"
               :rows="3"
-              :disabled="!editInfoMode"
+              :disabled="!editHalfYearInfoMode"
               placeholder="请输入内容"
-              v-model="info" />
-        </el-col>
-        <el-col :span="4">
-          <el-image style="width: 40px; height: 80px;margin-top: 5px"
-                    :src="'http://htzchina.org/imgs/tenyears/' + this.path"
-                    :preview-src-list="['http://htzchina.org/imgs/tenyears/' + this.path]"/>
-        </el-col>
-      </el-row>
-    </el-card>
+              v-model="halfYearInfo" />
+        </el-card>
+        <el-card style="float: left; width: 100%;">
+          <div style="float: left; margin-bottom: 10px;font-weight: bold">{{ getDateFormat(this.calendarValue).split('-')[0] }}年{{parseInt(getDateFormat(this.calendarValue).split('-')[1])}}月计划</div>
+          <i :class="[editMonthInfoMode ?'el-icon-finished' : 'el-icon-edit']"
+             style="float: right; margin-bottom: 10px" @click="changeMonthInfoMode"></i>
+          <el-input
+              type="textarea"
+              :rows="3"
+              :disabled="!editMonthInfoMode"
+              placeholder="请输入内容"
+              v-model="monthInfo" />
+        </el-card>
+      </el-collapse-item>
+    </el-collapse>
 
     <el-card style="float: left; width: 100%;margin-top: 10px">
-      <div style="float: left; margin-bottom: 10px;font-weight: bold">{{ getDateFormat(this.calendarValue).split('-')[0] }}年{{ parseInt(getDateFormat(this.calendarValue).split('-')[1]) > 6 || parseInt(getDateFormat(this.calendarValue).split('-')[0]) === 2021 ? '下' : '上' }}半年践行计划</div>
-      <i :class="[editHalfYearInfoMode ?'el-icon-finished' : 'el-icon-edit']"
-         style="float: right; margin-bottom: 10px" @click="changeHalfYearInfoMode"></i>
-      <el-input
-          type="textarea"
-          :rows="3"
-          :disabled="!editHalfYearInfoMode"
-          placeholder="请输入内容"
-          v-model="halfYearInfo" />
+      <el-calendar v-model="calendarValue">
+        <template
+            slot="dateCell"
+            slot-scope="{date, data}">
+          <el-row>
+            <div class="calendar-day" style="display:inline-block; font-size: 15px; margin-right: 5px">{{ data.day.split('-').slice(2).join('-') }}</div>
+            <span style="font-size: 15px">{{ getState(data) }}</span><br/>
+            <span style="font-size: 8px">{{ getDailyNoteFormat(data) }}</span>
+          </el-row>
+        </template>
+      </el-calendar>
     </el-card>
-
-    <el-card style="float: left; width: 100%;">
-      <div style="float: left; margin-bottom: 10px;font-weight: bold">{{ getDateFormat(this.calendarValue).split('-')[0] }}年{{parseInt(getDateFormat(this.calendarValue).split('-')[1])}}月计划</div>
-      <i :class="[editMonthInfoMode ?'el-icon-finished' : 'el-icon-edit']"
-         style="float: right; margin-bottom: 10px" @click="changeMonthInfoMode"></i>
-      <el-input
-          type="textarea"
-          :rows="3"
-          :disabled="!editMonthInfoMode"
-          placeholder="请输入内容"
-          v-model="monthInfo" />
-    </el-card>
-
-    <el-calendar v-model="calendarValue">
-      <template
-        slot="dateCell"
-        slot-scope="{date, data}">
-        <el-row>
-          <div class="calendar-day" style="display:inline-block; font-size: 15px; margin-right: 5px">{{ data.day.split('-').slice(2).join('-') }}</div>
-          <span style="font-size: 15px">{{ getState(data) }}</span><br/>
-          <span style="font-size: 8px">{{ getDailyNoteFormat(data) }}</span>
-        </el-row>
-      </template>
-    </el-calendar>
 
     <el-card style="float: left; width: 100%;margin-top: 10px">
       <div style="float: left; margin-bottom: 10px;font-weight: bold;text-align: left">每日反省总结，今天精气神是长养的还是消耗的，心量是开阔了还是狭迫了，10个字以内表述</div>
@@ -929,5 +934,8 @@ a {
   padding: 0 0;
   -webkit-appearance: none;
   border-radius: 0;
+}
+.el-collapse .el-collapse-item .el-collapse-item__header {
+  margin-left: 20px;
 }
 </style>
