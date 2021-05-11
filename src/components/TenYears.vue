@@ -61,19 +61,20 @@
 <!--    <el-button type="text" @click="dialogVisible = true">生成图片存档（建议先提交再点击）</el-button>-->
     <el-dialog
         :visible.sync="dialogVisible"
-        title="信息已成功提交！"
+        :title= "stepInfoDialogVisible ? '生成图片' : '信息已成功提交！'"
         width="100%"
         height="100%">
       <span>您可以点击下方'生成图片'按钮将图片保存。</span>
       <br/><br/>
-      <div ref="imageWrapper" style="position: relative; width: 100%; height: 100%;">
+      <div v-if="!stepInfoDialogVisible" ref="imageWrapper" style="position: relative; width: 100%; height: 100%;">
         <img src="../assets/img/lizhi_card.png" width="100%" height="100%" alt="" oncontextmenu="return false;">
         <div style="text-align: left" class="large" v-bind:class="{'small': this.smallScreen}">{{ this.info }}</div>
-<!--        <div class="line2">{{ this.info.length > 20 ? this.info.substring(20, this.info.length > 40 ? 40 : this.info.length) : "" }}</div>-->
-<!--        <div class="line3">{{ this.info.length > 40 ? this.info.substring(40, this.info.length > 60 ? 60 : this.info.length) : "" }}</div>-->
-<!--        <div class="line4">{{ this.info.length > 60 ? this.info.substring(60, this.info.length > 72 ? 72 : this.info.length) : "" }}</div>-->
-<!--        <div class="line5">{{ this.info.length > 72 ? this.info.substring(72) : "" }}</div>-->
         <div class="signName" v-bind:class="{'signNameSmall': this.smallScreen}">{{ this.name }}</div>
+      </div>
+      <div v-if="stepInfoDialogVisible" ref="imageWrapper" style="position: relative; width: 100%; height: 100%;">
+        <img src="../assets/img/step_info.png" width="100%" height="100%" alt="" oncontextmenu="return false;">
+        <div style="text-align: left" class="stepInfoStyle" v-bind:class="{'stepInfoLargeStyle': this.stepInfo.length < 40}">{{ this.stepInfo }}</div>
+        <div class="stepSignName">{{ this.name }}</div>
       </div>
       <br/>
       <el-button type="primary" @click="capture">生成图片</el-button>
@@ -103,6 +104,7 @@
         v-model="stepInfo">
     </el-input>
     <br/>
+    <el-button type="text" @click="stepInfoDialogVisible = true;dialogVisible = true">生成图片存档（建议先提交再点击）</el-button>
     <br/>
     <div class="titleNameStyle"><span class='req'>*</span> 9.生日</div>
     <br/>
@@ -207,6 +209,7 @@ export default {
       htmlsHeader: '',
       htmlsFooter: '',
       dialogVisible: false,
+      stepInfoDialogVisible: false,
       dialogTableVisible: false,
       imgUrl: '',
       isTimeout: false,
@@ -549,6 +552,7 @@ export default {
         }).then((res) => {
           if (res != null && res.data != null && res.data !== '') {
             this.$message.success('信息已成功' + this.buttonText + '！')
+            this.stepInfoDialogVisible = false
             this.dialogVisible = true
             this.buttonText = '修改'
             console.log(res)
@@ -593,13 +597,25 @@ export default {
   writing-mode: tb-rl;
   -webkit-writing-mode: vertical-rl;
 }
-.line1 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; top: 15%; right: 16%; color: #3a8ee6 }
-.line2 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; top: 15%; right: 32%; color: #3a8ee6 }
-.line3 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; top: 15%; right: 48%; color: #3a8ee6 }
-.line4 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; top: 15%; right: 64%; color: #3a8ee6 }
-.line5 { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; top: 15%; right: 80%; color: #3a8ee6 }
+
 .signName { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; bottom: 6%; right: 65%; color: #3a8ee6 }
-.signNameSmall { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; bottom: 6%; right: 68%; color: #3a8ee6 }
+
+.stepSignName { width: auto; font-size: 25px;  position: absolute; bottom: 10%; right: 10%; color: #3a8ee6 }
+
+.stepInfoStyle {
+  margin: 0 auto;
+  left: 10%;
+  top: 28%;
+  font-size: 16px;
+  position: absolute;
+  color: #3a8ee6;
+}
+
+.stepInfoLargeStyle {
+  font-size: 22px;
+  left: 15%;
+  top: 35%;
+}
 
 img {
   pointer-events:none;
