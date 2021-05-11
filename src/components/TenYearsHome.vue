@@ -35,7 +35,7 @@
               v-model="info" />
         </el-col>
         <el-col :span="4">
-          <el-image style="width: 40px; height: 80px"
+          <el-image style="width: 40px; height: 80px;margin-top: 5px"
                     :src="'http://htzchina.org/imgs/tenyears/' + this.path"
                     :preview-src-list="['http://htzchina.org/imgs/tenyears/' + this.path]"/>
         </el-col>
@@ -80,9 +80,10 @@
 
     <el-card style="float: left; width: 100%;margin-top: 10px">
       <div style="float: left; margin-bottom: 10px;font-weight: bold;text-align: left">每日反省总结，今天精气神是长养的还是消耗的，心量是开阔了还是狭迫了，10个字以内表述</div>
-      <el-radio-group v-model="state" style="margin-bottom: 10px">
-        <el-radio-button label="0">消耗的 - </el-radio-button>
-        <el-radio-button label="1">长养的 + </el-radio-button>
+      <el-radio-group v-model="state" style="margin-bottom: 10px;text-align: left">
+        <el-radio label="1" border style="width: 90%;float: left">今日身心性命，有得到长养，朝立志目标前进 +</el-radio>
+        <br/>
+        <el-radio label="0" border style="width: 90%;float: left">今日身心性命，没有得到长养，或有耗损 -</el-radio>
       </el-radio-group>
       <el-input
           type="textarea"
@@ -108,22 +109,31 @@
           :picker-options="pickerOptions">
       </el-date-picker>
 
-      <ul v-for='(list,index) in reportLists' v-bind:key='list.id'>
-        <li>
-          <span v-if="!editDailyReportMode" style="display: inline-block;width: 20%;text-align: right">{{ list.title }}</span>
-          <el-input v-if="editDailyReportMode" style="display: inline-block;width: 30%;" v-model="list.title"
-                    placeholder="请输入项目"></el-input>
-          <el-input v-if="!editDailyReportMode" v-model="list.value" placeholder="请输入"
-                    style="display: inline-block;width: 30%;margin: 0 20px"></el-input>
-          <el-input :disabled="editDailyReportMode" v-if="editDailyReportMode"
-                    style="display: inline-block;width: 12%;margin: 0 20px"></el-input>
-          <el-input v-if="editDailyReportMode" style="display: inline-block;width: 30%;" v-model="list.unit"
-                    placeholder="请输入单位"></el-input>
-          <span v-if="!editDailyReportMode" style="display: inline-block;width: 20%;text-align: left">{{ list.unit }}</span>
-          <el-button v-if="editDailyReportMode" icon="el-icon-minus" circle @click="del(index)"
-                     style="background: hotpink;margin-left: 10px;display: inline-block"></el-button>
-        </li>
-      </ul>
+      <div style="margin-top: 20px;margin-bottom: 20px">
+        <el-row :gutter="20" v-for='(list,index) in reportLists' v-bind:key='list.id' style="margin-top: 5px">
+          <el-col :span="8"  v-if="!editDailyReportMode" style="text-align: right;margin-top: 10px">
+            <span>{{ list.title }}</span>
+          </el-col>
+          <el-col v-if="editDailyReportMode" :span="8" style="text-align: right">
+            <el-input v-model="list.title" placeholder="请输入项目"></el-input>
+          </el-col>
+          <el-col :span="8" v-if="!editDailyReportMode">
+            <el-input v-model="list.value" placeholder="请输入"></el-input>
+          </el-col>
+          <el-col :span="4" v-if="editDailyReportMode">
+            <el-input :disabled="editDailyReportMode"></el-input>
+          </el-col>
+          <el-col :span="8" v-if="editDailyReportMode">
+            <el-input v-model="list.unit" placeholder="请输入单位"></el-input>
+          </el-col>
+          <el-col :span="4" v-if="!editDailyReportMode" style="margin-top: 10px;text-align: left">
+            <span>{{ list.unit }}</span>
+          </el-col>
+          <el-col :span="4">
+            <el-button v-if="editDailyReportMode" icon="el-icon-minus" circle @click="del(index)"></el-button>
+          </el-col>
+        </el-row>
+      </div>
       <div style="position: relative;top: 5%;">
         <el-button v-if="editDailyReportMode" icon="el-icon-plus" circle @click="addEl"
                    style="background: lightcyan;margin-top: 10px"></el-button>
@@ -134,7 +144,7 @@
           :rows="3"
           placeholder="请输入内容"
           v-model="share" />
-      <el-button v-if="!editDailyReportMode" style="float: right;margin-top: 10px;margin-bottom: 10px" @click="submitDailyReport">提交</el-button>
+      <el-button v-if="!editDailyReportMode" style="float: right;margin-top: 10px;margin-bottom: 15px" @click="submitDailyReport">提交</el-button>
     </el-card>
 
     <TabBar/>
@@ -203,7 +213,6 @@ export default {
       templateId: '0',
       state: '1',
       defaultReportLists: [
-        {title: "早起", unit: '', value: ''},
         {title: "家人陪伴", unit: '分钟', value: ''},
         {title: "站桩", unit: '分钟', value: ''},
         {title: "静坐", unit: '分钟', value: ''},

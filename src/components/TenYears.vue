@@ -73,8 +73,8 @@
       </div>
       <div v-if="stepInfoDialogVisible" ref="imageWrapper" style="position: relative; width: 100%; height: 100%;">
         <img src="../assets/img/step_info.png" width="100%" height="100%" alt="" oncontextmenu="return false;">
-        <div style="text-align: left" class="stepInfoStyle" v-bind:class="{'stepInfoLargeStyle': this.stepInfo.length < 40}">{{ this.stepInfo }}</div>
-        <div class="stepSignName">{{ this.name }}</div>
+        <p style="text-align: left" class="stepInfoStyle" v-bind:class="{'stepInfoLargeStyle': this.stepInfo.length < 100}" v-html="this.preText(this.stepInfo).replaceAll('↓', '<br/>')"/>
+        <p class="stepSignName" v-bind:class="{'stepSignNameLargeStyle': this.stepInfo.length < 100}">{{ this.name }}</p>
       </div>
       <br/>
       <el-button type="primary" @click="capture">生成图片</el-button>
@@ -101,8 +101,7 @@
         :rows="6"
         placeholder="请输入"
         style="width: 90%"
-        v-model="stepInfo">
-    </el-input>
+        v-model="stepInfo"/>
     <br/>
     <el-button type="text" @click="stepInfoDialogVisible = true;dialogVisible = true">生成图片存档（建议先提交再点击）</el-button>
     <br/>
@@ -229,6 +228,12 @@ export default {
     this.configDiv()
   },
   methods: {
+    preText (pretext) {
+      return pretext.replace(/\r\n/g, '↓').replace(/\n/g, '↓')
+    },
+    splitStepInfoText() {
+      return this.stepInfo.split('↓')
+    },
     configDiv() {
       // if (Date.now() - Date.parse('2021-5-6') > 0) {
         this.isTimeout = true
@@ -518,7 +523,7 @@ export default {
 
         telephone: this.telephone,
         info: this.info,
-        stepInfo: this.stepInfo,
+        stepInfo: this.preText(this.stepInfo),
         unionid: this.unionid,
         nickname: this.nickname,
         openid: this.openid,
@@ -601,6 +606,10 @@ export default {
 .signName { width: 25px; font-size: 25px; word-wrap: break-word; letter-spacing: 10px; position: absolute; bottom: 6%; right: 65%; color: #3a8ee6 }
 
 .stepSignName { width: auto; font-size: 25px;  position: absolute; bottom: 10%; right: 10%; color: #3a8ee6 }
+
+.stepSignNameLargeStyle {
+  bottom: 20%;
+}
 
 .stepInfoStyle {
   margin: 0 auto;
