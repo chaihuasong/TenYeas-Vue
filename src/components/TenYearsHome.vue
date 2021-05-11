@@ -934,5 +934,7 @@ a {
 }
 .el-collapse .el-collapse-item .el-collapse-item__header {
   margin-left: 20px;
+  font-weight: bold;
+  font-size: 15px;
 }
 </style>
