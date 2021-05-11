@@ -14,7 +14,7 @@
     </el-card>
 
     <el-card style="float: left; width: 100%;margin-top: 10px">
-      <span style="font-weight: bold">生命倒计时，离生命终了 <input class="ageInputStyle" style="border-left-width:0px;border-top-width:0px;border-right-width:0px;border-bottom-width:1px;border-bottom-color:lightgray; width: 25px;height: 20px;font-size: 15px;text-align: center;margin: 0 0" v-model="maxAge" @change="onMaxAgeChange"/> 岁，还有</span>
+      <span style="font-weight: bold">生命倒计时，离生命终了 <input class="ageInputStyle" v-model="maxAge" @change="onMaxAgeChange"/> 岁，还有</span>
       <br/>
       <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{this.getYearsRemaining()}}</span> 天
     </el-card>
@@ -878,6 +878,23 @@ a {
 </style>
 <style>
 .el-input.is-disabled .el-input__inner,.el-textarea.is-disabled .el-textarea__inner,.el-checkbox__input.is-disabled+.el-checkbox__label{
-  color: black;
+  color: #000000;
+  font-size: 16px;
+  background: white;
+}
+.ageInputStyle {
+  border-left-width:0px;
+  border-top-width:0px;
+  border-right-width:0px;
+  border-bottom-width:1px;
+  border-bottom-color:lightgray;
+  width: 35px;
+  height: 20px;
+  font-size: 18px;
+  text-align: center;
+  margin: 0 0;
+  padding: 0 0;
+  -webkit-appearance: none;
+  border-radius: 0;
 }
 </style>
