@@ -463,6 +463,10 @@ export default {
       return ''
     },
     submitDailyNote() {
+      if (this.state === '' || this.state === undefined || this.state.trim().length === 0) {
+        this.$message.warning("请选择身心性命长养情况！")
+        return
+      }
       if (this.note === '' || this.note === undefined || this.note.trim().length === 0) {
         this.$message.warning("请输入每日反省总结内容！")
         return
