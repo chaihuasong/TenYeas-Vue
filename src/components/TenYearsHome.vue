@@ -150,8 +150,6 @@
           v-model="share" />
       <el-button v-if="!editDailyReportMode" style="float: right;margin-top: 10px;margin-bottom: 15px" @click="submitDailyReport">提交</el-button>
     </el-card>
-
-    <TabBar/>
   </div>
 </template>
 
@@ -398,7 +396,6 @@ export default {
         reports.push(res.data.value18)
         reports.push(res.data.value19)
         reports.push(res.data.value20)
-        console.log(reports)
         let templateId = 0
         if (this.monthsNotes !== null && this.monthsNotes.length > 0) {
           let index = 0
