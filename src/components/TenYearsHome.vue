@@ -68,20 +68,17 @@
         </el-card>
       </el-collapse-item>
     </el-collapse>
-
-    <el-card style="float: left; width: 100%;margin-top: 10px">
-      <el-calendar v-model="calendarValue">
-        <template
-            slot="dateCell"
-            slot-scope="{date, data}">
-          <el-row>
-            <div class="calendar-day" style="display:inline-block; font-size: 15px; margin-right: 5px">{{ data.day.split('-').slice(2).join('-') }}</div>
-            <span style="font-size: 15px">{{ getState(data) }}</span><br/>
-            <span style="font-size: 8px">{{ getDailyNoteFormat(data) }}</span>
-          </el-row>
-        </template>
-      </el-calendar>
-    </el-card>
+    <el-calendar v-model="calendarValue">
+      <template
+          slot="dateCell"
+          slot-scope="{date, data}">
+        <el-row>
+          <div class="calendar-day" style="display:inline-block; font-size: 15px; margin-right: 5px">{{ data.day.split('-').slice(2).join('-') }}</div>
+          <span style="font-size: 15px">{{ getState(data) }}</span><br/>
+          <span style="font-size: 8px">{{ getDailyNoteFormat(data) }}</span>
+        </el-row>
+      </template>
+    </el-calendar>
 
     <el-card style="float: left; width: 100%;margin-top: 10px">
       <div style="float: left; margin-bottom: 10px;font-weight: bold;text-align: left">每日反省总结，今天精气神是长养的还是消耗的，心量是开阔了还是狭迫了，10个字以内表述</div>
