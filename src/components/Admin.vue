@@ -37,17 +37,17 @@
       </el-aside>
 
       <el-container>
-        <el-header style="text-align: left; font-size: 12px">
-          <i @click="collapseStatus" class="el-icon-menu"></i>
+        <el-header style="text-align: left; font-size: 12px;float: left">
+          <img @click="collapseStatus" style="width: 20px;height: 20px" src="../assets/img/icon/pin.png"/>
           <span style="text-align: center; font-size: 30px; margin-left: 45%">管理后台</span>
           <div style="float: right">
+            <span style="font-size: 16px; color: #3535c6">Admin</span>
             <el-dropdown>
               <i class="el-icon-setting" style="margin-right: 15px; font-size: 20px"></i>
               <el-dropdown-menu slot="dropdown">
                 <el-dropdown-item @click.native="gotoLogin">退出</el-dropdown-item>
               </el-dropdown-menu>
             </el-dropdown>
-            <span style="font-size: 16px; color: #3535c6">Admin</span>
           </div>
         </el-header>
 
