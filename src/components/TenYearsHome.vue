@@ -97,17 +97,19 @@
       <div style="float: left; margin-bottom: 10px;font-weight: bold;text-align: left">每日养气功课 & 经典实践</div>
       <i :class="[editDailyReportMode ?'el-icon-finished' : 'el-icon-edit']"
          style="float: right;" @click="changeDailyReportTemplateMode"></i>
-      <el-date-picker
-          v-model="reportDate"
-          type="date"
-          :editable="false"
-          placeholder="选择打卡日期"
-          :clearable="false"
-          align="center"
-          @change="dailyReportDateChanged"
-          style="margin-left: 10%;width: 150px"
-          :picker-options="pickerOptions">
-      </el-date-picker>
+      <br/><br/>
+      <el-row :gutter="20" style="display: inline-block">
+        <el-date-picker
+            v-model="reportDate"
+            type="date"
+            :editable="false"
+            placeholder="选择打卡日期"
+            :clearable="false"
+            style="width: 60%"
+            @change="dailyReportDateChanged"
+            :picker-options="pickerOptions">
+        </el-date-picker>
+      </el-row>
 
       <div style="margin-top: 20px;margin-bottom: 20px">
         <el-row :gutter="20" v-for='(list,index) in reportLists' v-bind:key='list.id' style="margin-top: 5px">
