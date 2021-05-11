@@ -785,8 +785,13 @@ export default {
             this.maxAge = 80
           }
         } else {
-          alert("您还未填写过立志卡，点击确定跳转到填写界面")
-          this.$router.push("/index");
+          this.$alert('您还未填写过立志卡，点击确定跳转到填写界面', '立志信息不存在', {
+            confirmButtonText: '确定',
+            callback: action => {
+              console.log(action)
+              this.$router.push("/index");
+            }
+          });
         }
       });
     },
