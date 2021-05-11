@@ -45,8 +45,7 @@
     <br/>
     <el-image
         style="width: 100%; height: 10%"
-        :src="require('../assets/img/lizhi.png')"
-        :fit="none" />
+        :src="require('../assets/img/lizhi.png')" />
     <br/>
     <el-input
         type="textarea"
@@ -85,8 +84,7 @@
         height="100%">
       <el-image
           style="width: 100%; height: 10%"
-          :src="imgUrl"
-          :fit="none" />
+          :src="imgUrl" />
       <br/>
       <br/>
       <span style="font-size: 16px">请长按上方的图片，保存到手机</span>
