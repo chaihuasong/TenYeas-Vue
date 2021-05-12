@@ -209,9 +209,8 @@ export default {
       editMonthInfoMode: false,
       editLastMonthInfoMode: false,
       editDailyReportMode: false,
-      reportDate: new Date(),
+      selectedDate: new Date(),
       calendarValue: new Date(),
-      currentSelectedMonth: new Date().getMonth(),
       share: '',
       note: '',
       monthsNotes: [],
@@ -356,11 +355,54 @@ export default {
                 this.monthsNotes.push(item)
               }
             } else {
-              this.reportLists = this.defaultReportLists
+              this.initReportTemplateId()
             }
           });
         }
       });
+    },
+    getReportTemplate(templateId) {
+      axios({
+        method: "GET",
+        url: "http://htzchina.org:8080/getReportTemplateById?id=" + templateId,
+        data: null,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        if (res.data !== '' && res.data.length > 0) {
+          this.reportLists = []
+          for (let i = 0; i < res.data.length; i++) {
+            let title = res.data[i].split('_')[0]
+            let unit = res.data[i].split('_').length === 2 ? res.data[i].split('_')[1] : ''
+            let cope = {
+              title: title,
+              unit: unit,
+              value: ''
+            }
+            this.reportLists.push(cope);
+          }
+        } else {
+          this.reportLists = this.defaultReportLists
+        }
+      });
+    },
+    initReportTemplateId() {
+      let templateId = -1
+      let lastMonth = 0
+      for(let i = 0; i < this.monthsNotes.length; i++) {
+        let tempMonth = parseInt(this.monthsNotes[i].date.split('-')[1])
+        if (lastMonth < tempMonth) {
+          if (this.monthsNotes[i].templateId !== null) {
+            templateId = parseInt(this.monthsNotes[i].templateId)
+          }
+        }
+      }
+      if (templateId === -1) {
+        this.reportLists = this.defaultReportLists
+      } else {
+        this.getReportTemplate(templateId)
+      }
     },
     getHalfYearFormat(date) {
       let year = date.getFullYear()
@@ -398,83 +440,87 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        this.note = res.data.note
-        this.share = res.data.share
-        this.state = res.data.state
-        console.log(res.data)
-        let reports = []
-        reports.push(res.data.value1)
-        reports.push(res.data.value2)
-        reports.push(res.data.value3)
-        reports.push(res.data.value4)
-        reports.push(res.data.value5)
-        reports.push(res.data.value6)
-        reports.push(res.data.value7)
-        reports.push(res.data.value8)
-        reports.push(res.data.value9)
-        reports.push(res.data.value10)
-        reports.push(res.data.value11)
-        reports.push(res.data.value12)
-        reports.push(res.data.value13)
-        reports.push(res.data.value14)
-        reports.push(res.data.value15)
-        reports.push(res.data.value16)
-        reports.push(res.data.value17)
-        reports.push(res.data.value18)
-        reports.push(res.data.value19)
-        reports.push(res.data.value20)
-        let templateId = 0
-        if (this.monthsNotes !== null && this.monthsNotes.length > 0) {
-          let index = 0
-          let temp = 0
-          for (let i = 0; i < this.monthsNotes.length; i++) {
-            let day = parseInt(this.monthsNotes[i].date.split('-')[2])
-            if (temp === 0) {
-              temp = day
-            } else if (day > temp) {
-              temp = day
-              index = i
-            }
-          }
-          templateId = this.monthsNotes[index].templateId
-          if (templateId === null || templateId === undefined || templateId === '') {
-            this.reportLists = this.defaultReportLists
-            return
-          }
-          axios({
-            method: "GET",
-            url: "http://htzchina.org:8080/getReportTemplateById?id=" + templateId,
-            data: null,
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded'
-            }
-          }).then((resp) => {
-            if (reports != null && reports.length > 0 && reports[0] !== undefined) {
-              this.reportLists = []
-              for (let i = 0; i < resp.data.length; i++) {
-                let title = resp.data[i].split('_')[0]
-                let unit = resp.data[i].split('_').length === 2 ? resp.data[i].split('_')[1] : ''
-                let value = reports[i].replace(title, '')
-                value = value.replace(unit, '')
-                let cope = {
-                  title: title,
-                  unit: unit,
-                  value: value
-                }
-                this.reportLists.push(cope);
+        if (res.data !== '' && res.data.length > 0) {
+          this.note = res.data.note
+          this.share = res.data.share
+          this.state = res.data.state
+          console.log(res.data)
+          let reports = []
+          reports.push(res.data.value1)
+          reports.push(res.data.value2)
+          reports.push(res.data.value3)
+          reports.push(res.data.value4)
+          reports.push(res.data.value5)
+          reports.push(res.data.value6)
+          reports.push(res.data.value7)
+          reports.push(res.data.value8)
+          reports.push(res.data.value9)
+          reports.push(res.data.value10)
+          reports.push(res.data.value11)
+          reports.push(res.data.value12)
+          reports.push(res.data.value13)
+          reports.push(res.data.value14)
+          reports.push(res.data.value15)
+          reports.push(res.data.value16)
+          reports.push(res.data.value17)
+          reports.push(res.data.value18)
+          reports.push(res.data.value19)
+          reports.push(res.data.value20)
+          let templateId = 0
+          if (this.monthsNotes !== null && this.monthsNotes.length > 0) {
+            let index = 0
+            let temp = 0
+            for (let i = 0; i < this.monthsNotes.length; i++) {
+              let day = parseInt(this.monthsNotes[i].date.split('-')[2])
+              if (temp === 0) {
+                temp = day
+              } else if (day > temp) {
+                temp = day
+                index = i
               }
-            } else {
-              this.reportLists = this.defaultReportLists
             }
-          });
+            templateId = this.monthsNotes[index].templateId
+            if (templateId === null || templateId === undefined || templateId === '') {
+              this.reportLists = this.defaultReportLists
+              return
+            }
+            axios({
+              method: "GET",
+              url: "http://htzchina.org:8080/getReportTemplateById?id=" + templateId,
+              data: null,
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+              }
+            }).then((resp) => {
+              if (reports != null && reports.length > 0 && reports[0] !== undefined) {
+                this.reportLists = []
+                for (let i = 0; i < resp.data.length; i++) {
+                  let title = resp.data[i].split('_')[0]
+                  let unit = resp.data[i].split('_').length === 2 ? resp.data[i].split('_')[1] : ''
+                  let value = reports[i].replace(title, '')
+                  value = value.replace(unit, '')
+                  let cope = {
+                    title: title,
+                    unit: unit,
+                    value: value
+                  }
+                  this.reportLists.push(cope);
+                }
+              } else {
+                this.reportLists = this.defaultReportLists
+              }
+            });
+          }
+        } else {
+          this.initReportTemplateId()
         }
       });
     },
     dateChanged(data) {
       if (data.isSelected) {
         let selectedDate = new Date(data.day)
-        if (this.currentSelectedMonth !== selectedDate.getMonth()) {
-          this.currentSelectedMonth = selectedDate.getMonth()
+        if (this.selectedDate.getMonth() !== selectedDate.getMonth()) {
+          this.selectedDate = selectedDate
           this.getMonthInfo()
           this.getLastMonthInfo()
           this.getHalfYearInfo()
@@ -504,7 +550,7 @@ export default {
       }
       let data = {}
       data['userId'] = this.unionid
-      data['date'] = this.getDateFormat(this.reportDate)
+      data['date'] = this.getDateFormat(this.selectedDate)
       data['state'] = this.state
       data['note'] = this.note
 
@@ -532,7 +578,7 @@ export default {
 
       data['userId'] = this.unionid
       data['templateId'] = this.templateId
-      data['date'] = this.getDateFormat(this.reportDate)
+      data['date'] = this.getDateFormat(this.selectedDate)
       data['state'] = this.state
       data['share'] = this.share
 
