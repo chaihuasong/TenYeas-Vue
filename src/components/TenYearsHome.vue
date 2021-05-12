@@ -56,6 +56,17 @@
               v-model="halfYearInfo" />
         </el-card>
         <el-card style="float: left; width: 100%;">
+          <div style="float: left; margin-bottom: 10px;font-weight: bold">{{ getLastMonthDateFormat(this.calendarValue).split('-')[0] }}年{{parseInt(getLastMonthDateFormat(this.calendarValue).split('-')[1])}}月计划</div>
+          <i :class="[editLastMonthInfoMode ?'el-icon-finished' : 'el-icon-edit']"
+             style="float: right; margin-bottom: 10px" @click="changeLastMonthInfoMode"></i>
+          <el-input
+              type="textarea"
+              :rows="3"
+              :disabled="!editLastMonthInfoMode"
+              placeholder="请输入内容"
+              v-model="lastMonthInfo" />
+        </el-card>
+        <el-card style="float: left; width: 100%;">
           <div style="float: left; margin-bottom: 10px;font-weight: bold">{{ getDateFormat(this.calendarValue).split('-')[0] }}年{{parseInt(getDateFormat(this.calendarValue).split('-')[1])}}月计划</div>
           <i :class="[editMonthInfoMode ?'el-icon-finished' : 'el-icon-edit']"
              style="float: right; margin-bottom: 10px" @click="changeMonthInfoMode"></i>
@@ -192,9 +203,11 @@ export default {
       maxAge: 80,
       halfYearInfo: '',
       editInfoMode: false,
+      lastMonthInfo: '',
       monthInfo: '',
       editHalfYearInfoMode: false,
       editMonthInfoMode: false,
+      editLastMonthInfoMode: false,
       editDailyReportMode: false,
       reportDate: new Date(),
       calendarValue: new Date(),
@@ -348,6 +361,12 @@ export default {
         }
       });
     },
+    getHalfYearFormat(date) {
+      let year = date.getFullYear()
+      let month = date.getMonth() + 1
+      if (month > 6) return year + "-" + '下半年'
+      return year + "-" + '上半年'
+    },
     getDateFormat(date) {
       let year = date.getFullYear()
       let month = date.getMonth() + 1
@@ -452,7 +471,13 @@ export default {
     },
     dateChanged(data) {
       if (data.isSelected) {
-        this.reportDate = new Date(data.day)
+        let selectedDate = new Date(data.day)
+        if (this.reportDate.getMonth() !== selectedDate.getMonth()) {
+          this.getMonthInfo()
+          this.getLastMonthInfo()
+          this.getHalfYearInfo()
+        }
+        this.reportDate = selectedDate
         axios({
           method: "GET",
           url: "http://htzchina.org:8080/getReportInfoByUserIdAndDate?userId=" + this.unionid + "&date=" + data.day,
@@ -624,8 +649,9 @@ export default {
     },
     changeHalfYearInfoMode() {
       if (this.editHalfYearInfoMode && this.halfYearInfo !== '') {
+        let halfYearFormat = this.getHalfYearFormat(this.calendarValue)
         let data = {
-          date: this.getDateFormat(this.calendarValue),
+          date: halfYearFormat,
           userId: this.unionid,
           halfYearInfo: this.halfYearInfo,
         }
@@ -648,8 +674,9 @@ export default {
     },
     changeMonthInfoMode() {
       if (this.editMonthInfoMode && this.monthInfo !== '') {
+        let dateFormat = this.getDateFormat(this.calendarValue)
         let data = {
-          date: this.getDateFormat(this.calendarValue),
+          date: dateFormat.substr(0, dateFormat.lastIndexOf('-')),
           userId: this.unionid,
           monthInfo: this.monthInfo,
         }
@@ -669,6 +696,88 @@ export default {
         });
       }
       this.editMonthInfoMode = !this.editMonthInfoMode
+    },
+    changeLastMonthInfoMode() {
+      if (this.editLastMonthInfoMode && this.lastMonthInfo !== '') {
+        let dateFormat = this.getLastMonthDateFormat(this.calendarValue)
+        let data = {
+          date: dateFormat.substr(0, dateFormat.lastIndexOf('-')),
+          userId: this.unionid,
+          monthInfo: this.lastMonthInfo,
+        }
+        axios({
+          method: "POST",
+          url: "http://htzchina.org:8080/saveMonthInfo",
+          data: qs.stringify(data),
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }).then((res) => {
+          if (res.status !== 200) {
+            this.$message.warning("保存出错！\n" + res.statusText)
+          } else {
+            this.$message.success("保存成功")
+          }
+        });
+      }
+      this.editLastMonthInfoMode = !this.editLastMonthInfoMode
+    },
+    getHalfYearInfo() {
+      let halfYearFormat = this.getHalfYearFormat(this.calendarValue)
+      let data = {
+        date: halfYearFormat,
+        userId: this.unionid,
+      }
+      axios({
+        method: "GET",
+        url: "http://htzchina.org:8080/getHalfYearInfo",
+        data: qs.stringify(data),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        if (res != null && res.data != null && res.data !== '') {
+          this.halfYearInfo = res.data.halfYearInfo
+        }
+      });
+    },
+    getMonthInfo() {
+      let dateFormat = this.getDateFormat(this.calendarValue)
+      let data = {
+        date: dateFormat.substr(0, dateFormat.lastIndexOf('-')),
+        userId: this.unionid,
+      }
+      axios({
+        method: "GET",
+        url: "http://htzchina.org:8080/getMonthInfo",
+        data: qs.stringify(data),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        if (res != null && res.data != null && res.data !== '') {
+          this.monthInfo = res.data.monthInfo
+        }
+      });
+    },
+    getLastMonthInfo() {
+      let dateFormat = this.getLastMonthDateFormat(this.calendarValue)
+      let data = {
+        date: dateFormat.substr(0, dateFormat.lastIndexOf('-')),
+        userId: this.unionid,
+      }
+      axios({
+        method: "GET",
+        url: "http://htzchina.org:8080/getMonthInfo",
+        data: qs.stringify(data),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        if (res != null && res.data != null && res.data !== '') {
+          this.lastMonthInfo = res.data.lastMonthInfo
+        }
+      });
     },
     getTenYearsDate() {
       let createdDate = new Date(this.createDate)
