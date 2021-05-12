@@ -19,8 +19,8 @@
       <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{this.getYearsRemaining()}}</span> 天
     </el-card>
 
-    <el-collapse style="float: left; width: 100%;margin-top: 20px;margin-bottom: 20px">
-      <el-collapse-item title="十年立志信息" name="1">
+    <el-collapse v-model="this.planInfoFlag" @change="handlePlanInfoFlagChange" style="float: left; width: 100%;margin-top: 20px;margin-bottom: 20px">
+      <el-collapse-item title="计划和总结" name="1">
 
         <el-card style="float: left; width: 100%;margin-top: 10px">
           <div style="float: left; margin-bottom: 10px;font-weight: bold">十年立志</div>
@@ -83,9 +83,9 @@
     <el-card style="float: left; width: 100%;margin-top: 10px">
       <div style="float: left; margin-bottom: 10px;font-weight: bold;text-align: left">每日反省总结，今天精气神是长养的还是消耗的，心量是开阔了还是狭迫了，10个字以内表述</div>
       <el-radio-group v-model="state" style="margin-bottom: 10px;text-align: left">
-        <el-radio label="1" border style="width: 90%;float: left">今日身心性命，有得到长养，朝立志目标前进 +</el-radio>
+        <el-radio label="1" border style="width: 90%;float: left">身心性命，得到长养，朝立志目标前进<span style="margin-left: 10px;margin-right: 5px;font-size: 20px;font-weight: bold">+</span></el-radio>
         <br/>
-        <el-radio label="0" border style="width: 90%;float: left">今日身心性命，没有得到长养，或有耗损 -</el-radio>
+        <el-radio label="0" border style="width: 90%;float: left">身心性命，没有得到长养，或有耗损<span style="margin-left: 10px;margin-right: 5px;font-size: 14px;font-weight: bold">一</span></el-radio>
       </el-radio-group>
       <el-input
           type="textarea"
@@ -99,19 +99,7 @@
       <div style="float: left; margin-bottom: 10px;font-weight: bold;text-align: left">每日养气功课 & 经典实践</div>
       <i :class="[editDailyReportMode ?'el-icon-finished' : 'el-icon-edit']"
          style="float: right;" @click="changeDailyReportTemplateMode"></i>
-      <br/><br/>
-      <el-row :gutter="20" style="display: inline-block">
-        <el-date-picker
-            v-model="reportDate"
-            type="date"
-            :editable="false"
-            placeholder="选择打卡日期"
-            :clearable="false"
-            style="width: 60%"
-            @change="dailyReportDateChanged"
-            :picker-options="pickerOptions">
-        </el-date-picker>
-      </el-row>
+      <br/>
 
       <div style="margin-top: 20px;margin-bottom: 20px">
         <el-row :gutter="20" v-for='(list,index) in reportLists' v-bind:key='list.id' style="margin-top: 5px">
@@ -188,6 +176,8 @@ export default {
       language: '',
       groupId: '',
       path: '',
+      planInfoFlag: [''],
+
       submitDisable: false,
       daixieDisabled: false,
       htmlsHeader: '',
@@ -259,9 +249,26 @@ export default {
     this.getData()
     this.getMonthNotes()
     this.configWechat()
-    this.dailyReportDateChanged(new Date())
+    this.getDailyReportInfoByDate(new Date())
   },
   methods: {
+    handlePlanInfoFlagChange(val) {
+      let flag = val.toString().replaceAll(',', '')
+      this.planInfoFlag = []
+      this.planInfoFlag.push(flag)
+      let data = {
+        id: this.unionid,
+        planInfoFlag: flag,
+      }
+      axios({
+        method: "POST",
+        url: "http://htzchina.org:8080/updatePlanInfoFlag",
+        data: qs.stringify(data),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      })
+    },
     onMaxAgeChange() {
       try {
         parseInt(this.maxAge)
@@ -361,7 +368,7 @@ export default {
       if (day < 10) day = '0' + day
       return year + "-" + month + "-" + day
     },
-    dailyReportDateChanged(val) {
+    getDailyReportInfoByDate(val) {
       let date = this.getDateFormat(val)
       axios({
         method: "GET",
@@ -456,7 +463,6 @@ export default {
         }).then((res) => {
           this.note = res.data.note
           this.state = res.data.state
-          this.dailyReportDateChanged(this.reportDate)
         });
       }
       return ''
@@ -782,6 +788,10 @@ export default {
           this.wechatid = res.data.wechatid
           this.province = res.data.province
           this.path = res.data.path
+          let planInfoFlag = res.data.planInfoFlag
+          if (planInfoFlag !== undefined && planInfoFlag !== null && planInfoFlag !== '') {
+            this.planInfoFlag.push(planInfoFlag)
+          }
 
           let age = res.data.maxAge
           if (age !== undefined && age !== null && age !== '') {
