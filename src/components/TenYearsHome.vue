@@ -85,8 +85,8 @@
           slot-scope="{date, data}">
         <el-row>
           <div class="calendar-day" style="display:inline-block; font-size: 15px; margin-right: 5px">{{ data.day.split('-').slice(2).join('-') }}</div>
-          <span style="font-size: 15px">{{ getState(data) }}</span><br/>
-          <span style="font-size: 8px">{{ getDailyNoteFormat(data) }}</span>
+          <span style="font-size: 18px" :class="getState(data) === '-' ? 'red' : 'green'">{{ getState(data) }}</span><br/>
+          <span style="font-size: 10px;color: #66b1ff">{{ getDailyNoteFormat(data) }}</span>
         </el-row>
       </template>
     </el-calendar>
@@ -519,10 +519,12 @@ export default {
       if (data.isSelected) {
         let selectedDate = new Date(data.day)
         if (this.selectedDate.getMonth() !== selectedDate.getMonth()) {
-          this.selectedDate = selectedDate
           this.getMonthInfo()
           this.getLastMonthInfo()
           this.getHalfYearInfo()
+        }
+        if (this.selectedDate.getDate() !== selectedDate.getDate()) {
+          this.selectedDate = selectedDate
         }
         axios({
           method: "GET",
@@ -590,7 +592,6 @@ export default {
       data['userId'] = this.unionid
       data['templateId'] = this.templateId
       data['date'] = this.getDateFormat(this.selectedDate)
-      data['state'] = this.state
       data['share'] = this.share
 
 
@@ -621,12 +622,13 @@ export default {
     },
     getDailyNoteFormat(data) {
       this.dateChanged(data)
+      let maxLength = 12
       for (let i = 0; i < this.monthsNotesList.length; i++) {
         if (data.day === this.monthsNotesList[i].date) {
           if (this.monthsNotesList[i].note === null || this.monthsNotesList[i].note === '') return ''
-          if (this.monthsNotesList[i].note.trim().length > 8) {
-            return this.monthsNotesList[i].note.trim().substring(0, 7) + '…'
-          } else if (this.monthsNotesList[i].note.trim().length < 8) {
+          if (this.monthsNotesList[i].note.trim().length > maxLength) {
+            return this.monthsNotesList[i].note.trim().substring(0, maxLength - 1) + '…'
+          } else if (this.monthsNotesList[i].note.trim().length < maxLength) {
             return this.monthsNotesList[i].note
           }
           return this.monthsNotesList[i].note
@@ -1111,5 +1113,15 @@ a {
   margin-left: 20px;
   font-weight: bold;
   font-size: 15px;
+}
+.el-calendar-table .el-calendar-day {
+  height: 80px;
+  padding: 0 2px;
+}
+.red {
+  color: red;
+}
+.green {
+  color: green;
 }
 </style>
