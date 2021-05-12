@@ -262,7 +262,6 @@ export default {
     this.getData()
     this.getMonthNotes()
     this.configWechat()
-    this.getDailyReportInfoByDate(new Date())
   },
   methods: {
     handlePlanInfoFlagChange(val) {
@@ -492,7 +491,7 @@ export default {
                 'Content-Type': 'application/x-www-form-urlencoded'
               }
             }).then((resp) => {
-              if (reports != null && reports.length > 0 && reports[0] !== undefined) {
+              if (reports != null && reports.length > 0  && reports[0] != null && reports[0] !== undefined) {
                 this.reportLists = []
                 for (let i = 0; i < resp.data.length; i++) {
                   let title = resp.data[i].split('_')[0]
@@ -536,6 +535,8 @@ export default {
           this.note = res.data.note
           this.state = res.data.state
         });
+
+        this.getDailyReportInfoByDate(selectedDate)
       }
       return ''
     },
