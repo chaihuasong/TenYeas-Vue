@@ -211,6 +211,7 @@ export default {
       editDailyReportMode: false,
       reportDate: new Date(),
       calendarValue: new Date(),
+      currentSelectedMonth: new Date().getMonth(),
       share: '',
       note: '',
       monthsNotes: [],
@@ -472,12 +473,12 @@ export default {
     dateChanged(data) {
       if (data.isSelected) {
         let selectedDate = new Date(data.day)
-        if (this.reportDate.getMonth() !== selectedDate.getMonth()) {
+        if (this.currentSelectedMonth !== selectedDate.getMonth()) {
+          this.currentSelectedMonth = selectedDate.getMonth()
           this.getMonthInfo()
           this.getLastMonthInfo()
           this.getHalfYearInfo()
         }
-        this.reportDate = selectedDate
         axios({
           method: "GET",
           url: "http://htzchina.org:8080/getReportInfoByUserIdAndDate?userId=" + this.unionid + "&date=" + data.day,
