@@ -267,7 +267,7 @@ export default {
   },
   methods: {
     stateFormatter(row) {
-      if (row.state === 1) {
+      if (row.state === '1') {
         return "+";
       }
       return "-";
