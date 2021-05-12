@@ -11,7 +11,7 @@
       </el-table-column>
       <el-table-column prop="templateId" label="模板" width="100">
       </el-table-column>
-      <el-table-column prop="state" label="状态" width="80">
+      <el-table-column prop="state" label="状态" width="80" :formatter="stateFormatter">
       </el-table-column>
       <el-table-column prop="value1" label="项目1" width="100">
       </el-table-column>
@@ -52,6 +52,8 @@
       <el-table-column prop="value19" label="项目19" width="100">
       </el-table-column>
       <el-table-column prop="value20" label="项目20" width="100">
+      </el-table-column>
+      <el-table-column prop="share" label="每日分享" width="120">
       </el-table-column>
       <el-table-column label="操作">
         <template slot-scope="scope">
@@ -264,6 +266,12 @@ export default {
     document.title = this.$route.meta.title
   },
   methods: {
+    stateFormatter(row) {
+      if (row.state === 1) {
+        return "+";
+      }
+      return "-";
+    },
     getData() {
       axios({
         method: "GET",

@@ -213,7 +213,7 @@ export default {
       calendarValue: new Date(),
       share: '',
       note: '',
-      monthsNotes: [],
+      monthsNotesList: [],
       template: {},
       templateId: '0',
       state: '1',
@@ -320,8 +320,8 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        if (res.data !== '' && res.data.length > 0) {
-          this.monthsNotes = []
+        if (res.data !== null && res.data.length > 0) {
+          this.monthsNotesList = []
           for (let i = 0; i < res.data.length; i++) {
             let item = {
               date: res.data[i].date,
@@ -329,7 +329,7 @@ export default {
               templateId: res.data[i].templateId,
               state: res.data[i].state,
             }
-            this.monthsNotes.push(item)
+            this.monthsNotesList.push(item)
           }
         } else {
           //可能是新的月份，获取一次上个月的值
@@ -344,7 +344,7 @@ export default {
             }
           }).then((res) => {
             if (res.data !== '' && res.data.length > 0) {
-              this.monthsNotes = []
+              this.monthsNotesList = []
               for (let i = 0; i < res.data.length; i++) {
                 let item = {
                   date: res.data[i].date,
@@ -352,7 +352,7 @@ export default {
                   templateId: res.data[i].templateId,
                   state: res.data[i].state,
                 }
-                this.monthsNotes.push(item)
+                this.monthsNotesList.push(item)
               }
             } else {
               this.initReportTemplateId()
@@ -390,11 +390,11 @@ export default {
     initReportTemplateId() {
       let templateId = -1
       let lastMonth = 0
-      for(let i = 0; i < this.monthsNotes.length; i++) {
-        let tempMonth = parseInt(this.monthsNotes[i].date.split('-')[1])
+      for(let i = 0; i < this.monthsNotesList.length; i++) {
+        let tempMonth = parseInt(this.monthsNotesList[i].date.split('-')[1])
         if (lastMonth < tempMonth) {
-          if (this.monthsNotes[i].templateId !== null) {
-            templateId = parseInt(this.monthsNotes[i].templateId)
+          if (this.monthsNotesList[i].templateId !== null) {
+            templateId = parseInt(this.monthsNotesList[i].templateId)
           }
         }
       }
@@ -440,7 +440,7 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        if (res.data !== '' && res.data.length > 0) {
+        if (res.data !== null && res.data != null) {
           this.note = res.data.note
           this.share = res.data.share
           this.state = res.data.state
@@ -467,11 +467,11 @@ export default {
           reports.push(res.data.value19)
           reports.push(res.data.value20)
           let templateId = 0
-          if (this.monthsNotes !== null && this.monthsNotes.length > 0) {
+          if (this.monthsNotesList !== null && this.monthsNotesList.length > 0) {
             let index = 0
             let temp = 0
-            for (let i = 0; i < this.monthsNotes.length; i++) {
-              let day = parseInt(this.monthsNotes[i].date.split('-')[2])
+            for (let i = 0; i < this.monthsNotesList.length; i++) {
+              let day = parseInt(this.monthsNotesList[i].date.split('-')[2])
               if (temp === 0) {
                 temp = day
               } else if (day > temp) {
@@ -479,7 +479,7 @@ export default {
                 index = i
               }
             }
-            templateId = this.monthsNotes[index].templateId
+            templateId = this.monthsNotesList[index].templateId
             if (templateId === null || templateId === undefined || templateId === '') {
               this.reportLists = this.defaultReportLists
               return
@@ -572,8 +572,18 @@ export default {
     },
     submitDailyReport() {
       let data = {}
+      let inputted = false
       for (let i = 0; i < this.reportLists.length; i++) {
-        data['value' + (i + 1)] = this.reportLists[i].title.trim() + this.reportLists[i].value.trim() === '' ? 0 : this.reportLists[i].value.trim() + this.reportLists[i].unit.trim()
+        let value = this.reportLists[i].value.trim() === '' ? 0 : this.reportLists[i].value.trim()
+        if (value !== 0) {
+          inputted = true
+        }
+        data['value' + (i + 1)] = this.reportLists[i].title.trim() + value + this.reportLists[i].unit.trim()
+      }
+
+      if (!inputted) {
+        this.$message.warning("汇报内容不能为空！")
+        return
       }
 
       data['userId'] = this.unionid
@@ -581,6 +591,7 @@ export default {
       data['date'] = this.getDateFormat(this.selectedDate)
       data['state'] = this.state
       data['share'] = this.share
+
 
       axios({
         method: "POST",
@@ -598,10 +609,10 @@ export default {
       });
     },
     getState(data) {
-      for (let i = 0; i < this.monthsNotes.length; i++) {
-        if (data.day === this.monthsNotes[i].date) {
-          if (this.monthsNotes[i].state === null || this.monthsNotes[i].state === '') return ''
-          let sign = this.monthsNotes[i].state === '0' ? '-' : '+'
+      for (let i = 0; i < this.monthsNotesList.length; i++) {
+        if (data.day === this.monthsNotesList[i].date) {
+          if (this.monthsNotesList[i].state === null || this.monthsNotesList[i].state === '') return ''
+          let sign = this.monthsNotesList[i].state === '0' ? '-' : '+'
           return sign
         }
       }
@@ -609,15 +620,15 @@ export default {
     },
     getDailyNoteFormat(data) {
       this.dateChanged(data)
-      for (let i = 0; i < this.monthsNotes.length; i++) {
-        if (data.day === this.monthsNotes[i].date) {
-          if (this.monthsNotes[i].note === null || this.monthsNotes[i].note === '') return ''
-          if (this.monthsNotes[i].note.trim().length > 8) {
-            return this.monthsNotes[i].note.trim().substring(0, 7) + '…'
-          } else if (this.monthsNotes[i].note.trim().length < 8) {
-            return this.monthsNotes[i].note
+      for (let i = 0; i < this.monthsNotesList.length; i++) {
+        if (data.day === this.monthsNotesList[i].date) {
+          if (this.monthsNotesList[i].note === null || this.monthsNotesList[i].note === '') return ''
+          if (this.monthsNotesList[i].note.trim().length > 8) {
+            return this.monthsNotesList[i].note.trim().substring(0, 7) + '…'
+          } else if (this.monthsNotesList[i].note.trim().length < 8) {
+            return this.monthsNotesList[i].note
           }
-          return this.monthsNotes[i].note
+          return this.monthsNotesList[i].note
         }
       }
       return ''
