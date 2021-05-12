@@ -1031,7 +1031,7 @@ a {
 <style>
 .el-input.is-disabled .el-input__inner,.el-textarea.is-disabled .el-textarea__inner,.el-checkbox__input.is-disabled+.el-checkbox__label{
   color: #000000;
-  font-size: 16px;
+  font-size: 15px;
   background: white;
 }
 .ageInputStyle {
