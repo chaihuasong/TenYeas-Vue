@@ -121,10 +121,10 @@
             <el-input v-model="list.title" placeholder="请输入项目"></el-input>
           </el-col>
           <el-col :span="8" v-if="!editDailyReportMode">
-            <el-input v-model="list.value" placeholder="请输入"></el-input>
+            <el-input v-model="list.value" placeholder="请输入" @change="onDailyReportResultChange"></el-input>
           </el-col>
           <el-col :span="4" v-if="editDailyReportMode">
-            <el-input :disabled="editDailyReportMode"></el-input>
+            <el-input></el-input>
           </el-col>
           <el-col :span="8" v-if="editDailyReportMode">
             <el-input v-model="list.unit" placeholder="请输入单位"></el-input>
@@ -146,8 +146,10 @@
           type="textarea"
           :rows="3"
           placeholder="请输入内容"
+          @change="onDailyReportResultChange"
           v-model="share" />
-      <el-button v-if="!editDailyReportMode" style="float: right;margin-top: 10px;margin-bottom: 15px" @click="submitDailyReport">提交</el-button>
+      <el-button v-if="!editDailyReportMode" style="float: right;margin-top: 10px;margin-bottom: 15px" @click="submitDailyReport"
+                 v-clipboard:copy="dailyReportResult">提交</el-button>
     </el-card>
   </div>
 </template>
@@ -217,6 +219,7 @@ export default {
       template: {},
       templateId: '0',
       state: '1',
+      dailyReportResult: '',
       defaultReportLists: [
         {title: "家人陪伴", unit: '分钟', value: ''},
         {title: "站桩", unit: '分钟', value: ''},
@@ -465,21 +468,27 @@ export default {
           reports.push(res.data.value18)
           reports.push(res.data.value19)
           reports.push(res.data.value20)
-          let templateId = 0
           if (this.monthsNotesList !== null && this.monthsNotesList.length > 0) {
             let index = 0
             let temp = 0
+            let templateId = null
             for (let i = 0; i < this.monthsNotesList.length; i++) {
               let day = parseInt(this.monthsNotesList[i].date.split('-')[2])
+              let tmpTemplateId = this.monthsNotesList[index].templateId
               if (temp === 0) {
                 temp = day
+                if (tmpTemplateId !== null && tmpTemplateId !== undefined && tmpTemplateId !== '') {
+                  templateId = tmpTemplateId
+                }
               } else if (day > temp) {
                 temp = day
                 index = i
+                if (tmpTemplateId !== null && tmpTemplateId !== undefined && tmpTemplateId !== '') {
+                  templateId = tmpTemplateId
+                }
               }
             }
-            templateId = this.monthsNotesList[index].templateId
-            if (templateId === null || templateId === undefined || templateId === '') {
+            if (templateId === null) {
               this.reportLists = this.defaultReportLists
               return
             }
@@ -539,6 +548,7 @@ export default {
         });
 
         this.getDailyReportInfoByDate(selectedDate)
+        this.onDailyReportResultChange()
       }
       return ''
     },
@@ -573,6 +583,23 @@ export default {
         }
       });
     },
+    onDailyReportResultChange() {
+      let data = ''
+      for (let i = 0; i < this.reportLists.length; i++) {
+        let value = (i + 1) + '. ' + this.reportLists[i].title + (this.reportLists[i].value.trim() === '' ? 0 : this.reportLists[i].value.trim()) + this.reportLists[i].unit
+        data += '\n' + value
+      }
+
+      if (data !== '') {
+        data = this.name + ' ' + this.getDateFormat(this.selectedDate) + '\n' + data
+      }
+
+      if (this.share !== null && this.share !== '') {
+        data = data + '\n\n分享：' + this.share
+      }
+
+      this.dailyReportResult = data
+    },
     submitDailyReport() {
       let data = {}
       let inputted = false
@@ -592,8 +619,9 @@ export default {
       data['userId'] = this.unionid
       data['templateId'] = this.templateId
       data['date'] = this.getDateFormat(this.selectedDate)
+      data['state'] = this.state
+      data['note'] = this.note
       data['share'] = this.share
-
 
       axios({
         method: "POST",
@@ -606,7 +634,7 @@ export default {
         if (res.status !== 200) {
           this.$message.warning("保存出错！\n" + res.statusText)
         } else {
-          this.$message.success("提交成功！")
+          this.$message.success("内容已成功提交并已复制到剪贴板！")
         }
       });
     },
