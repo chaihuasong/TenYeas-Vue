@@ -86,7 +86,7 @@
         <el-row>
           <div class="calendar-day" style="display:inline-block; font-size: 15px; margin-right: 5px">{{ data.day.split('-').slice(2).join('-') }}</div>
           <span style="font-size: 18px" :class="getState(data) === '-' ? 'red' : 'green'">{{ getState(data) }}</span><br/>
-          <span style="font-size: 10px;color: #66b1ff">{{ getDailyNoteFormat(data) }}</span>
+          <span style="font-size: 9px;color: #66b1ff">{{ getDailyNoteFormat(data) }}</span>
         </el-row>
       </template>
     </el-calendar>
@@ -622,7 +622,7 @@ export default {
     },
     getDailyNoteFormat(data) {
       this.dateChanged(data)
-      let maxLength = 12
+      let maxLength = 10
       for (let i = 0; i < this.monthsNotesList.length; i++) {
         if (data.day === this.monthsNotesList[i].date) {
           if (this.monthsNotesList[i].note === null || this.monthsNotesList[i].note === '') return ''
@@ -1115,8 +1115,10 @@ a {
   font-size: 15px;
 }
 .el-calendar-table .el-calendar-day {
-  height: 80px;
-  padding: 0 2px;
+  height: 75px;
+  padding: 0 0px;
+  font-weight: bold;
+  margin: 0 0px;
 }
 .red {
   color: red;
