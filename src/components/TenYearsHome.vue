@@ -595,7 +595,7 @@ export default {
         data = this.name + ' ' + this.getDateFormat(this.selectedDate) + '\n' + data
       }
 
-      if (this.share !== null && this.share !== '') {
+      if (this.share !== undefined && this.share !== null && this.share !== '') {
         data = data + '\n\n分享：' + this.share
       }
 
