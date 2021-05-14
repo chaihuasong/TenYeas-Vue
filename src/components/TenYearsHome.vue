@@ -29,7 +29,7 @@
           <br/>
           <br/>
           <el-row :gutter="15">
-            <el-col :span="20">
+            <el-col :span="this.path !== '' ? 20 : 24">
               <el-input
                   type="textarea"
                   :rows="3"
@@ -37,7 +37,7 @@
                   placeholder="请输入内容"
                   v-model="info" />
             </el-col>
-            <el-col :span="4">
+            <el-col v-if="this.path !== ''" :span="4">
               <el-image style="width: 40px; height: 80px;margin-top: 5px"
                         :src="'http://htzchina.org/imgs/tenyears/' + this.path"
                         :preview-src-list="['http://htzchina.org/imgs/tenyears/' + this.path]"/>
@@ -123,7 +123,7 @@
           <el-col :span="8" v-if="!editDailyReportMode">
             <el-input v-model="list.value" placeholder="请输入" @change="onDailyReportResultChange"></el-input>
           </el-col>
-          <el-col :span="4" v-if="editDailyReportMode">
+          <el-col :span="4" v-if="editDailyReportMode" disabled="">
             <el-input></el-input>
           </el-col>
           <el-col :span="8" v-if="editDailyReportMode">
@@ -265,7 +265,6 @@ export default {
     this.getData()
     this.getMonthNotes()
     this.configWechat()
-    this.getDailyReportInfoByDate(this.selectedDate)
   },
   methods: {
     handlePlanInfoFlagChange(val) {
@@ -334,6 +333,7 @@ export default {
             }
             this.monthsNotesList.push(item)
           }
+          this.getDailyReportInfoByDate(this.selectedDate)
         } else {
           //可能是新的月份，获取一次上个月的值
           let lastDate = this.getLastMonthDateFormat(this.calendarValue)
@@ -357,6 +357,7 @@ export default {
                 }
                 this.monthsNotesList.push(item)
               }
+              this.getDailyReportInfoByDate(this.selectedDate)
             } else {
               this.initReportTemplateId()
             }
@@ -443,7 +444,7 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        if (res.data !== null && res.data != null) {
+        if (res.data !== null && res.data !== '') {
           this.note = res.data.note
           this.share = res.data.share
           this.state = res.data.state
@@ -510,11 +511,12 @@ export default {
                   value = value.replace(unit, '')
                   let cope = {
                     title: title,
+                    value: value,
                     unit: unit,
-                    value: value
                   }
                   this.reportLists.push(cope);
                 }
+                this.onDailyReportResultChange()
               } else {
                 this.reportLists = this.defaultReportLists
               }
@@ -537,7 +539,6 @@ export default {
           this.selectedDate = selectedDate
 
           this.getDailyReportInfoByDate(selectedDate)
-          this.onDailyReportResultChange()
         }
         axios({
           method: "GET",
@@ -585,6 +586,7 @@ export default {
       });
     },
     onDailyReportResultChange() {
+      if (this.reportLists === null || this.reportLists.length === 0) return
       let data = ''
       for (let i = 0; i < this.reportLists.length; i++) {
         let value = (i + 1) + '. ' + this.reportLists[i].title + (this.reportLists[i].value.trim() === '' ? 0 : this.reportLists[i].value.trim()) + this.reportLists[i].unit
