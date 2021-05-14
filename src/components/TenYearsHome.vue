@@ -13,11 +13,11 @@
       <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{this.getTenYearsRemaining()}}</span> 天
     </el-card>
 
-    <el-card style="float: left; width: 100%;margin-top: 10px">
-      <span style="font-weight: bold">生命倒计时，离生命终了 <input class="ageInputStyle" v-model="maxAge" @change="onMaxAgeChange"/> 岁，还有</span>
-      <br/>
-      <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{this.getYearsRemaining()}}</span> 天
-    </el-card>
+<!--    <el-card style="float: left; width: 100%;margin-top: 10px">-->
+<!--      <span style="font-weight: bold">生命倒计时，离生命终了 <input class="ageInputStyle" v-model="maxAge" @change="onMaxAgeChange"/> 岁，还有</span>-->
+<!--      <br/>-->
+<!--      <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{this.getYearsRemaining()}}</span> 天-->
+<!--    </el-card>-->
 
     <el-collapse v-model="this.planInfoFlag" @change="handlePlanInfoFlagChange" style="float: left; width: 100%;margin-top: 20px;margin-bottom: 20px">
       <el-collapse-item title="计划和总结" name="1">
@@ -92,11 +92,11 @@
     </el-calendar>
 
     <el-card style="float: left; width: 100%;margin-top: 10px">
-      <div style="float: left; margin-bottom: 10px;font-weight: bold;text-align: left">每日反省总结，今天精气神是长养的还是消耗的，心量是开阔了还是狭迫了，15个字以内表述</div>
+      <div style="float: left; margin-bottom: 10px;font-weight: bold;text-align: left">每日反省总结，今天精气神是长养的还是消耗的，心量是开阔了还是狭迫了，表述内容不超过日历框。</div>
       <el-radio-group v-model="state" style="margin-bottom: 10px;text-align: left">
-        <el-radio label="1" border style="width: 90%;float: left">身心性命得到长养，朝着目标<span style="margin-left: 10px;margin-right: 5px;font-size: 20px;font-weight: bold">+</span></el-radio>
+        <el-radio label="1" border style="width: 90%;float: left">精气神得到长养，朝着目标<span style="margin-left: 10px;margin-right: 5px;font-size: 20px;font-weight: bold">+</span></el-radio>
         <br/>
-        <el-radio label="0" border style="width: 90%;float: left">身心性命没有长养，偏离目标<span style="margin-left: 10px;margin-right: 5px;font-size: 14px;font-weight: bold">一</span></el-radio>
+        <el-radio label="0" border style="width: 90%;float: left">精气神没有长养，偏离目标<span style="margin-left: 10px;margin-right: 5px;font-size: 14px;font-weight: bold">一</span></el-radio>
       </el-radio-group>
       <el-input
           type="textarea"
@@ -223,7 +223,7 @@ export default {
       defaultReportLists: [
         {title: "家人陪伴", unit: '分钟', value: ''},
         {title: "站桩", unit: '分钟', value: ''},
-        {title: "静坐", unit: '分钟', value: ''},
+        {title: "禅坐", unit: '分钟', value: ''},
         {title: "诵读经典", unit: '分钟', value: ''},
         {title: "经典学习", unit: '分钟', value: ''},
         {title: "运动", unit: '分钟', value: ''},
@@ -556,7 +556,7 @@ export default {
     },
     submitDailyNote() {
       if (this.state === '' || this.state === undefined || this.state.trim().length === 0) {
-        this.$message.warning("请选择身心性命长养情况！")
+        this.$message.warning("请选择精气神长养情况！")
         return
       }
       if (this.note === '' || this.note === undefined || this.note.trim().length === 0) {
