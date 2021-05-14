@@ -123,8 +123,8 @@
           <el-col :span="8" v-if="!editDailyReportMode">
             <el-input v-model="list.value" placeholder="请输入" @change="onDailyReportResultChange"></el-input>
           </el-col>
-          <el-col :span="4" v-if="editDailyReportMode" disabled="">
-            <el-input></el-input>
+          <el-col :span="4" v-if="editDailyReportMode">
+            <el-input disabled/>
           </el-col>
           <el-col :span="8" v-if="editDailyReportMode">
             <el-input v-model="list.unit" placeholder="请输入单位"></el-input>
