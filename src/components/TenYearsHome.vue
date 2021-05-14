@@ -269,7 +269,7 @@ export default {
   },
   methods: {
     handlePlanInfoFlagChange(val) {
-      let flag = val.toString().replaceAll(',', '')
+      let flag = val.toString().replace(',', '')
       this.planInfoFlag = []
       this.planInfoFlag.push(flag)
       let data = {
@@ -994,6 +994,7 @@ export default {
           this.path = res.data.path
           let planInfoFlag = res.data.planInfoFlag
           if (planInfoFlag !== undefined && planInfoFlag !== null && planInfoFlag !== '') {
+            this.planInfoFlag = ['']
             this.planInfoFlag.push(planInfoFlag)
           }
 

@@ -81,6 +81,8 @@
       </el-table-column>
       <el-table-column prop="path" label="文件名" width="80">
       </el-table-column>
+      <el-table-column prop="planInfoFlag" label="是否展开" width="80">
+      </el-table-column>
       <el-table-column prop="createDate" label="创建时间" width="100">
       </el-table-column>
       <el-table-column label="图片" width="120">
