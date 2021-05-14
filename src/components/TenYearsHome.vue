@@ -946,10 +946,11 @@ export default {
             console.log("unionid:" + res.data.unionid)
             console.log("sex:" + res.data.sex)
             this.unionid = res.data.unionid
-            this.$store.commit('$_setUnionid', this.unionid)
             if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
               alert("信息获取失败，请关注“黄庭书院”公众号后重试！")
+              return
             }
+            this.$store.commit('$_setUnionid', this.unionid)
             this.nickname = res.data.nickname
             this.openid = res.data.openid
             this.headimgurl = res.data.headimgurl

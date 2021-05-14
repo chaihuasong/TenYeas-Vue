@@ -176,8 +176,10 @@ export default {
     },
     getData() {
       let uid = this.$store.getters.getUnionid
-      if (uid != null && uid !== '') {
-        console.log("unionid:" + uid)
+      if (uid != null && uid !== '' && uid !== undefined) {
+        this.unionid = uid.replace("\"","").replace("\"","")
+        console.log("unionid:" + this.unionid)
+        this.getUserInfoByUnionId()
         return;
       }
       let openid = this.getOpenId()
@@ -198,10 +200,11 @@ export default {
             console.log("unionid:" + res.data.unionid)
             console.log("sex:" + res.data.sex)
             this.unionid = res.data.unionid
-            this.$store.commit('$_setUnionid', this.unionid)
             if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
               alert("信息获取失败，请关注“黄庭书院”公众号后重试！")
+              return
             }
+            this.$store.commit('$_setUnionid', this.unionid)
             this.nickname = res.data.nickname
             this.openid = res.data.openid
             this.headimgurl = res.data.headimgurl
@@ -212,55 +215,48 @@ export default {
             this.groupId = res.data.groupId
             this.gender = res.data.sex + ''
 
-            axios({
-              method: "GET",
-              url: "http://htzchina.org:8080/getById?id=" + this.unionid,
-              data: null,
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-              }
-            }).then((res) => {
-              if (res != null && res.data != null && res.data !== '') {
-                console.log("getById res:" + res)
-                console.log("getById res.data:" + res.data)
-                this.name = res.data.name
-                this.gender = res.data.gender + ''
-                this.wechatgroup = res.data.wechatgroup
-                this.telephone = res.data.telephone
-                this.info = res.data.info
-                this.stepInfo = res.data.stepInfo
-                this.createDate = res.data.createDate
-                this.birthday = res.data.birthday
-                this.open = res.data.open
-                this.daixie = res.data.daixie
-                this.chujie = res.data.chujie
-                this.wechatid = res.data.wechatid
-                this.province = res.data.province
-
-                // let createTime = Date.parse(this.createDate)
-                // console.log("remaining time:" + (Date.now() - createTime))
-                // if ((Date.now() - createTime) > 3600000 * 24) {
-                //   this.$message({
-                //     message: '数据已被锁定，无法修改！',
-                //     type: 'warning'
-                //   })
-                //   this.submitDisable = true
-                // }
-
-                let endTime = Date.parse("2021-05-1T00:00:00.000Z")
-                console.log("endTime:" + endTime)
-                console.log("remaining:" + (Date.now() - endTime))
-                if (Date.now() - endTime > 0) {
-                  this.daixieDisabled = true
-                  this.daixie = '0'
-                }
-              }
-            });
+            this.getUserInfoByUnionId()
           }
         });
       } else {
         window.location.href = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx83aec75c3ca58f0e&redirect_uri=http://htzchina.org/wc_redirect2&response_type=code&scope=snsapi_base&state=123#wechat_redirect"
       }
+    },
+    getUserInfoByUnionId() {
+      axios({
+        method: "GET",
+        url: "http://htzchina.org:8080/getById?id=" + this.unionid,
+        data: null,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        if (res != null && res.data != null && res.data !== '') {
+          console.log("getById res:" + res)
+          console.log("getById res.data:" + res.data)
+          this.name = res.data.name
+          this.gender = res.data.gender + ''
+          this.wechatgroup = res.data.wechatgroup
+          this.telephone = res.data.telephone
+          this.info = res.data.info
+          this.stepInfo = res.data.stepInfo
+          this.createDate = res.data.createDate
+          this.birthday = res.data.birthday
+          this.open = res.data.open
+          this.daixie = res.data.daixie
+          this.chujie = res.data.chujie
+          this.wechatid = res.data.wechatid
+          this.province = res.data.province
+
+          let endTime = Date.parse("2021-05-1T00:00:00.000Z")
+          console.log("endTime:" + endTime)
+          console.log("remaining:" + (Date.now() - endTime))
+          if (Date.now() - endTime > 0) {
+            this.daixieDisabled = true
+            this.daixie = '0'
+          }
+        }
+      });
     },
   },
 }
