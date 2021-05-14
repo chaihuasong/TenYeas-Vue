@@ -893,9 +893,10 @@ export default {
       return parseInt(remaining / (24 * 3600 * 1000)+"")
     },
     getYearsRemaining() {
-      if (this.createDate !== '') {
-        let createdDate = new Date(this.createDate)
-        let tenYearsLater = new Date((createdDate.getFullYear() + parseInt(this.maxAge)) + this.createDate.substr(4))
+      if (this.birthday !== '') {
+        let birthday = new Date(this.birthday)
+        if (this.maxAge === '') return 0
+        let tenYearsLater = new Date((birthday.getFullYear() + parseInt(this.maxAge)) + this.birthday.substr(4))
         let remaining = tenYearsLater.getTime() - Date.now()
         return parseInt(remaining / (24 * 3600 * 1000)+"")
       }
