@@ -312,6 +312,10 @@ export default {
       });
     },
     getMonthNotes() {
+      if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
+        this.$message.warning("信息获取失败，请关注“黄庭书院”公众号后刷新页面重试！")
+        return
+      }
       let currentDate = this.getDateFormat(this.calendarValue)
       let monthDate = currentDate.substr(0, currentDate.lastIndexOf('-') + 1)
       axios({
@@ -555,6 +559,10 @@ export default {
       return ''
     },
     submitDailyNote() {
+      if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
+        this.$message.warning("信息获取失败，请关注“黄庭书院”公众号后刷新页面重试！")
+        return
+      }
       if (this.state === '' || this.state === undefined || this.state.trim().length === 0) {
         this.$message.warning("请选择精气神长养情况！")
         return
@@ -949,8 +957,7 @@ export default {
             console.log("sex:" + res.data.sex)
             this.unionid = res.data.unionid
             if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
-              alert("信息获取失败，请关注“黄庭书院”公众号后重试！")
-              return
+              alert("信息获取失败，请关注“黄庭书院”公众号后刷新页面重试！")
             }
             this.$store.commit('$_setUnionid', this.unionid)
             this.nickname = res.data.nickname
@@ -970,6 +977,10 @@ export default {
       }
     },
     getUserInfoByUnionId() {
+      if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
+        this.$message.warning("信息获取失败，请关注“黄庭书院”公众号后刷新页面重试！")
+        return
+      }
       axios({
         method: "GET",
         url: "http://htzchina.org:8080/getById?id=" + this.unionid,
