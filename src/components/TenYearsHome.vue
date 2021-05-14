@@ -92,11 +92,11 @@
     </el-calendar>
 
     <el-card style="float: left; width: 100%;margin-top: 10px">
-      <div style="float: left; margin-bottom: 10px;font-weight: bold;text-align: left">每日反省总结，今天精气神是长养的还是消耗的，心量是开阔了还是狭迫了，10个字以内表述</div>
+      <div style="float: left; margin-bottom: 10px;font-weight: bold;text-align: left">每日反省总结，今天精气神是长养的还是消耗的，心量是开阔了还是狭迫了，15个字以内表述</div>
       <el-radio-group v-model="state" style="margin-bottom: 10px;text-align: left">
-        <el-radio label="1" border style="width: 90%;float: left">身心性命，得到长养，朝立志目标前进<span style="margin-left: 10px;margin-right: 5px;font-size: 20px;font-weight: bold">+</span></el-radio>
+        <el-radio label="1" border style="width: 90%;float: left">身心性命得到长养，朝着目标<span style="margin-left: 10px;margin-right: 5px;font-size: 20px;font-weight: bold">+</span></el-radio>
         <br/>
-        <el-radio label="0" border style="width: 90%;float: left">身心性命，没有得到长养，或有耗损<span style="margin-left: 10px;margin-right: 5px;font-size: 14px;font-weight: bold">一</span></el-radio>
+        <el-radio label="0" border style="width: 90%;float: left">身心性命没有长养，偏离目标<span style="margin-left: 10px;margin-right: 5px;font-size: 14px;font-weight: bold">一</span></el-radio>
       </el-radio-group>
       <el-input
           type="textarea"
@@ -265,6 +265,7 @@ export default {
     this.getData()
     this.getMonthNotes()
     this.configWechat()
+    this.getDailyReportInfoByDate(this.selectedDate)
   },
   methods: {
     handlePlanInfoFlagChange(val) {
@@ -534,6 +535,9 @@ export default {
         }
         if (this.selectedDate.getDate() !== selectedDate.getDate()) {
           this.selectedDate = selectedDate
+
+          this.getDailyReportInfoByDate(selectedDate)
+          this.onDailyReportResultChange()
         }
         axios({
           method: "GET",
@@ -546,9 +550,6 @@ export default {
           this.note = res.data.note
           this.state = res.data.state
         });
-
-        this.getDailyReportInfoByDate(selectedDate)
-        this.onDailyReportResultChange()
       }
       return ''
     },
@@ -650,7 +651,7 @@ export default {
     },
     getDailyNoteFormat(data) {
       this.dateChanged(data)
-      let maxLength = 10
+      let maxLength = 15
       for (let i = 0; i < this.monthsNotesList.length; i++) {
         if (data.day === this.monthsNotesList[i].date) {
           if (this.monthsNotesList[i].note === null || this.monthsNotesList[i].note === '') return ''
@@ -869,8 +870,9 @@ export default {
       });
     },
     getTenYearsDate() {
-      let createdDate = new Date(this.createDate)
-      let tenYearsLater = new Date((createdDate.getFullYear() + 10) + this.createDate.substr(4))
+      //let createdDate = new Date(this.createDate)
+      //let tenYearsLater = new Date((createdDate.getFullYear() + 10) + this.createDate.substr(4))
+      let tenYearsLater = new Date('2031-04-17')
       let year = tenYearsLater.getFullYear()
       let month = tenYearsLater.getMonth() + 1
       if (month < 10) month = "0" + month
@@ -879,12 +881,16 @@ export default {
       return year + "年" + month + "月" + dates + "日"
     },
     getTenYearsRemaining() {
-      if (this.createDate !== '') {
-        let createdDate = new Date(this.createDate)
-        let tenYearsLater = new Date((createdDate.getFullYear() + 10) + this.createDate.substr(4))
-        let remaining = tenYearsLater.getTime() - Date.now()
-        return parseInt(remaining / (24 * 3600 * 1000)+"")
-      }
+      // if (this.createDate !== '') {
+      //   let createdDate = new Date(this.createDate)
+      //   let tenYearsLater = new Date((createdDate.getFullYear() + 10) + this.createDate.substr(4))
+      //   let remaining = tenYearsLater.getTime() - Date.now()
+      //   return parseInt(remaining / (24 * 3600 * 1000)+"")
+      // }
+      let tenYearsLater = new Date('2031-04-18')
+      let remaining = tenYearsLater.getTime() - Date.now()
+      if (remaining < 0) remaining = 0
+      return parseInt(remaining / (24 * 3600 * 1000)+"")
     },
     getYearsRemaining() {
       if (this.createDate !== '') {
@@ -1143,7 +1149,7 @@ a {
   font-size: 15px;
 }
 .el-calendar-table .el-calendar-day {
-  height: 75px;
+  height: 95px;
   padding: 0 0px;
   font-weight: bold;
   margin: 0 0px;
