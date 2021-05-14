@@ -930,7 +930,6 @@ export default {
         return;
       }
       let openid = this.getOpenId()
-      // openid = "onuFi1qE_KG2W3T9YG6bv49cJjyQ"
       console.log("openid:" + openid)
       if (openid !== "" && openid != null && openid.length > 0) {
         console.log("begin axios...")
