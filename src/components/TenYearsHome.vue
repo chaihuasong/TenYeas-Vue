@@ -223,7 +223,7 @@ export default {
       defaultReportLists: [
         {title: "家人陪伴", unit: '分钟', value: ''},
         {title: "站桩", unit: '分钟', value: ''},
-        {title: "禅坐", unit: '分钟', value: ''},
+        {title: "静坐", unit: '分钟', value: ''},
         {title: "诵读经典", unit: '分钟', value: ''},
         {title: "经典学习", unit: '分钟', value: ''},
         {title: "运动", unit: '分钟', value: ''},
