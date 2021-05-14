@@ -56,7 +56,7 @@
               v-model="halfYearInfo" />
         </el-card>
         <el-card style="float: left; width: 100%;">
-          <div style="float: left; margin-bottom: 10px;font-weight: bold">{{ getLastMonthDateFormat(this.calendarValue).split('-')[0] }}年{{parseInt(getLastMonthDateFormat(this.calendarValue).split('-')[1])}}月计划</div>
+          <div style="float: left; margin-bottom: 10px;font-weight: bold">{{ getLastMonthDateFormat(this.calendarValue).split('-')[0] }}年{{parseInt(getLastMonthDateFormat(this.calendarValue).split('-')[1])}}月总结</div>
           <i :class="[editLastMonthInfoMode ?'el-icon-finished' : 'el-icon-edit']"
              style="float: right; margin-bottom: 10px" @click="changeLastMonthInfoMode"></i>
           <el-input
