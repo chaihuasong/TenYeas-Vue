@@ -158,6 +158,7 @@
 import axios from "axios";
 import qs from "qs";
 import wx from 'weixin-js-sdk'
+import global from './Common.vue'
 
 export default {
   name: 'TenYears',
@@ -166,6 +167,7 @@ export default {
   },
   data() {
     return {
+      serverUrl: global.httpUrl,
       name: '',
       gender: '1',
       telephone: '',
@@ -277,7 +279,7 @@ export default {
       }
       axios({
         method: "POST",
-        url: "http://htzchina.org:8080/updatePlanInfoFlag",
+        url: this.serverUrl + 'updatePlanInfoFlag',
         data: qs.stringify(data),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -298,7 +300,7 @@ export default {
       }
       axios({
         method: "POST",
-        url: "http://htzchina.org:8080/updateMaxAge",
+        url: this.serverUrl + 'updateMaxAge',
         data: qs.stringify(data),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -320,7 +322,7 @@ export default {
       let monthDate = currentDate.substr(0, currentDate.lastIndexOf('-') + 1)
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getReportInfoListByIdAndMonth?userId=" + this.unionid + "&monthDate=" + monthDate,
+        url: this.serverUrl + 'getReportInfoListByIdAndMonth?userId=' + this.unionid + "&monthDate=" + monthDate,
         data: null,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -344,7 +346,7 @@ export default {
           let lastMonthDate = lastDate.substr(0, lastDate.lastIndexOf('-') + 1)
           axios({
             method: "GET",
-            url: "http://htzchina.org:8080/getReportInfoListByIdAndMonth?userId=" + this.unionid + "&monthDate=" + lastMonthDate,
+            url: this.serverUrl + "getReportInfoListByIdAndMonth?userId=" + this.unionid + "&monthDate=" + lastMonthDate,
             data: null,
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded'
@@ -372,7 +374,7 @@ export default {
     getReportTemplate(templateId) {
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getReportTemplateById?id=" + templateId,
+        url: this.serverUrl + "getReportTemplateById?id=" + templateId,
         data: null,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -442,7 +444,7 @@ export default {
       let date = this.getDateFormat(val)
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getReportInfoByUserIdAndDate?userId=" + this.unionid + "&date=" + date,
+        url: this.serverUrl + "getReportInfoByUserIdAndDate?userId=" + this.unionid + "&date=" + date,
         data: null,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -474,10 +476,11 @@ export default {
           reports.push(res.data.value18)
           reports.push(res.data.value19)
           reports.push(res.data.value20)
-          if (this.monthsNotesList !== null && this.monthsNotesList.length > 0) {
+          let templateId = res.data.templateId
+          if ((templateId === undefined || templateId === null || templateId === '')
+              && this.monthsNotesList !== null && this.monthsNotesList.length > 0) {
             let index = 0
             let temp = 0
-            let templateId = null
             for (let i = 0; i < this.monthsNotesList.length; i++) {
               let day = parseInt(this.monthsNotesList[i].date.split('-')[2])
               let tmpTemplateId = this.monthsNotesList[index].templateId
@@ -494,38 +497,38 @@ export default {
                 }
               }
             }
-            if (templateId === null) {
-              this.reportLists = this.defaultReportLists
-              return
-            }
-            axios({
-              method: "GET",
-              url: "http://htzchina.org:8080/getReportTemplateById?id=" + templateId,
-              data: null,
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-              }
-            }).then((resp) => {
-              if (reports != null && reports.length > 0  && reports[0] != null && reports[0] !== undefined) {
-                this.reportLists = []
-                for (let i = 0; i < resp.data.length; i++) {
-                  let title = resp.data[i].split('_')[0]
-                  let unit = resp.data[i].split('_').length === 2 ? resp.data[i].split('_')[1] : ''
-                  let value = reports[i].replace(title, '')
-                  value = value.replace(unit, '')
-                  let cope = {
-                    title: title,
-                    value: value,
-                    unit: unit,
-                  }
-                  this.reportLists.push(cope);
-                }
-                this.onDailyReportResultChange()
-              } else {
-                this.reportLists = this.defaultReportLists
-              }
-            });
           }
+          if (templateId === null) {
+            this.reportLists = this.defaultReportLists
+            return
+          }
+          axios({
+            method: "GET",
+            url: this.serverUrl + "getReportTemplateById?id=" + templateId,
+            data: null,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          }).then((resp) => {
+            if (reports != null && reports.length > 0  && reports[0] != null && reports[0] !== undefined) {
+              this.reportLists = []
+              for (let i = 0; i < resp.data.length; i++) {
+                let title = resp.data[i].split('_')[0]
+                let unit = resp.data[i].split('_').length === 2 ? resp.data[i].split('_')[1] : ''
+                let value = reports[i].replace(title, '')
+                value = value.replace(unit, '')
+                let cope = {
+                  title: title,
+                  value: value,
+                  unit: unit,
+                }
+                this.reportLists.push(cope);
+              }
+              this.onDailyReportResultChange()
+            } else {
+              this.reportLists = this.defaultReportLists
+            }
+          });
         } else {
           this.initReportTemplateId()
         }
@@ -546,7 +549,7 @@ export default {
         }
         axios({
           method: "GET",
-          url: "http://htzchina.org:8080/getReportInfoByUserIdAndDate?userId=" + this.unionid + "&date=" + data.day,
+          url: this.serverUrl + "getReportInfoByUserIdAndDate?userId=" + this.unionid + "&date=" + data.day,
           data: null,
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -579,7 +582,7 @@ export default {
 
       axios({
         method: "POST",
-        url: "http://htzchina.org:8080/saveDailyNote",
+        url: this.serverUrl + "saveDailyNote",
         data: qs.stringify(data),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -596,8 +599,11 @@ export default {
     onDailyReportResultChange() {
       if (this.reportLists === null || this.reportLists.length === 0) return
       let data = ''
+      let index = 0;
       for (let i = 0; i < this.reportLists.length; i++) {
-        let value = (i + 1) + '. ' + this.reportLists[i].title + (this.reportLists[i].value.trim() === '' ? 0 : this.reportLists[i].value.trim()) + this.reportLists[i].unit
+        if (this.reportLists[i].value.trim() === '' || this.reportLists[i].value.trim() === '0') continue
+        index++
+        let value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + this.reportLists[i].unit
         data += '\n' + value
       }
 
@@ -636,7 +642,7 @@ export default {
 
       axios({
         method: "POST",
-        url: "http://htzchina.org:8080/saveReportInfo",
+        url: this.serverUrl + "saveReportInfo",
         data: qs.stringify(data),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -694,7 +700,7 @@ export default {
         let data = qs.stringify(this.template)
         axios({
           method: "POST",
-          url: "http://htzchina.org:8080/saveTemplate",
+          url: this.serverUrl + "saveTemplate",
           data: data,
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -732,7 +738,7 @@ export default {
         }
         axios({
           method: "POST",
-          url: "http://htzchina.org:8080/updateLiZhiInfo",
+          url: this.serverUrl + "updateLiZhiInfo",
           data: qs.stringify(data),
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -757,7 +763,7 @@ export default {
         }
         axios({
           method: "POST",
-          url: "http://htzchina.org:8080/saveHalfYearInfo",
+          url: this.serverUrl + "saveHalfYearInfo",
           data: qs.stringify(data),
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -782,7 +788,7 @@ export default {
         }
         axios({
           method: "POST",
-          url: "http://htzchina.org:8080/saveMonthInfo",
+          url: this.serverUrl + "saveMonthInfo",
           data: qs.stringify(data),
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -807,7 +813,7 @@ export default {
         }
         axios({
           method: "POST",
-          url: "http://htzchina.org:8080/saveMonthInfo",
+          url: this.serverUrl + "saveMonthInfo",
           data: qs.stringify(data),
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -830,7 +836,7 @@ export default {
       }
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getHalfYearInfo",
+        url: this.serverUrl + "getHalfYearInfo",
         data: qs.stringify(data),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -849,7 +855,7 @@ export default {
       }
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getMonthInfo",
+        url: this.serverUrl + "getMonthInfo",
         data: qs.stringify(data),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -868,7 +874,7 @@ export default {
       }
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getMonthInfo",
+        url: this.serverUrl + "getMonthInfo",
         data: qs.stringify(data),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -945,7 +951,7 @@ export default {
         console.log("begin axios...")
         axios({
           method: "GET",
-          url: "http://htzchina.org:8080/getUserInfo?openid=" + openid,
+          url: this.serverUrl + "getUserInfo?openid=" + openid,
           data: null,
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -983,7 +989,7 @@ export default {
       }
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getById?id=" + this.unionid,
+        url: this.serverUrl + "getById?id=" + this.unionid,
         data: null,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -1033,7 +1039,7 @@ export default {
     configWechat() {
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getAccessToken?url=" + window.location.href,
+        url: this.serverUrl + "getAccessToken?url=" + window.location.href,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }

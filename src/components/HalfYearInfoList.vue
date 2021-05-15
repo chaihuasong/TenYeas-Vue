@@ -73,11 +73,13 @@
 
 <script>
 import axios from "axios"
-import qs from "qs";
+import qs from "qs"
+import global from './Common.vue'
 
 export default {
   data() {
     return {
+      serverUrl: global.httpUrl,
       tableData: [],
       currentPage: 1,
       pageSize: 10,
@@ -113,7 +115,7 @@ export default {
     getData() {
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getAllHalfYearInfo",
+        url: this.serverUrl + "getAllHalfYearInfo",
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -146,7 +148,7 @@ export default {
       this.$set(this.tableData, this.halfYearInfoIndex, this.newHalfYearInfo);
       axios({
         method: "POST",
-        url: "http://htzchina.org:8080/saveHalfYearInfo",
+        url: this.serverUrl + "saveHalfYearInfo",
         data: qs.stringify(this.newHalfYearInfo),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -166,7 +168,7 @@ export default {
             })
             axios({
               method: "POST",
-              url: "http://htzchina.org:8080/deleteHalfYearInfoById",
+              url: this.serverUrl + "deleteHalfYearInfoById",
               data: data,
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'

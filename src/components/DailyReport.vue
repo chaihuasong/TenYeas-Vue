@@ -58,9 +58,10 @@
 
 <script>
 
-import axios from "axios";
-import qs from "qs";
+import axios from "axios"
+import qs from "qs"
 import wx from 'weixin-js-sdk'
+import global from './Common.vue'
 
 function getOpenId() {
   const str = window.location.href
@@ -81,6 +82,7 @@ export default {
   },
   data() {
     return {
+      serverUrl: global.httpUrl,
       name: '',
       sex: '',
       unionid: '',
@@ -154,7 +156,7 @@ export default {
         console.log("begin axios...")
         axios({
           method: "GET",
-          url: "http://htzchina.org:8080/getUserInfo?openid=" + openid,
+          url: this.serverUrl + "getUserInfo?openid=" + openid,
           data: null,
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -208,7 +210,7 @@ export default {
         let data = qs.stringify(this.template)
         axios({
           method: "POST",
-          url: "http://htzchina.org:8080/saveTemplate",
+          url: this.serverUrl + "saveTemplate",
           data: data,
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -239,7 +241,7 @@ export default {
     configWechat() {
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getAccessToken?url=" + window.location.href,
+        url: this.serverUrl + "getAccessToken?url=" + window.location.href,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }

@@ -200,10 +200,12 @@ import axios from "axios"
 import XLSX from 'xlsx'
 import FileSaver from 'file-saver'
 import qs from "qs";
+import global from './Common.vue'
 
 export default {
   data() {
     return {
+      serverUrl: global.httpUrl,
       tableData: [],
       currentPage: 1,
       pageSize: 10,
@@ -302,7 +304,7 @@ export default {
     getData() {
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getAll",
+        url: this.serverUrl + "getAll",
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -326,7 +328,7 @@ export default {
       }
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getByNameLike?name=" + this.search,
+        url: this.serverUrl + "getByNameLike?name=" + this.search,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -337,7 +339,7 @@ export default {
         } else {
           axios({
             method: "GET",
-            url: "http://htzchina.org:8080/getByNicknameLike?name=" + this.search,
+            url: this.serverUrl + "getByNicknameLike?name=" + this.search,
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded'
             }
@@ -396,7 +398,7 @@ export default {
       this.$set(this.tableData, this.userIndex, this.newUserInfo);
       axios({
         method: "POST",
-        url: "http://htzchina.org:8080/update",
+        url: this.serverUrl + "update",
         data: qs.stringify(this.newUserInfo),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -415,7 +417,7 @@ export default {
             })
             axios({
               method: "POST",
-              url: "http://htzchina.org:8080/delete",
+              url: this.serverUrl + "delete",
               data: data,
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -423,7 +425,7 @@ export default {
             }).then((res) => {
               axios({
                 method: "GET",
-                url: "http://htzchina.org:8080/getById?id=" + this.unionid,
+                url: this.serverUrl + "getById?id=" + this.unionid,
                 data: null,
                 headers: {
                   'Content-Type': 'application/x-www-form-urlencoded'

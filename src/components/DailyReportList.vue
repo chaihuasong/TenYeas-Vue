@@ -185,11 +185,13 @@
 
 <script>
 import axios from "axios"
-import qs from "qs";
+import qs from "qs"
+import global from './Common.vue'
 
 export default {
   data() {
     return {
+      serverUrl: global.httpUrl,
       tableData: [],
       currentPage: 1,
       pageSize: 10,
@@ -275,7 +277,7 @@ export default {
     getData() {
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getAllReportInfo",
+        url: this.serverUrl + "getAllReportInfo",
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -330,7 +332,7 @@ export default {
       this.$set(this.tableData, this.valueIndex, this.newValueInfo);
       axios({
         method: "POST",
-        url: "http://htzchina.org:8080/updateReportInfo",
+        url: this.serverUrl + "updateReportInfo",
         data: qs.stringify(this.newValueInfo),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -350,7 +352,7 @@ export default {
             })
             axios({
               method: "POST",
-              url: "http://htzchina.org:8080/deleteReportInfoById",
+              url: this.serverUrl + "deleteReportInfoById",
               data: data,
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -358,7 +360,7 @@ export default {
             }).then((res) => {
               axios({
                 method: "GET",
-                url: "http://htzchina.org:8080/getReportInfoById?id=" + this.id,
+                url: this.serverUrl + "getReportInfoById?id=" + this.id,
                 data: null,
                 headers: {
                   'Content-Type': 'application/x-www-form-urlencoded'

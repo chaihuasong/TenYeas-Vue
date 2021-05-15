@@ -158,7 +158,8 @@
 import axios from 'axios'
 import qs from 'qs'
 import wx from 'weixin-js-sdk'
-import html2canvas from "html2canvas";
+import html2canvas from "html2canvas"
+import global from './Common.vue'
 
 function getOpenId() {
   const str = window.location.href
@@ -179,6 +180,7 @@ export default {
   },
   data() {
     return {
+      serverUrl: global.httpUrl,
       name: '',
       gender: '1',
       telephone: '',
@@ -255,7 +257,7 @@ export default {
     configWechat() {
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getAccessToken?url=" + window.location.href,
+        url: this.serverUrl + "getAccessToken?url=" + window.location.href,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -304,7 +306,7 @@ export default {
     getHeaderHtml() {
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getHeader",
+        url: this.serverUrl + "getHeader",
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -340,7 +342,7 @@ export default {
     getFooterHtml() {
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getFooter",
+        url: this.serverUrl + "getFooter",
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -367,7 +369,7 @@ export default {
         console.log("begin axios...")
         axios({
           method: "GET",
-          url: "http://htzchina.org:8080/getUserInfo?openid=" + openid,
+          url: this.serverUrl + "getUserInfo?openid=" + openid,
           data: null,
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -403,7 +405,7 @@ export default {
     getUserInfoByUnionId() {
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getById?id=" + this.unionid,
+        url: this.serverUrl + "getById?id=" + this.unionid,
         data: null,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -526,7 +528,7 @@ export default {
       })
       axios({
         method: "POST",
-        url: "http://htzchina.org:8080/save",
+        url: this.serverUrl + "save",
         data: data,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -538,7 +540,7 @@ export default {
         }
         axios({
           method: "GET",
-          url: "http://htzchina.org:8080/getById?id=" + this.unionid,
+          url: this.serverUrl + "getById?id=" + this.unionid,
           data: null,
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
