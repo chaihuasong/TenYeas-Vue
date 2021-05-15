@@ -399,12 +399,13 @@ export default {
     },
     initReportTemplateId() {
       let templateId = -1
-      let lastMonth = 0
+      let preDay = 0
       for(let i = 0; i < this.monthsNotesList.length; i++) {
-        let tempMonth = parseInt(this.monthsNotesList[i].date.split('-')[1])
-        if (lastMonth < tempMonth) {
+        let tempDay = parseInt(this.monthsNotesList[i].date.split('-')[2])
+        if (preDay < tempDay) {
           if (this.monthsNotesList[i].templateId !== null) {
             templateId = parseInt(this.monthsNotesList[i].templateId)
+            preDay = tempDay
           }
         }
       }
