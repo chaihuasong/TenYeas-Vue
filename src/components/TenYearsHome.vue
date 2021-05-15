@@ -267,6 +267,9 @@ export default {
     this.getData()
     this.getMonthNotes()
     this.configWechat()
+    this.getMonthInfo()
+    this.getLastMonthInfo()
+    this.getHalfYearInfo()
   },
   methods: {
     handlePlanInfoFlagChange(val) {
@@ -832,13 +835,12 @@ export default {
     getHalfYearInfo() {
       let halfYearFormat = this.getHalfYearFormat(this.calendarValue)
       let data = {
-        date: halfYearFormat,
         userId: this.unionid,
+        date: halfYearFormat,
       }
       axios({
         method: "GET",
-        url: this.serverUrl + "getHalfYearInfo",
-        data: qs.stringify(data),
+        url: this.serverUrl + "getHalfYearInfo?" + qs.stringify(data),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -851,13 +853,12 @@ export default {
     getMonthInfo() {
       let dateFormat = this.getDateFormat(this.calendarValue)
       let data = {
-        date: dateFormat.substr(0, dateFormat.lastIndexOf('-')),
         userId: this.unionid,
+        date: dateFormat.substr(0, dateFormat.lastIndexOf('-')),
       }
       axios({
         method: "GET",
-        url: this.serverUrl + "getMonthInfo",
-        data: qs.stringify(data),
+        url: this.serverUrl + "getMonthInfo?" + qs.stringify(data),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -875,14 +876,13 @@ export default {
       }
       axios({
         method: "GET",
-        url: this.serverUrl + "getMonthInfo",
-        data: qs.stringify(data),
+        url: this.serverUrl + "getMonthInfo?" + qs.stringify(data),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
         if (res != null && res.data != null && res.data !== '') {
-          this.lastMonthInfo = res.data.lastMonthInfo
+          this.lastMonthInfo = res.data.monthInfo
         }
       });
     },
