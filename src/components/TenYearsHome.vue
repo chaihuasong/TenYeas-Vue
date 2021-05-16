@@ -121,7 +121,7 @@
             <el-input v-model="list.title" placeholder="请输入项目"></el-input>
           </el-col>
           <el-col :span="8" v-if="!editDailyReportMode">
-            <el-input v-model="list.value" placeholder="请输入" @change="onDailyReportResultChange"></el-input>
+            <el-input type="number" v-model="list.value" placeholder="请输入" @change="onDailyReportResultChange"></el-input>
           </el-col>
           <el-col :span="4" v-if="editDailyReportMode">
             <el-input disabled/>
