@@ -13,12 +13,17 @@
 
     <br/>
     <br/>
-    <el-card style="float: left;width: 100%;margin-top: 5px" @click.native="PYQ">
+<!--    <el-card style="float: left;width: 100%;margin-top: 5px" @click.native="PYQ">-->
+<!--      <div style="float: left; margin-bottom: 20px;width: 15%">-->
+<!--        立志圈-->
+<!--      </div>-->
+<!--      <div style="float: right; margin-bottom: 20px;width: 60%;text-align: left;margin-right: 10%">-->
+<!--        <el-image v-if="this.lastImgUrl != ''" :src="lastImgUrl" style="width: 30px; height: 30px;"></el-image>-->
+<!--      </div>-->
+<!--    </el-card>-->
+    <el-card style="float: left;width: 100%;margin-top: 5px">
       <div style="float: left; margin-bottom: 20px;width: 15%">
-        立志圈
-      </div>
-      <div style="float: right; margin-bottom: 20px;width: 60%;text-align: left;margin-right: 10%">
-        <el-image v-if="this.lastImgUrl != ''" :src="lastImgUrl" style="width: 30px; height: 30px;"></el-image>
+        {{this.unionid}}
       </div>
     </el-card>
     <el-card style="float: left">

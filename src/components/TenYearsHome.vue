@@ -940,7 +940,7 @@ export default {
     },
     getData() {
       let uid = this.$store.getters.getUnionid
-      if (uid != null && uid !== '' && uid !== undefined) {
+      if (uid != null && uid !== '' && uid !== undefined && uid !=='undefined') {
         this.unionid = uid.replace("\"","").replace("\"","")
         console.log("unionid:" + this.unionid)
         this.getUserInfoByUnionId()
