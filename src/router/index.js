@@ -20,6 +20,7 @@ import DailyReportList from "@/components/DailyReportList";
 import TenYearsHome from "@/components/TenYearsHome";
 import HalfYearInfoList from "@/components/HalfYearInfoList";
 import MonthInfoList from "@/components/MonthInfoList";
+import DefaultTemplateList from "@/components/DefaultTemplateList";
 
 Vue.use(Router)
 
@@ -146,6 +147,15 @@ export default new Router({
           path: 'templateList',
           name: 'templateList',
           component: TemplateList,
+          meta: {
+            title: '管理后台',
+            footShow: false,
+          },
+        },
+        {
+          path: 'defaultTemplateList',
+          name: 'defaultTemplateList',
+          component: DefaultTemplateList,
           meta: {
             title: '管理后台',
             footShow: false,

@@ -160,6 +160,24 @@
       <el-button v-if="!editDailyReportMode" style="float: right;margin-top: 10px;margin-bottom: 15px" @click="submitDailyReport"
                  v-clipboard:copy="dailyReportResult">提交</el-button>
     </el-card>
+    <el-dialog title="从模板库中添加" :visible.sync="addTemplateDialogVisible">
+      <el-form :model="templateList">
+        <div v-for='(item) in templateList' v-bind:key='item.id'>
+          <el-row style="margin-top: 10px;font-size: 16px;">
+            <el-col span="16">
+              <span autocomplete="off">{{ item.name }}</span>
+            </el-col>
+            <el-col span="8">
+              <el-checkbox item.che></el-checkbox>
+            </el-col>
+          </el-row>
+        </div>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="addTemplateDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="addTemplateDialogVisible = false">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -208,6 +226,12 @@ export default {
       htmlsFooter: '',
       dialogVisible: false,
       dialogTableVisible: false,
+      addTemplateDialogVisible: false,
+      templateList: [
+        {id: 0, name: "家人陪伴1"},
+        {id: 1, name: "家人陪伴2"},
+        {id: 2, name: "家人陪伴3"},
+      ],
       imgUrl: '',
       isTimeout: false,
       chujieIndex: '11',
@@ -777,10 +801,8 @@ export default {
       if (this.reportLists.length > 19) {
         this.$message.warning("已达到上限！")
         return
-      } else {
-        this.$message.warning('暂不支持！')
-        return
       }
+      this.addTemplateDialogVisible = true
       // let cope = {
       //   title: '',
       //   unit: '',

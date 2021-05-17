@@ -27,6 +27,9 @@
           <el-submenu index="2">
             <template slot="title"><i class="el-icon-setting"></i>设置</template>
             <el-menu-item-group>
+              <el-menu-item index="/home/defaultTemplateList">模板集合</el-menu-item>
+            </el-menu-item-group>
+            <el-menu-item-group>
               <el-menu-item index="/home/modifyHeader">修改Header</el-menu-item>
             </el-menu-item-group>
             <el-menu-item-group>
