@@ -79,6 +79,11 @@
         </el-card>
       </el-collapse-item>
     </el-collapse>
+    <div>
+      <el-image style="width: 100%"
+                :src="require('../assets/img/tenyears_tips.jpg')"
+                fit="cover"/>
+    </div>
     <el-calendar v-model="calendarValue">
       <template
           slot="dateCell"
@@ -97,9 +102,9 @@
     <el-card style="float: left; width: 100%;margin-top: 10px">
       <div style="float: left; margin-bottom: 10px;font-weight: bold;text-align: left">每日反省总结，今天精气神是长养的还是消耗的，心量是开阔了还是狭迫了，表述内容不超过日历框。</div>
       <el-radio-group v-model="state" style="margin-bottom: 10px;text-align: left">
-        <el-radio label="1" border style="width: 90%;float: left">精气神得到长养，朝着目标<span style="margin-left: 10px;margin-right: 5px;font-size: 20px;font-weight: bold">+</span></el-radio>
+        <el-radio label="1" style="width: 90%;float: left">精气神得到长养，朝着目标<span style="margin-left: 10px;margin-right: 5px;font-size: 20px;font-weight: bold">+</span></el-radio>
         <br/>
-        <el-radio label="0" border style="width: 90%;float: left">精气神没有长养，偏离目标<span style="margin-left: 10px;margin-right: 5px;font-size: 14px;font-weight: bold">一</span></el-radio>
+        <el-radio label="0" style="width: 90%;float: left;margin-top: 10px">精气神没有长养，偏离目标<span style="margin-left: 10px;margin-right: 5px;font-size: 14px;font-weight: bold">一</span></el-radio>
       </el-radio-group>
       <el-input
           type="textarea"
@@ -802,7 +807,7 @@ export default {
         this.$message.warning("已达到上限！")
         return
       }
-      this.addTemplateDialogVisible = true
+      //this.addTemplateDialogVisible = true
       // let cope = {
       //   title: '',
       //   unit: '',
