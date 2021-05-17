@@ -752,13 +752,16 @@ export default {
       if (this.reportLists.length > 19) {
         this.$message.warning("已达到上限！")
         return
+      } else {
+        this.$message.warning('暂不支持！')
+        return
       }
-      let cope = {
-        title: '',
-        unit: '',
-        value: ''
-      }
-      this.reportLists.push(cope);
+      // let cope = {
+      //   title: '',
+      //   unit: '',
+      //   value: ''
+      // }
+      // this.reportLists.push(cope);
     },
     del: function (index) {
       this.reportLists.splice(index, 1);
