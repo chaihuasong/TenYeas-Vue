@@ -416,7 +416,7 @@ export default {
             this.reportLists.push(cope);
           }
         } else {
-          this.reportLists = this.defaultReportLists
+          this.reportLists = JSON.parse(JSON.stringify(this.defaultReportLists))
           this.templateId = '0'
         }
       });
@@ -424,7 +424,7 @@ export default {
     initReportTemplateId() {
       let templateId = -1
       let preDay = 0
-      for(let i = 0; i < this.monthsNotesList.length; i++) {
+      for (let i = 0; i < this.monthsNotesList.length; i++) {
         let tempDay = parseInt(this.monthsNotesList[i].date.split('-')[2])
         if (preDay < tempDay) {
           if (this.monthsNotesList[i].templateId !== null) {
@@ -434,7 +434,7 @@ export default {
         }
       }
       if (templateId === -1) {
-        this.reportLists = this.defaultReportLists
+        this.reportLists = JSON.parse(JSON.stringify(this.defaultReportLists))
         this.templateId = '0'
       } else {
         this.getReportTemplate(templateId)
@@ -525,7 +525,7 @@ export default {
             }
           }
           if (templateId === null) {
-            this.reportLists = this.defaultReportLists
+            this.reportLists = JSON.parse(JSON.stringify(this.defaultReportLists))
             this.templateId = '0'
             return
           }
@@ -554,7 +554,7 @@ export default {
               }
               this.onDailyReportResultChange()
             } else {
-              this.reportLists = this.defaultReportLists
+              this.reportLists = JSON.parse(JSON.stringify(this.defaultReportLists))
               this.templateId = '0'
             }
           });
@@ -755,18 +755,17 @@ export default {
     resetDefaultTemplate() {
       this.reportLists = []
       this.templateId = '0'
-      console.log(this.defaultReportLists.length)
       for (let i = 0; i < this.defaultReportLists.length; i++) {
         let data = {
           title: this.defaultReportLists[i].title,
           unit: this.defaultReportLists[i].unit,
           value: ''
         }
-        console.log(this.defaultReportLists[i].title)
         this.reportLists.push(data);
+        this.editDailyReportMode = false
       }
     },
-    addEl: function () {
+    addEl() {
       if (this.reportLists.length > 19) {
         this.$message.warning("已达到上限！")
         return
@@ -781,7 +780,7 @@ export default {
       // }
       // this.reportLists.push(cope);
     },
-    del: function (index) {
+    del(index) {
       this.reportLists.splice(index, 1);
     },
     changeInfoMode() {
