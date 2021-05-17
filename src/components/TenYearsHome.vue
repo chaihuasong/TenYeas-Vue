@@ -397,6 +397,7 @@ export default {
           }
         } else {
           this.reportLists = this.defaultReportLists
+          this.templateId = '0'
         }
       });
     },
@@ -414,6 +415,7 @@ export default {
       }
       if (templateId === -1) {
         this.reportLists = this.defaultReportLists
+        this.templateId = '0'
       } else {
         this.getReportTemplate(templateId)
       }
@@ -504,6 +506,7 @@ export default {
           }
           if (templateId === null) {
             this.reportLists = this.defaultReportLists
+            this.templateId = '0'
             return
           }
           axios({
@@ -515,6 +518,7 @@ export default {
             }
           }).then((resp) => {
             if (reports != null && reports.length > 0  && reports[0] != null && reports[0] !== undefined) {
+              this.templateId = templateId
               this.reportLists = []
               for (let i = 0; i < resp.data.length; i++) {
                 let title = resp.data[i].split('_')[0]
@@ -531,6 +535,7 @@ export default {
               this.onDailyReportResultChange()
             } else {
               this.reportLists = this.defaultReportLists
+              this.templateId = '0'
             }
           });
         } else {
