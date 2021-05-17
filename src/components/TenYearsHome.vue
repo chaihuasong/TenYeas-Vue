@@ -83,7 +83,10 @@
       <template
           slot="dateCell"
           slot-scope="{date, data}">
-        <el-row>
+        <el-row
+            :class="[new Date(data.day).getFullYear() > new Date().getFullYear()
+            || (new Date(data.day).getFullYear() === new Date().getFullYear() && new Date(data.day).getMonth() > new Date().getMonth())
+            || (new Date(data.day).getFullYear() === new Date().getFullYear() && new Date(data.day).getMonth() === new Date().getMonth() && new Date(data.day).getDate() > new Date().getDate()) ? 'disabled-color' : '']">
           <div class="calendar-day" style="display:inline-block; font-size: 15px; margin-right: 5px">{{ data.day.split('-').slice(2).join('-') }}</div>
           <span style="font-size: 18px" :class="getState(data) === '-' ? 'red' : 'green'">{{ getState(data) }}</span><br/>
           <span style="font-size: 9px;color: #66b1ff">{{ getDailyNoteFormat(data) }}</span>
@@ -109,7 +112,7 @@
     <el-card style="float: left; width: 100%;margin-bottom: 20px;margin-top: 10px">
       <div style="float: left; margin-bottom: 10px;font-weight: bold;text-align: left">每日养气功课 & 经典实践</div>
       <i :class="[editDailyReportMode ?'el-icon-finished' : 'el-icon-edit']"
-         style="float: right;" @click="changeDailyReportTemplateMode"></i>
+         style="float: right;" @click="changeDailyReportTemplateMode" v-if="this.isToday()"></i>
       <br/>
 
       <div style="margin-top: 20px;margin-bottom: 20px">
@@ -272,6 +275,19 @@ export default {
     this.getHalfYearInfo()
   },
   methods: {
+    isToday() {
+      let now = new Date()
+      return this.selectedDate.getFullYear() === now.getFullYear() && this.selectedDate.getMonth() === now.getMonth() && this.selectedDate.getDate() === now.getDate()
+    },
+    isAfterToday(val) {
+      let value = new Date(val)
+      let now = new Date()
+      if (value.getFullYear() < now.getFullYear()) return false
+      if (value.getFullYear() > now.getFullYear()) return true
+      if (value.getMonth() > now.getMonth()) return true
+      if (value.getMonth() < now.getMonth()) return false
+      return value.getDate() > now.getDate()
+    },
     handlePlanInfoFlagChange(val) {
       let flag = val.toString().replace(',', '')
       this.planInfoFlag = []
@@ -571,6 +587,10 @@ export default {
       return ''
     },
     submitDailyNote() {
+      if (this.isAfterToday(this.selectedDate)) {
+        this.$message.warning("当前日期不允许打卡")
+        return
+      }
       if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
         this.$message.warning("信息获取失败，请关注“黄庭书院”公众号后刷新页面重试！")
         return
@@ -627,6 +647,10 @@ export default {
       this.dailyReportResult = data
     },
     submitDailyReport() {
+      if (this.isAfterToday(this.selectedDate)) {
+        this.$message.warning("当前日期不允许打卡")
+        return
+      }
       let data = {}
       let inputted = false
       for (let i = 0; i < this.reportLists.length; i++) {
@@ -1192,5 +1216,8 @@ a {
   float: right;
   margin-right: 15%;
   width: 80px;
+}
+.disabled-color {
+  color: lightgray;
 }
 </style>
