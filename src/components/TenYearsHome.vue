@@ -140,11 +140,15 @@
           </el-col>
         </el-row>
       </div>
-      <div style="position: relative;top: 5%;">
+      <div style="position: relative;top: 5%;" v-if="false">
         <el-button v-if="editDailyReportMode" icon="el-icon-plus" circle @click="addEl"
                    style="background: lightcyan;margin-top: 10px"></el-button>
       </div>
-      <div style="float: left; margin-bottom: 10px;font-weight: bold;text-align: left">每日分享（选填）</div>
+      <div style="position: relative;top: 5%;">
+        <el-button v-if="editDailyReportMode" @click="resetDefaultTemplate"
+                   style="background: lightcyan;margin-top: 10px">还原默认模板</el-button>
+      </div>
+      <div style="float: left; margin-bottom: 10px;margin-top: 10px;font-weight: bold;text-align: left">每日分享（选填）</div>
       <el-input
           type="textarea"
           :rows="3"
@@ -747,6 +751,20 @@ export default {
         });
       }
       this.editDailyReportMode = !this.editDailyReportMode
+    },
+    resetDefaultTemplate() {
+      this.reportLists = []
+      this.templateId = '0'
+      console.log(this.defaultReportLists.length)
+      for (let i = 0; i < this.defaultReportLists.length; i++) {
+        let data = {
+          title: this.defaultReportLists[i].title,
+          unit: this.defaultReportLists[i].unit,
+          value: ''
+        }
+        console.log(this.defaultReportLists[i].title)
+        this.reportLists.push(data);
+      }
     },
     addEl: function () {
       if (this.reportLists.length > 19) {
