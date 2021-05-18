@@ -642,6 +642,9 @@ export default {
           });
         } else {
           this.initReportTemplateId()
+          this.note = ''
+          this.share = ''
+          this.state = ''
         }
       });
     },
