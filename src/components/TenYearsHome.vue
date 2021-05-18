@@ -165,22 +165,20 @@
       <el-button v-if="!editDailyReportMode" style="float: right;margin-top: 10px;margin-bottom: 15px" @click="submitDailyReport"
                  v-clipboard:copy="dailyReportResult">提交</el-button>
     </el-card>
-    <el-dialog title="从模板库中添加" :visible.sync="addTemplateDialogVisible">
-      <el-form :model="templateList">
-        <div v-for='(item) in templateList' v-bind:key='item.id'>
-          <el-row style="margin-top: 10px;font-size: 16px;">
-            <el-col span="16">
-              <span autocomplete="off">{{ item.name }}</span>
-            </el-col>
-            <el-col span="8">
-              <el-checkbox item.che></el-checkbox>
-            </el-col>
-          </el-row>
-        </div>
-      </el-form>
+    <el-dialog title="从模板库中添加" :visible.sync="addTemplateDialogVisible" custom-class="templateStyle">
+      <div v-for='item in allDefaultReportsLists' v-bind:key='item.id'>
+        <el-row style="margin-top: 10px;font-size: 16px;">
+          <el-col :span="14">
+            <div autocomplete="off" style="text-align: right">{{ item.template }}</div>
+          </el-col>
+          <el-col :span="10">
+            <el-checkbox :checked="templateChecked(item)" @change="checked=>handleTemplateCheckedChange(checked, item.template)"></el-checkbox>
+          </el-col>
+        </el-row>
+      </div>
       <div slot="footer" class="dialog-footer">
         <el-button @click="addTemplateDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="addTemplateDialogVisible = false">确 定</el-button>
+        <el-button type="primary" @click="confirmAddTemplate()">确 定</el-button>
       </div>
     </el-dialog>
   </div>
@@ -232,11 +230,6 @@ export default {
       dialogVisible: false,
       dialogTableVisible: false,
       addTemplateDialogVisible: false,
-      templateList: [
-        {id: 0, name: "家人陪伴1"},
-        {id: 1, name: "家人陪伴2"},
-        {id: 2, name: "家人陪伴3"},
-      ],
       imgUrl: '',
       isTimeout: false,
       chujieIndex: '11',
@@ -271,7 +264,9 @@ export default {
         {title: "宽两秒", unit: '次', value: ''},
         {title: "家务", unit: '分钟', value: ''},
       ],
+      allDefaultReportsLists: [],
       reportLists: [],
+      newReportLists: [],
       pickerOptions: {
         disabledDate(time) {
           return time.getTime() > Date.now();
@@ -308,8 +303,86 @@ export default {
     this.getMonthInfo()
     this.getLastMonthInfo()
     this.getHalfYearInfo()
+    this.getAllDefaultReportsLists()
   },
   methods: {
+    confirmAddTemplate() {
+      if (this.newReportLists.length === 0) {
+        this.$message.warning('至少添加一项内容！')
+        return
+      }
+      this.addTemplateDialogVisible = false
+      this.reportLists = []
+      for (let i = 0; i < this.newReportLists.length; i++) {
+        let title = this.newReportLists[i].split('_')[0]
+        let unit = this.newReportLists[i].split('_').length === 2 ? this.newReportLists[i].split('_')[1] : ''
+        let value = ''
+        let cope = {
+          title: title,
+          value: value,
+          unit: unit,
+        }
+        this.reportLists.push(cope)
+      }
+    },
+    handleTemplateCheckedChange(checked, template) {
+      if (checked) {
+        if (!this.itemInList(template, this.newReportLists)) {
+          this.newReportLists.push(template)
+        }
+      } else {
+        if (this.itemInList(template, this.newReportLists)) {
+          this.newReportLists.splice(this.newReportLists.indexOf(template), 1)
+        }
+      }
+    },
+    syncNewReportList() {
+      this.newReportLists = []
+      for(let i = 0; i < this.reportLists.length; i++) {
+        this.newReportLists.push(this.reportLists[i].title)
+      }
+    },
+    templateChecked(item) {
+      if (this.reportLists.length === 0) return false
+      for (let i = 0; i < this.reportLists.length; i++) {
+        if (item.template === (this.reportLists[i].title + '_' + this.reportLists[i].unit)) {
+          if (!this.itemInList(item.template, this.newReportLists)) {
+            this.newReportLists.push(item.template)
+          }
+          return true
+        }
+      }
+      return false
+    },
+    itemInList(item, list) {
+      for (let i = 0; i < list.length; i++) {
+        if (item === list[i]) {
+          return true
+        }
+      }
+      return false
+    },
+    getAllDefaultReportsLists() {
+      axios({
+        method: "GET",
+        url: this.serverUrl + 'getAllDefaultTemplate',
+        data: null,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        if (res.data !== null && res.data.length > 0) {
+          this.allDefaultReportsLists = []
+          for (let i = 0; i < res.data.length; i++) {
+            let item = {
+              id: res.data[i].id,
+              template: res.data[i].template,
+            }
+            this.allDefaultReportsLists.push(item)
+          }
+        }
+      });
+    },
     isToday() {
       let now = new Date()
       return this.selectedDate.getFullYear() === now.getFullYear() && this.selectedDate.getMonth() === now.getMonth() && this.selectedDate.getDate() === now.getDate()
@@ -450,6 +523,7 @@ export default {
           this.reportLists = JSON.parse(JSON.stringify(this.defaultReportLists))
           this.templateId = '0'
         }
+        this.syncNewReportList()
       });
     },
     initReportTemplateId() {
@@ -467,6 +541,7 @@ export default {
       if (templateId === -1) {
         this.reportLists = JSON.parse(JSON.stringify(this.defaultReportLists))
         this.templateId = '0'
+        this.syncNewReportList()
       } else {
         this.getReportTemplate(templateId)
       }
@@ -558,6 +633,7 @@ export default {
           if (templateId === null) {
             this.reportLists = JSON.parse(JSON.stringify(this.defaultReportLists))
             this.templateId = '0'
+            this.syncNewReportList()
             return
           }
           axios({
@@ -588,6 +664,7 @@ export default {
               this.reportLists = JSON.parse(JSON.stringify(this.defaultReportLists))
               this.templateId = '0'
             }
+            this.syncNewReportList()
           });
         } else {
           this.initReportTemplateId()
@@ -799,6 +876,7 @@ export default {
           }
           this.reportLists.push(data);
           this.editDailyReportMode = false
+          this.syncNewReportList()
         }
       })
     },
@@ -807,16 +885,11 @@ export default {
         this.$message.warning("已达到上限！")
         return
       }
-      //this.addTemplateDialogVisible = true
-      // let cope = {
-      //   title: '',
-      //   unit: '',
-      //   value: ''
-      // }
-      // this.reportLists.push(cope);
+      this.addTemplateDialogVisible = true
     },
     del(index) {
-      this.reportLists.splice(index, 1);
+      this.handleTemplateCheckedChange(false, this.reportLists[index].title + '_' + this.reportLists[index].unit)
+      this.reportLists.splice(index, 1)
     },
     changeInfoMode() {
       if (this.editInfoMode) {
@@ -1274,5 +1347,8 @@ a {
 }
 .disabled-color {
   color: lightgray;
+}
+.templateStyle {
+  width: 80%;
 }
 </style>
