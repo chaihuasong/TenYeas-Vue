@@ -27,13 +27,10 @@
           <el-submenu index="2">
             <template slot="title"><i class="el-icon-setting"></i>设置</template>
             <el-menu-item-group>
-              <el-menu-item index="/home/defaultTemplateList">模板集合</el-menu-item>
+              <el-menu-item index="/home/templateTab">编辑模板</el-menu-item>
             </el-menu-item-group>
             <el-menu-item-group>
-              <el-menu-item index="/home/modifyHeader">修改Header</el-menu-item>
-            </el-menu-item-group>
-            <el-menu-item-group>
-              <el-menu-item index="/home/modifyFooter">修改Footer</el-menu-item>
+              <el-menu-item index="/home/tenYearsHtmlTab">页面修改</el-menu-item>
             </el-menu-item-group>
           </el-submenu>
         </el-menu>
@@ -68,7 +65,7 @@ export default {
   data() {
     return {
       collapseBtnClick: false,
-      isCollapse: true,
+      isCollapse: false,
     }
   },
   methods: {

@@ -19,7 +19,7 @@
 <!--      <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{this.getYearsRemaining()}}</span> 天-->
 <!--    </el-card>-->
 
-    <el-collapse v-model="this.planInfoFlag" @change="handlePlanInfoFlagChange" style="float: left; width: 100%;margin-top: 20px;margin-bottom: 20px">
+    <el-collapse v-model="this.planInfoFlag" @change="handlePlanInfoFlagChange" style="float: left; width: 100%;margin-top: 20px;margin-bottom: 15px">
       <el-collapse-item title="计划和总结" name="1">
 
         <el-card style="float: left; width: 100%;margin-top: 10px">
@@ -104,7 +104,7 @@
       <el-radio-group v-model="state" style="margin-bottom: 10px;text-align: left">
         <el-radio label="1" style="width: 90%;float: left">精气神得到长养，朝着目标<span style="margin-left: 10px;margin-right: 5px;font-size: 20px;font-weight: bold">+</span></el-radio>
         <br/>
-        <el-radio label="0" style="width: 90%;float: left;margin-top: 10px">精气神没有长养，偏离目标<span style="margin-left: 10px;margin-right: 5px;font-size: 14px;font-weight: bold">一</span></el-radio>
+        <el-radio label="0" style="width: 90%;float: left;margin-top: 10px;margin-bottom: 5px">精气神没有长养，偏离目标<span style="margin-left: 10px;margin-right: 5px;font-size: 14px;font-weight: bold">一</span></el-radio>
       </el-radio-group>
       <el-input
           type="textarea"
@@ -250,17 +250,8 @@ export default {
       templateId: '0',
       state: '1',
       dailyReportResult: '',
-      defaultReportLists: [
-        {title: "家人陪伴", unit: '分钟', value: ''},
-        {title: "站桩", unit: '分钟', value: ''},
-        {title: "静坐", unit: '分钟', value: ''},
-        {title: "诵读经典", unit: '分钟', value: ''},
-        {title: "经典学习", unit: '分钟', value: ''},
-        {title: "运动", unit: '分钟', value: ''},
-        {title: "善本", unit: '条', value: ''},
-        {title: "宽两秒", unit: '次', value: ''},
-        {title: "家务", unit: '分钟', value: ''},
-      ],
+      defaultReportLists1: [],
+      defaultReportLists2: [],
       allDefaultReportsLists: [],
       reportLists: [],
       newReportLists: [],
@@ -294,6 +285,8 @@ export default {
   mounted: function () {
     document.title = this.$route.meta.title
     console.log("TenYearsHome getData")
+    this.getDefaultReportTemplate1()
+    this.getDefaultReportTemplate2()
     this.getData()
     this.getMonthNotes()
     this.configWechat()
@@ -303,6 +296,50 @@ export default {
     this.getAllDefaultReportsLists()
   },
   methods: {
+    getDefaultReportTemplate1() {
+      axios({
+        method: "GET",
+        url: this.serverUrl + 'getAllDefaultTemplate1',
+        data: null,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        if (res.data !== null && res.data.length > 0) {
+          this.defaultReportLists1 = []
+          for (let i = 0; i < res.data.length; i++) {
+            let item = {
+              title: res.data[i].template.split('_')[0],
+              unit: res.data[i].template.split('_')[1],
+              value: '',
+            }
+            this.defaultReportLists1.push(item)
+          }
+        }
+      });
+    },
+    getDefaultReportTemplate2() {
+      axios({
+        method: "GET",
+        url: this.serverUrl + 'getAllDefaultTemplate2',
+        data: null,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        if (res.data !== null && res.data.length > 0) {
+          this.defaultReportLists2 = []
+          for (let i = 0; i < res.data.length; i++) {
+            let item = {
+              title: res.data[i].template.split('_')[0],
+              unit: res.data[i].template.split('_')[1],
+              value: '',
+            }
+            this.defaultReportLists2.push(item)
+          }
+        }
+      });
+    },
     confirmAddTemplate() {
       if (this.newReportLists.length === 0) {
         this.$message.warning('至少添加一项内容！')
@@ -494,7 +531,7 @@ export default {
             this.reportLists.push(cope);
           }
         } else {
-          this.reportLists = JSON.parse(JSON.stringify(this.defaultReportLists))
+          this.reportLists = JSON.parse(JSON.stringify(this.chujie === '1' ? this.defaultReportLists1 : this.defaultReportLists2))
           this.templateId = '0'
         }
         this.syncNewReportList()
@@ -513,7 +550,7 @@ export default {
         }
       }
       if (templateId === -1) {
-        this.reportLists = JSON.parse(JSON.stringify(this.defaultReportLists))
+        this.reportLists = JSON.parse(JSON.stringify(this.chujie === '1' ? this.defaultReportLists1 : this.defaultReportLists2))
         this.templateId = '0'
         this.syncNewReportList()
       } else {
@@ -605,7 +642,7 @@ export default {
             }
           }
           if (templateId === null) {
-            this.reportLists = JSON.parse(JSON.stringify(this.defaultReportLists))
+            this.reportLists = JSON.parse(JSON.stringify(this.chujie === '1' ? this.defaultReportLists1 : this.defaultReportLists2))
             this.templateId = '0'
             this.syncNewReportList()
             return
@@ -635,7 +672,7 @@ export default {
               }
               this.onDailyReportResultChange()
             } else {
-              this.reportLists = JSON.parse(JSON.stringify(this.defaultReportLists))
+              this.reportLists = JSON.parse(JSON.stringify(this.chujie === '1' ? this.defaultReportLists1 : this.defaultReportLists2))
               this.templateId = '0'
             }
             this.syncNewReportList()
@@ -840,10 +877,10 @@ export default {
     resetDefaultTemplate() {
       this.reportLists = []
       this.templateId = '0'
-      for (let i = 0; i < this.defaultReportLists.length; i++) {
+      for (let i = 0; i < (this.chujie === '1' ? this.defaultReportLists1.length : this.defaultReportLists2.length); i++) {
         let data = {
-          title: this.defaultReportLists[i].title,
-          unit: this.defaultReportLists[i].unit,
+          title: this.chujie === '1' ? this.defaultReportLists1[i].title : this.defaultReportLists2[i].title,
+          unit: this.chujie === '1' ? this.defaultReportLists1[i].unit : this.defaultReportLists2[i].unit,
           value: ''
         }
         this.reportLists.push(data);

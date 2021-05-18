@@ -5,8 +5,6 @@ import LoginAdmin from '@/components/LoginAdmin'
 import Login from '@/components/Login'
 import Redirect from '@/components/Redirect'
 import Admin from '@/components/Admin'
-import ModifyHeader from '@/components/ModifyHeader'
-import ModifyFooter from '@/components/ModifyFooter'
 import InfoList from '@/components/InfoList'
 import UploadRole from "@/components/UploadRole";
 import LoginRole from "@/components/LoginRole";
@@ -20,7 +18,8 @@ import DailyReportList from "@/components/DailyReportList";
 import TenYearsHome from "@/components/TenYearsHome";
 import HalfYearInfoList from "@/components/HalfYearInfoList";
 import MonthInfoList from "@/components/MonthInfoList";
-import DefaultTemplateList from "@/components/DefaultTemplateList";
+import TemplateTab from "@/components/settings/TemplateTab";
+import TenYearsHtmlTab from "@/components/settings/TenYearsHtmlTab";
 
 Vue.use(Router)
 
@@ -108,24 +107,6 @@ export default new Router({
       },
       children: [
         {
-          path: 'modifyHeader',
-          name: 'modifyHeader',
-          component: ModifyHeader,
-          meta: {
-            title: '管理后台',
-            footShow: false,
-          },
-        },
-        {
-          path: 'modifyFooter',
-          name: 'modifyFooter',
-          component: ModifyFooter,
-          meta: {
-            title: '管理后台',
-            footShow: false,
-          },
-        },
-        {
           path: 'infoList',
           name: 'infoList',
           component: InfoList,
@@ -153,9 +134,18 @@ export default new Router({
           },
         },
         {
-          path: 'defaultTemplateList',
-          name: 'defaultTemplateList',
-          component: DefaultTemplateList,
+          path: 'templateTab',
+          name: 'templateTab',
+          component: TemplateTab,
+          meta: {
+            title: '管理后台',
+            footShow: false,
+          },
+        },
+        {
+          path: 'tenYearsHtmlTab',
+          name: 'tenYearsHtmlTab',
+          component: TenYearsHtmlTab,
           meta: {
             title: '管理后台',
             footShow: false,
