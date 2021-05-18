@@ -126,7 +126,7 @@
             <span>{{ list.title }}</span>
           </el-col>
           <el-col v-if="editDailyReportMode" :span="8" style="text-align: right">
-            <el-input v-model="list.title" placeholder="请输入项目"></el-input>
+            <el-input v-model="list.title" placeholder="请输入项目" disabled></el-input>
           </el-col>
           <el-col :span="8" v-if="!editDailyReportMode">
             <el-input type="number" v-model="list.value" placeholder="请输入" @change="onDailyReportResultChange"></el-input>
@@ -135,7 +135,7 @@
             <el-input disabled/>
           </el-col>
           <el-col :span="8" v-if="editDailyReportMode">
-            <el-input v-model="list.unit" placeholder="请输入单位"></el-input>
+            <el-input v-model="list.unit" placeholder="请输入单位" disabled></el-input>
           </el-col>
           <el-col :span="4" v-if="!editDailyReportMode" style="margin-top: 10px;text-align: left">
             <span>{{ list.unit }}</span>
@@ -165,17 +165,14 @@
       <el-button v-if="!editDailyReportMode" style="float: right;margin-top: 10px;margin-bottom: 15px" @click="submitDailyReport"
                  v-clipboard:copy="dailyReportResult">提交</el-button>
     </el-card>
-    <el-dialog title="从模板库中添加" :visible.sync="addTemplateDialogVisible" custom-class="templateStyle">
-      <div v-for='item in allDefaultReportsLists' v-bind:key='item.id'>
-        <el-row style="margin-top: 10px;font-size: 16px;">
-          <el-col :span="14">
-            <div autocomplete="off" style="text-align: right">{{ item.template }}</div>
-          </el-col>
+    <el-dialog title="从模板库中选择" :visible.sync="addTemplateDialogVisible" custom-class="templateStyle">
+      <el-checkbox-group v-model="newReportLists">
+        <el-row style="margin-top: 10px;font-size: 16px;" v-for="item in allDefaultReportsLists" :key="item.template">
           <el-col :span="10">
-            <el-checkbox :checked="templateChecked(item)" @change="checked=>handleTemplateCheckedChange(checked, item.template)"></el-checkbox>
+            <el-checkbox :label="item.template" style="height:30px;width: auto; font-size: 18px;text-align: left;margin-left: 30px" />
           </el-col>
         </el-row>
-      </div>
+      </el-checkbox-group>
       <div slot="footer" class="dialog-footer">
         <el-button @click="addTemplateDialogVisible = false">取 消</el-button>
         <el-button type="primary" @click="confirmAddTemplate()">确 定</el-button>
@@ -325,34 +322,11 @@ export default {
         this.reportLists.push(cope)
       }
     },
-    handleTemplateCheckedChange(checked, template) {
-      if (checked) {
-        if (!this.itemInList(template, this.newReportLists)) {
-          this.newReportLists.push(template)
-        }
-      } else {
-        if (this.itemInList(template, this.newReportLists)) {
-          this.newReportLists.splice(this.newReportLists.indexOf(template), 1)
-        }
-      }
-    },
     syncNewReportList() {
       this.newReportLists = []
       for(let i = 0; i < this.reportLists.length; i++) {
-        this.newReportLists.push(this.reportLists[i].title)
+        this.newReportLists.push(this.reportLists[i].title + '_' + this.reportLists[i].unit)
       }
-    },
-    templateChecked(item) {
-      if (this.reportLists.length === 0) return false
-      for (let i = 0; i < this.reportLists.length; i++) {
-        if (item.template === (this.reportLists[i].title + '_' + this.reportLists[i].unit)) {
-          if (!this.itemInList(item.template, this.newReportLists)) {
-            this.newReportLists.push(item.template)
-          }
-          return true
-        }
-      }
-      return false
     },
     itemInList(item, list) {
       for (let i = 0; i < list.length; i++) {
@@ -861,24 +835,18 @@ export default {
       this.editDailyReportMode = !this.editDailyReportMode
     },
     resetDefaultTemplate() {
-      this.$confirm('还原成默认模板吗?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        this.reportLists = []
-        this.templateId = '0'
-        for (let i = 0; i < this.defaultReportLists.length; i++) {
-          let data = {
-            title: this.defaultReportLists[i].title,
-            unit: this.defaultReportLists[i].unit,
-            value: ''
-          }
-          this.reportLists.push(data);
-          this.editDailyReportMode = false
-          this.syncNewReportList()
+      this.reportLists = []
+      this.templateId = '0'
+      for (let i = 0; i < this.defaultReportLists.length; i++) {
+        let data = {
+          title: this.defaultReportLists[i].title,
+          unit: this.defaultReportLists[i].unit,
+          value: ''
         }
-      })
+        this.reportLists.push(data);
+        this.editDailyReportMode = false
+        this.syncNewReportList()
+      }
     },
     addEl() {
       if (this.reportLists.length > 19) {
@@ -888,8 +856,8 @@ export default {
       this.addTemplateDialogVisible = true
     },
     del(index) {
-      this.handleTemplateCheckedChange(false, this.reportLists[index].title + '_' + this.reportLists[index].unit)
       this.reportLists.splice(index, 1)
+      this.syncNewReportList()
     },
     changeInfoMode() {
       if (this.editInfoMode) {
@@ -1350,5 +1318,11 @@ a {
 }
 .templateStyle {
   width: 80%;
+}
+.el-checkbox {
+  width: 100%;
+}
+.el-checkbox .el-checkbox__label {
+  font-size: 18px;
 }
 </style>
