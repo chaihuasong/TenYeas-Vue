@@ -780,11 +780,11 @@ export default {
       let data = {}
       let inputted = false
       for (let i = 0; i < this.reportLists.length; i++) {
-        let value = this.reportLists[i].value.trim() === '' ? 0 : this.reportLists[i].value.trim()
+        let value = this.reportLists[i].value.trim() === '' ? '0' : this.reportLists[i].value.trim()
         if (value !== 0) {
           inputted = true
         }
-        data['value' + (i + 1)] = this.reportLists[i].title.trim() + value + this.reportLists[i].unit.trim()
+        data['value' + (i + 1)] = value
       }
 
       if (!inputted) {

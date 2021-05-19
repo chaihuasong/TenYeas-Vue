@@ -210,7 +210,7 @@ export default {
                   this.$message.warning('删除失败！')
                 } else {
                   this.$message.success('已删除！')
-                  this.tableData.splice(index, 1)
+                  this.tableData.splice(id, 1)
                 }
               })
               console.log(res)

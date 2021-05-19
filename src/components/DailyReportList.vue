@@ -155,6 +155,9 @@
         <el-form-item label="20.">
           <el-input v-model="newValueInfo.value20" autocomplete="off"></el-input>
         </el-form-item>
+        <el-form-item label="每日分享.">
+          <el-input v-model="newValueInfo.share" autocomplete="off"></el-input>
+        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="editDialogVisible = false">取 消</el-button>
@@ -205,6 +208,7 @@ export default {
         note: '',
         templateId: '',
         state: '',
+        share: '',
         value1: '',
         value2: '',
         value3: '',
@@ -233,6 +237,7 @@ export default {
         note: '',
         templateId: '',
         state: '',
+        share: '',
         value1: '',
         value2: '',
         value3: '',
@@ -324,6 +329,7 @@ export default {
         value18: item.value18,
         value19: item.value19,
         value20: item.value20,
+        share: item.share,
       }
       this.editDialogVisible = true
     },
@@ -372,7 +378,7 @@ export default {
                   this.$message.warning('删除失败！')
                 } else {
                   this.$message.success('已删除！')
-                  this.tableData.splice(index, 1)
+                  this.tableData.splice(id, 1)
                 }
               })
               console.log(res)
