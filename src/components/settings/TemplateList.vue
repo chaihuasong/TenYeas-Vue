@@ -159,7 +159,7 @@
 <script>
 import axios from "axios"
 import qs from "qs"
-import global from './Common.vue'
+import global from '../Common.vue'
 
 export default {
   data() {

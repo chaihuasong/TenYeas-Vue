@@ -1,6 +1,9 @@
 <template>
   <div>
     <el-tabs type="border-card">
+      <el-tab-pane label="线上模板">
+        <TemplateList/>
+      </el-tab-pane>
       <el-tab-pane label="模板集合">
         <DefaultTemplateList/>
       </el-tab-pane>
@@ -18,12 +21,14 @@
 import DefaultTemplateList from "@/components/settings/DefaultTemplateList"
 import DefaultTemplateList1 from "@/components/settings/DefaultTemplateList1"
 import DefaultTemplateList2 from "@/components/settings/DefaultTemplateList2"
+import TemplateList from "@/components/settings/TemplateList";
 
 export default {
   components:{
     DefaultTemplateList:DefaultTemplateList,
     DefaultTemplateList1:DefaultTemplateList1,
     DefaultTemplateList2:DefaultTemplateList2,
+    TemplateList:TemplateList,
   },
 }
 </script>

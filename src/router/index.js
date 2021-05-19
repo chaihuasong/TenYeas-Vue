@@ -13,7 +13,6 @@ import MyHome from "@/components/MyHome";
 import Error from "@/components/Error";
 import HTQ from "@/components/HTQ";
 import DailyReport from "@/components/DailyReport";
-import TemplateList from "@/components/TemplateList";
 import DailyReportList from "@/components/DailyReportList";
 import TenYearsHome from "@/components/TenYearsHome";
 import HalfYearInfoList from "@/components/HalfYearInfoList";
@@ -123,15 +122,6 @@ export default new Router({
             title: '管理后台',
             footShow: false,
           }
-        },
-        {
-          path: 'templateList',
-          name: 'templateList',
-          component: TemplateList,
-          meta: {
-            title: '管理后台',
-            footShow: false,
-          },
         },
         {
           path: 'templateTab',

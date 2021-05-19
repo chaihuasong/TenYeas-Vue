@@ -12,9 +12,6 @@
               <el-menu-item index="/home/infoList">立志列表</el-menu-item>
             </el-menu-item-group>
             <el-menu-item-group>
-              <el-menu-item index="/home/templateList">打卡模板</el-menu-item>
-            </el-menu-item-group>
-            <el-menu-item-group>
               <el-menu-item index="/home/reportList">打卡列表</el-menu-item>
             </el-menu-item-group>
             <el-menu-item-group>
