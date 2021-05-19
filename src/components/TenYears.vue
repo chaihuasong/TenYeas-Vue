@@ -66,7 +66,7 @@
         v-model="info">
     </el-input>
     <br/>
-    <el-button type="text" @click="capturedSuccess = false;stepInfoDialogVisible = false;dialogVisible = true;startCapture()">生成图片存档（建议先提交再点击）</el-button>
+    <el-button type="text" @click="capturedSuccess = false;stepInfoDialogVisible = false;dialogVisible = true;startCapture()">生成图片存档</el-button>
     <el-dialog
         :visible.sync="dialogVisible"
         :title="capturedSuccess ? '图片生成成功' : '正在生成图片中...'"
@@ -102,7 +102,7 @@
         style="width: 90%"
         v-model="stepInfo"/>
     <br/>
-    <el-button type="text" @click="capturedSuccess = false;stepInfoDialogVisible = true;dialogVisible = true;startCapture()">生成图片存档（建议先提交再点击）</el-button>
+    <el-button type="text" @click="capturedSuccess = false;stepInfoDialogVisible = true;dialogVisible = true;startCapture()">生成图片存档</el-button>
     <br/>
     <div class="titleNameStyle"><span style="margin-left: 10px"/> 10.生日</div>
     <br/>
