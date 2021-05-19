@@ -74,20 +74,22 @@
         height="100%">
       <span>{{ capturedSuccess ? '长按下方图片保存至手机' : '请稍等...' }}</span>
       <br/><br/>
-      <el-image
-          v-if="capturedSuccess"
-          style="width: 100%; height: 100%"
-          :src="imgUrl" />
-      <div v-if="!stepInfoDialogVisible && !capturedSuccess" ref="imageWrapper" style="position: relative; width: 100%; height: 100%;">
-        <img src="../assets/img/lizhi_card.png" width="100%" height="100%" alt="" oncontextmenu="return false;">
-        <div style="text-align: left" class="large" v-bind:class="{'small': this.smallScreen}">{{ this.info }}</div>
-        <div class="signName" v-bind:class="{'signNameSmall': this.smallScreen}">{{ this.name }}</div>
-      </div>
-      <div v-if="stepInfoDialogVisible && !capturedSuccess" ref="imageWrapper" style="position: relative; width: 100%; height: 100%;">
-        <img src="../assets/img/step_info.png" width="100%" height="100%" alt="" oncontextmenu="return false;">
-        <p style="text-align: left" class="stepInfoStyle" v-bind:class="{'stepInfoLargeStyle': this.stepInfo.length < 100}" v-html="this.preText(this.stepInfo).replaceAll('↓', '<br/>')"/>
-        <p class="stepSignName" v-bind:class="{'stepSignNameLargeStyle': this.stepInfo.length < 100}">{{ this.name }}</p>
-      </div>
+      <transition name="el-fade-in">
+        <el-image
+            v-if="capturedSuccess"
+            style="width: 100%; height: 100%"
+            :src="imgUrl" />
+        <div v-if="!stepInfoDialogVisible && !capturedSuccess" ref="imageWrapper" style="position: relative; width: 100%; height: 100%;">
+          <img src="../assets/img/lizhi_card.png" width="100%" height="100%" alt="" oncontextmenu="return false;">
+          <div style="text-align: left" class="large" v-bind:class="{'small': this.smallScreen}">{{ this.info }}</div>
+          <div class="signName" v-bind:class="{'signNameSmall': this.smallScreen}">{{ this.name }}</div>
+        </div>
+        <div v-if="stepInfoDialogVisible && !capturedSuccess" ref="imageWrapper" style="position: relative; width: 100%; height: 100%;">
+          <img src="../assets/img/step_info.png" width="100%" height="100%" alt="" oncontextmenu="return false;">
+          <p style="text-align: left" class="stepInfoStyle" v-bind:class="{'stepInfoLargeStyle': this.stepInfo.length < 100}" v-html="this.preText(this.stepInfo).replaceAll('↓', '<br/>')"/>
+          <p class="stepSignName" v-bind:class="{'stepSignNameLargeStyle': this.stepInfo.length < 100}">{{ this.name }}</p>
+        </div>
+      </transition>
       <br/>
     </el-dialog>
     <br/>
