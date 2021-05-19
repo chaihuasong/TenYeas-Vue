@@ -41,7 +41,16 @@
     <el-input placeholder="请输入" prefix-icon="el-icon-mobile-phone" v-model="telephone" class="inputStyle" clearable
               pattern="[0-9]*"></el-input>
     <br/>
-    <div class="titleNameStyle"><span class='req'>*</span> 7.十年立志内容（不超过80字）</div>
+    <div class="sexTitleStyle"><span class='req'>*</span> 7.是否参加过黄庭禅初阶课程？</div>
+    <br/>
+    <br/>
+    <el-radio-group v-model="chujie">
+      <el-radio label="1">参加过</el-radio>
+      <el-radio label="0">未参加过</el-radio>
+    </el-radio-group>
+    <br/>
+    <br/>
+    <div class="titleNameStyle"><span class='req'>*</span> 8.十年立志内容（不超过80字）</div>
     <br/>
     <el-image
         style="width: 100%; height: 10%"
@@ -57,10 +66,10 @@
         v-model="info">
     </el-input>
     <br/>
-<!--    <el-button type="text" @click="dialogVisible = true">生成图片存档（建议先提交再点击）</el-button>-->
+    <el-button type="text" @click="dialogVisible = true">生成图片存档（建议先提交再点击）</el-button>
     <el-dialog
         :visible.sync="dialogVisible"
-        :title= "stepInfoDialogVisible ? '生成图片' : '信息已成功提交！'"
+        :title="'生成图片'"
         width="100%"
         height="100%">
       <span>您可以点击下方'生成图片'按钮将图片保存。</span>
@@ -91,7 +100,7 @@
     </el-dialog>
     <br/>
     <br/>
-    <div class="titleNameStyle"><span style="margin-left: 10px"/> 8.为达到十年立志的目标，您会有哪些具体的实施步骤？</div>
+    <div class="titleNameStyle"><span style="margin-left: 10px"/> 9.为达到十年立志的目标，您会有哪些具体的实施步骤？</div>
     <br/>
     <br/>
     <el-input
@@ -103,7 +112,7 @@
     <br/>
     <el-button type="text" @click="stepInfoDialogVisible = true;dialogVisible = true">生成图片存档（建议先提交再点击）</el-button>
     <br/>
-    <div class="titleNameStyle"><span class='req'>*</span> 9.生日</div>
+    <div class="titleNameStyle"><span style="margin-left: 10px"/> 10.生日</div>
     <br/>
     <br/>
     <el-date-picker
@@ -127,16 +136,7 @@
       <br/>
       <br/>
     </div>
-    <div class="sexTitleStyle"><span class='req'>*</span> {{this.chujieIndex}}.是否参加过黄庭禅初阶课程？</div>
-    <br/>
-    <br/>
-    <el-radio-group v-model="chujie">
-      <el-radio label="1">参加过</el-radio>
-      <el-radio label="0">未参加过</el-radio>
-    </el-radio-group>
-    <br/>
-    <br/>
-    <div class="sexTitleStyle"><span class='req'>*</span> {{this.openIndex}}.立志内容能否公开</div>
+    <div class="sexTitleStyle"><span style="margin-left: 10px"/> 11.立志内容能否公开</div>
     <br/>
     <br/>
     <el-radio-group v-model="open">
@@ -188,7 +188,7 @@ export default {
       info: '',
       stepInfo: '',
       createDate: '',
-      birthday: '1988',
+      birthday: '',
       open: '',
       daixie: '',
       chujie: '',
@@ -212,8 +212,6 @@ export default {
       dialogTableVisible: false,
       imgUrl: '',
       isTimeout: false,
-      chujieIndex: '11',
-      openIndex: '12',
       smallScreen: false,
       buttonText: '提交'
     };
@@ -356,7 +354,7 @@ export default {
       })
     },
     getData() {
-      let uid = this.$store.getters.getUnionid
+      let uid = ''//this.$store.getters.getUnionid
       if (uid != null && uid !== '' && uid !== undefined && uid !== 'undefined') {
         this.unionid = uid.replace("\"","").replace("\"","")
         console.log("unionid:" + this.unionid)
@@ -475,10 +473,6 @@ export default {
         this.$message.warning("立志信息字数超过80字!")
         return;
       }
-      if (this.birthday === '1988') {
-        this.$message.warning("请选择正确的生日！")
-        return;
-      }
       if (this.chujie.trim() === '') {
         this.$message.warning("请选择是否上过初阶课程！")
         return;
@@ -487,10 +481,6 @@ export default {
       //   this.$message.warning("请选择是否需要代写！")
       //   return;
       // }
-      if (this.open.trim() === '') {
-        this.$message.warning("请选择立志内容是否公开！")
-        return;
-      }
       if (this.info.length < 50) {
         this.smallScreen = false
       } else {
@@ -535,7 +525,7 @@ export default {
         }
       }).then((res) => {
         console.log(res.status)
-        if (res.status != 200) {
+        if (res.status !== 200) {
           alert("error!")
         }
         axios({
@@ -548,8 +538,8 @@ export default {
         }).then((res) => {
           if (res != null && res.data != null && res.data !== '') {
             this.$message.success('信息已成功' + this.buttonText + '！')
-            this.stepInfoDialogVisible = false
-            this.dialogVisible = true
+            // this.stepInfoDialogVisible = false
+            // this.dialogVisible = true
             this.buttonText = '修改'
             console.log(res)
           } else {
