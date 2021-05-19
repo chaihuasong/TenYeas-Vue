@@ -225,17 +225,13 @@ export default {
       return this.stepInfo.split('↓')
     },
     configDiv() {
-      // if (Date.now() - Date.parse('2021-5-6') > 0) {
-        this.isTimeout = true
-        this.chujieIndex = '10'
-        this.openIndex = '11'
-      // }
+      this.isTimeout = true
     },
     startCapture() {
       let that = this
       setTimeout(function () {
         that.capture()
-      },500)
+      },1000)
     },
     capture() {
       html2canvas(this.$refs.imageWrapper, {
