@@ -66,37 +66,29 @@
         v-model="info">
     </el-input>
     <br/>
-    <el-button type="text" @click="dialogVisible = true">生成图片存档（建议先提交再点击）</el-button>
+    <el-button type="text" @click="capturedSuccess = false;stepInfoDialogVisible = false;dialogVisible = true;startCapture()">生成图片存档（建议先提交再点击）</el-button>
     <el-dialog
         :visible.sync="dialogVisible"
-        :title="'生成图片'"
+        :title="capturedSuccess ? '图片生成成功' : '正在生成图片中...'"
         width="100%"
         height="100%">
-      <span>您可以点击下方'生成图片'按钮将图片保存。</span>
+      <span>{{ capturedSuccess ? '长按下方图片保存至手机' : '请稍等...' }}</span>
       <br/><br/>
-      <div v-if="!stepInfoDialogVisible" ref="imageWrapper" style="position: relative; width: 100%; height: 100%;">
+      <el-image
+          v-if="capturedSuccess"
+          style="width: 100%; height: 100%"
+          :src="imgUrl" />
+      <div v-if="!stepInfoDialogVisible && !capturedSuccess" ref="imageWrapper" style="position: relative; width: 100%; height: 100%;">
         <img src="../assets/img/lizhi_card.png" width="100%" height="100%" alt="" oncontextmenu="return false;">
         <div style="text-align: left" class="large" v-bind:class="{'small': this.smallScreen}">{{ this.info }}</div>
         <div class="signName" v-bind:class="{'signNameSmall': this.smallScreen}">{{ this.name }}</div>
       </div>
-      <div v-if="stepInfoDialogVisible" ref="imageWrapper" style="position: relative; width: 100%; height: 100%;">
+      <div v-if="stepInfoDialogVisible && !capturedSuccess" ref="imageWrapper" style="position: relative; width: 100%; height: 100%;">
         <img src="../assets/img/step_info.png" width="100%" height="100%" alt="" oncontextmenu="return false;">
         <p style="text-align: left" class="stepInfoStyle" v-bind:class="{'stepInfoLargeStyle': this.stepInfo.length < 100}" v-html="this.preText(this.stepInfo).replaceAll('↓', '<br/>')"/>
         <p class="stepSignName" v-bind:class="{'stepSignNameLargeStyle': this.stepInfo.length < 100}">{{ this.name }}</p>
       </div>
       <br/>
-      <el-button type="primary" @click="capture">生成图片</el-button>
-    </el-dialog>
-    <el-dialog
-        :visible.sync="dialogTableVisible"
-        width="100%"
-        height="100%">
-      <el-image
-          style="width: 100%; height: 10%"
-          :src="imgUrl" />
-      <br/>
-      <br/>
-      <span style="font-size: 16px">请长按上方的图片，保存到手机</span>
     </el-dialog>
     <br/>
     <br/>
@@ -110,7 +102,7 @@
         style="width: 90%"
         v-model="stepInfo"/>
     <br/>
-    <el-button type="text" @click="stepInfoDialogVisible = true;dialogVisible = true">生成图片存档（建议先提交再点击）</el-button>
+    <el-button type="text" @click="capturedSuccess = false;stepInfoDialogVisible = true;dialogVisible = true;startCapture()">生成图片存档（建议先提交再点击）</el-button>
     <br/>
     <div class="titleNameStyle"><span style="margin-left: 10px"/> 10.生日</div>
     <br/>
@@ -209,11 +201,11 @@ export default {
       htmlsFooter: '',
       dialogVisible: false,
       stepInfoDialogVisible: false,
-      dialogTableVisible: false,
       imgUrl: '',
       isTimeout: false,
       smallScreen: false,
-      buttonText: '提交'
+      buttonText: '提交',
+      capturedSuccess: false,
     };
   },
   mounted: function () {
@@ -239,16 +231,21 @@ export default {
         this.openIndex = '11'
       // }
     },
+    startCapture() {
+      let that = this
+      setTimeout(function () {
+        that.capture()
+      },500)
+    },
     capture() {
       html2canvas(this.$refs.imageWrapper, {
         scrollY: 0,
         scrollX: 0,
       }).then(canvas => {
-        let dataURL = canvas.toDataURL("image/png")
+        let dataURL = canvas.toDataURL("image/png")//.replace("image/png", "image/octet-stream")
         this.imgUrl = dataURL
         if (this.imgUrl !== "") {
-          this.dialogTableVisible = true
-          this.dialogVisible = false
+          this.capturedSuccess = true
         }
       });
     },
@@ -539,7 +536,6 @@ export default {
           if (res != null && res.data != null && res.data !== '') {
             this.$message.success('信息已成功' + this.buttonText + '！')
             // this.stepInfoDialogVisible = false
-            // this.dialogVisible = true
             this.buttonText = '修改'
             console.log(res)
           } else {
