@@ -1,6 +1,13 @@
 <template>
   <div>
     <el-button size="mini" @click="addTemplate">新增</el-button>
+    <el-button size="mini" @click="syncTemplate">同步线上模板</el-button>
+    <el-tooltip class="item" effect="light" placement="bottom-start" style="border: white;">
+      <div slot="content" style="font-size: 16px;color: grey; line-height:1.8">
+        注： 默认模板有更新时需要同步，此功能只会同步新增线上不存在的模板，不会修改或删除已有模板
+      </div>
+      <el-button style="height: fit-content;font-size: 8px;color: grey;">?</el-button>
+    </el-tooltip>
     <el-table :data="tableData.slice((currentPage-1)*pageSize,currentPage*pageSize)">
       <el-table-column prop="id" label="id" width="80">
       </el-table-column>
@@ -133,6 +140,36 @@ export default {
         }
       }
       return false
+    },
+    syncTemplate() {
+      if (this.tableData.length > 20) {
+        this.$message.warning("已超过模板上限！")
+        return
+      }
+      if (this.tableData.length === 0) {
+        this.$message.warning("至少需要有一个模板！")
+        return
+      }
+      let template = {}
+      for (let i = 0; i < this.tableData.length; i++) {
+        if (this.tableData[i].template.trim() === '') {
+          this.$message.warning("请输入项目")
+          return
+        }
+        template['template' + (i + 1)] = this.tableData[i].template.trim()
+      }
+      console.log(template)
+      axios({
+        method: "POST",
+        url: this.serverUrl + "saveTemplate",
+        data: qs.stringify(template),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then(() => {
+        this.$message.success("同步成功！")
+        this.getData()
+      })
     },
     addTemplate() {
       this.newTemplateInfo = {
