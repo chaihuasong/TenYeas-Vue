@@ -200,7 +200,7 @@ import axios from "axios"
 import XLSX from 'xlsx'
 import FileSaver from 'file-saver'
 import qs from "qs";
-import global from './Common.vue'
+import global from '../Common.vue'
 
 export default {
   data() {

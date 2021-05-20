@@ -49,7 +49,7 @@ export default {
       this.$refs[formName].validate((valid) => {
         if (valid && this.login()) {
           // 使用 vue-router 路由到指定页面，该方式称之为编程式导航
-          this.$router.push("/home/infoList");
+          this.$router.push("/home/adminHome");
         } else {
           this.dialogVisible = true;
           return false;

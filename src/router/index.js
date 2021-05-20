@@ -1,11 +1,11 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import TenYears from '@/components/TenYears'
-import LoginAdmin from '@/components/LoginAdmin'
+import LoginAdmin from '@/components/admin/LoginAdmin'
 import Login from '@/components/Login'
 import Redirect from '@/components/Redirect'
-import Admin from '@/components/Admin'
-import InfoList from '@/components/InfoList'
+import Admin from '@/components/admin/Admin'
+import InfoList from '@/components/admin/InfoList'
 import UploadRole from "@/components/UploadRole";
 import LoginRole from "@/components/LoginRole";
 import HomePage from "@/components/HomePage";
@@ -13,12 +13,13 @@ import MyHome from "@/components/MyHome";
 import Error from "@/components/Error";
 import HTQ from "@/components/HTQ";
 import DailyReport from "@/components/DailyReport";
-import DailyReportList from "@/components/DailyReportList";
+import DailyReportList from "@/components/admin/DailyReportList";
 import TenYearsHome from "@/components/TenYearsHome";
-import HalfYearInfoList from "@/components/HalfYearInfoList";
-import MonthInfoList from "@/components/MonthInfoList";
+import HalfYearInfoList from "@/components/admin/HalfYearInfoList";
+import MonthInfoList from "@/components/admin/MonthInfoList";
 import TemplateTab from "@/components/settings/TemplateTab";
 import TenYearsHtmlTab from "@/components/settings/TenYearsHtmlTab";
+import AdminHome from "@/components/admin/AdminHome";
 
 Vue.use(Router)
 
@@ -105,6 +106,15 @@ export default new Router({
         footShow: false,
       },
       children: [
+        {
+          path: 'adminHome',
+          name: 'adminHome',
+          component: AdminHome,
+          meta: {
+            title: '管理后台',
+            footShow: false,
+          },
+        },
         {
           path: 'infoList',
           name: 'infoList',

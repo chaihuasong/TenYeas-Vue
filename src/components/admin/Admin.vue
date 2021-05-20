@@ -7,6 +7,9 @@
           <el-submenu index="1">
             <template slot="title"><i class="el-icon-menu"></i>导航</template>
             <el-menu-item-group>
+              <el-menu-item index="/home/adminHome">首页</el-menu-item>
+            </el-menu-item-group>
+            <el-menu-item-group>
               <el-menu-item index="/home/infoList">立志列表</el-menu-item>
             </el-menu-item-group>
             <el-menu-item-group>
@@ -33,7 +36,7 @@
 
       <el-container>
         <el-header style="text-align: left; font-size: 12px;float: left">
-          <img @click="collapseStatus" style="width: 20px;height: 20px" src="../assets/img/icon/pin.png"/>
+          <img @click="collapseStatus" style="width: 20px;height: 20px" src="../../assets/img/icon/pin.png"/>
           <span style="text-align: center; font-size: 30px; margin-left: 45%">管理后台</span>
           <div style="float: right">
             <span style="font-size: 16px; color: #3535c6">Admin</span>
