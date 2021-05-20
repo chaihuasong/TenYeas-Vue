@@ -2,8 +2,6 @@
   <div>
     <el-container style="height: 100%; border: 1px solid #eee">
       <el-aside width="auto"
-                @mouseenter.native="collapseOpen"
-                @mouseleave.native="collapseClose"
                 style="background-color: rgb(238, 241, 246);">
         <el-menu :collapse="isCollapse" :default-active="$route.path" router>
           <el-submenu index="1">
