@@ -73,6 +73,8 @@ export default {
       }).then((res) => {
         console.log(res.data)
         this.monthsReportCountList = res.data
+        let thisMonth = new Date().getMonth()
+        this.monthsReportCountList.splice(thisMonth + 1, 12 - thisMonth)
         this.drawPie('daily_report')
       })
     },
@@ -111,7 +113,6 @@ export default {
     },
     drawPie(id) {
       this.charts = echarts.init(document.getElementById(id))
-      console.log("draw..." + this.dailyReportCount)
       this.charts.setOption({
         title: {
           text: '打卡数'
