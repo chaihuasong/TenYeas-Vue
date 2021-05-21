@@ -4,23 +4,23 @@
       <el-col :span="6">
         <el-card style="width:250px; height: 140px;">
           <div class="el-card-list">
-            <p><span class="el-card-big-font">2,029</span></p>
+            <p><span class="el-card-big-font">{{ dailyReportCount }}</span></p>
             <p style="font-size: 14px;padding-top: 10px;">
-              总打卡数
+              今日打卡数
             </p>
           </div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card style="width:250px; height: 140px;">
-          <p><span class="el-card-big-font">13,900</span></p>
-          <p style="font-size: 14px;padding-top: 10px;">今日打卡</p>
+          <p><span class="el-card-big-font">{{ totalReportCount }}</span></p>
+          <p style="font-size: 14px;padding-top: 10px;">总打卡数</p>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card style="width:250px; height: 140px;">
-          <p><span class="el-card-big-font">2,803</span></p>
-          <p style="font-size: 14px;padding-top: 10px;">今日访客<span class="el-card-:span-el-color"></span>
+          <p><span class="el-card-big-font"> {{ userCount }} </span></p>
+          <p style="font-size: 14px;padding-top: 10px;">立志卡填写数<span class="el-card-:span-el-color"></span>
           </p>
         </el-card>
       </el-col>
@@ -28,7 +28,7 @@
     <el-row>
       <el-col :span="11">
         <el-card style="width:1066px; height: 350px;">
-          <div id="main" :style="{width:'500px',height: '300px'}" style="float: left;"></div>
+          <div id="daily_report" :style="{width:'500px',height: '300px'}" style="float: left;"></div>
           <div id="echarts" :style="{width:'500px', height: '300px'}" style="float: left;"></div>
         </el-card>
       </el-col>
@@ -37,21 +37,84 @@
 </template>
 
 <script>
-import echarts from 'echarts'
+import * as echarts from 'echarts'
+import axios from "axios";
+import global from "@/components/Common";
 
 export default {
   data() {
     return {
+      serverUrl: global.httpUrl,
+      getDateFormat: global.getDateFormat,
       collapsed: false,
-      charts: ''
+      charts: '',
+      totalReportCount: 0,
+      dailyReportCount: 0,
+      userCount: 0,
+      monthsReportCountList: [],
     };
   },
+  //调用
+  mounted() {
+    this.getDailyReportCount()
+    this.getTotalReportCount()
+    this.getUserCount()
+    this.getMonthData()
+    // this.drawPie2('echarts')
+  },
   methods: {
+    getMonthData() {
+      axios({
+        method: "GET",
+        url: this.serverUrl + "getReportInfoCountListByYear?year=" + new Date().getFullYear(),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        console.log(res.data)
+        this.monthsReportCountList = res.data
+        this.drawPie('daily_report')
+      })
+    },
+    getDailyReportCount() {
+      axios({
+        method: "GET",
+        url: this.serverUrl + "getReportInfoByDate?date=" + this.getDateFormat(new Date()),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        this.dailyReportCount = res.data.length
+      })
+    },
+    getTotalReportCount() {
+      axios({
+        method: "GET",
+        url: this.serverUrl + "getAllReportInfo",
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        this.totalReportCount = res.data.length
+      })
+    },
+    getUserCount() {
+      axios({
+        method: "GET",
+        url: this.serverUrl + "getAll",
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        this.userCount = res.data.length
+      })
+    },
     drawPie(id) {
       this.charts = echarts.init(document.getElementById(id))
+      console.log("draw..." + this.dailyReportCount)
       this.charts.setOption({
         title: {
-          text: '每月销售量'
+          text: '打卡数'
         },
         xAxis: {
           type: 'category',
@@ -69,13 +132,13 @@ export default {
         yAxis: {
           type: 'value',
           axisLabel: {
-            formatter: '{value} 台'
+            formatter: '{value}'
           }
         },
         series: [{
-          name: '销售量',
+          name: '统计',
           type: 'line',
-          data: [108, 133, 136, 101, 155, 113, 125, 100, 181, 128, 79, 131]
+          data: this.monthsReportCountList
         }]
       })
     },
@@ -83,7 +146,7 @@ export default {
       this.charts = echarts.init(document.getElementById(id))
       this.charts.setOption({
         title: {
-          text: '每月销售额'
+          text: '立志卡数'
         },
         xAxis: {
           type: 'category',
@@ -120,13 +183,6 @@ export default {
         }]
       })
     }
-  },
-  //调用
-  mounted() {
-    this.$nextTick(function () {
-      this.drawPie('main')
-      this.drawPie2('echarts')
-    })
   },
   computed: {
     menuitemClasses: function () {
