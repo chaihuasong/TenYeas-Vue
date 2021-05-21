@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-row style="margin-bottom: 20px;">
-      <el-col :span="6">
+      <el-col :span="4">
         <el-card style="width:250px; height: 140px;">
           <div class="el-card-list">
             <p><span class="el-card-big-font">{{ yesterdayReportCount }}</span></p>
@@ -11,7 +11,7 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :span="4">
         <el-card style="width:250px; height: 140px;">
           <div class="el-card-list">
             <p><span class="el-card-big-font">{{ dailyReportCount }}</span></p>
@@ -21,13 +21,13 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :span="4">
         <el-card style="width:250px; height: 140px;">
           <p><span class="el-card-big-font">{{ totalReportCount }}</span></p>
           <p style="font-size: 14px;padding-top: 10px;">总打卡数</p>
         </el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :span="4">
         <el-card style="width:250px; height: 140px;">
           <p><span class="el-card-big-font"> {{ userCount }} </span></p>
           <p style="font-size: 14px;padding-top: 10px;">立志卡填写数<span class="el-card-:span-el-color"></span>
