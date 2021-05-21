@@ -4,6 +4,16 @@
       <el-col :span="6">
         <el-card style="width:250px; height: 140px;">
           <div class="el-card-list">
+            <p><span class="el-card-big-font">{{ yesterdayReportCount }}</span></p>
+            <p style="font-size: 14px;padding-top: 10px;">
+              昨日打卡数
+            </p>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card style="width:250px; height: 140px;">
+          <div class="el-card-list">
             <p><span class="el-card-big-font">{{ dailyReportCount }}</span></p>
             <p style="font-size: 14px;padding-top: 10px;">
               今日打卡数
@@ -50,6 +60,7 @@ export default {
       charts: '',
       totalReportCount: 0,
       dailyReportCount: 0,
+      yesterdayReportCount: 0,
       userCount: 0,
       monthsReportCountList: [],
     };
@@ -58,6 +69,7 @@ export default {
   mounted() {
     document.title = this.$route.meta.title
     this.getDailyReportCount()
+    this.getYesterdayReportCount()
     this.getTotalReportCount()
     this.getUserCount()
     this.getMonthData()
@@ -88,6 +100,17 @@ export default {
         }
       }).then((res) => {
         this.dailyReportCount = res.data.length
+      })
+    },
+    getYesterdayReportCount() {
+      axios({
+        method: "GET",
+        url: this.serverUrl + "getReportInfoByDate?date=" + this.getDateFormat(new Date(Date.now() - 24 * 3600*1000)),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        this.yesterdayReportCount = res.data.length
       })
     },
     getTotalReportCount() {
