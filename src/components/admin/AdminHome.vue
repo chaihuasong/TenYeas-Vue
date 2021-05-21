@@ -56,6 +56,7 @@ export default {
   },
   //调用
   mounted() {
+    document.title = this.$route.meta.title
     this.getDailyReportCount()
     this.getTotalReportCount()
     this.getUserCount()
