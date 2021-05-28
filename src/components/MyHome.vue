@@ -7,11 +7,9 @@
           :preview-src-list="[this.headimgurl.substr(0, this.headimgurl.lastIndexOf('/')) + '/0']"
           fit="cover" />
       <div style="float: left;color: white;font-weight: bold;margin-top: 100px">{{this.nickname}}</div>
-      <div style="float: right;color: white;font-weight: bold;margin-top: 20px;margin-right: 20px"><i class="el-icon-edit" @click="edit"></i></div>
-      <div style="float: left;margin-top:25px;color: white;width: 100%;font-size: 15px;font-weight: bold;">十年倒计时： <span style="color: red;font-size: 15px">{{remainningTime}}</span></div>
+      <div style="float: right;color: white;font-weight: bold;margin-top: 20px;margin-right: 20px" v-if="false"><i class="el-icon-edit" @click="edit"></i></div>
     </div>
 
-    <br/>
     <br/>
 <!--    <el-card style="float: left;width: 100%;margin-top: 5px" @click.native="PYQ">-->
 <!--      <div style="float: left; margin-bottom: 20px;width: 15%">-->
@@ -21,11 +19,6 @@
 <!--        <el-image v-if="this.lastImgUrl != ''" :src="lastImgUrl" style="width: 30px; height: 30px;"></el-image>-->
 <!--      </div>-->
 <!--    </el-card>-->
-    <el-card style="float: left;width: 100%;margin-top: 5px">
-      <div style="float: left; margin-bottom: 20px;width: 15%">
-        {{this.unionid}}
-      </div>
-    </el-card>
     <el-card style="float: left">
       <table style="text-align: left" cellpadding="10">
         <tr>
@@ -80,6 +73,18 @@
         </tr>
       </table>
     </el-card>
+
+    <el-row>
+      <el-col :span="12" style="text-align: left;margin-top: 20px">
+        <span style="margin-left: 35px;font-size: 16px;font-weight: bold">打卡提醒{{ notification ? '开启' : '关闭'}}</span>
+      </el-col>
+      <el-col :span="12" style="text-align: right;margin-top: 20px">
+        <el-switch
+            v-model="notification"
+            style="margin-right: 50px">
+        </el-switch>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
@@ -130,6 +135,7 @@ export default {
       tenyearsLater: 0,
       remainningTime: '',
       lastImgUrl: '',
+      notification: 0,
     };
   },
   mounted: function () {
