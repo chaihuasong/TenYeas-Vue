@@ -50,6 +50,8 @@
       </el-table-column>
       <el-table-column prop="nickname" label="昵称" width="80">
       </el-table-column>
+      <el-table-column prop="openid" label="openid" width="80">
+      </el-table-column>
       <el-table-column label="头像" width="80">
         <template slot-scope="scope">
           <el-image
@@ -82,6 +84,8 @@
       <el-table-column prop="path" label="文件名" width="80">
       </el-table-column>
       <el-table-column prop="planInfoFlag" label="是否展开" width="80">
+      </el-table-column>
+      <el-table-column prop="notification" label="通知" width="80">
       </el-table-column>
       <el-table-column prop="createDate" label="创建时间" width="100">
       </el-table-column>
@@ -131,6 +135,9 @@
         <el-form-item label="昵称">
           <el-input v-model="newUserInfo.nickname" autocomplete="off"></el-input>
         </el-form-item>
+        <el-form-item label="openid">
+          <el-input v-model="newUserInfo.openid" autocomplete="off"></el-input>
+        </el-form-item>
         <el-form-item label="微信群">
           <el-input v-model="newUserInfo.wechatgroup" autocomplete="off"></el-input>
         </el-form-item>
@@ -163,6 +170,12 @@
         </el-form-item>
         <el-form-item label="文件名称">
           <el-input v-model="newUserInfo.path" autocomplete="off" :rows="4"></el-input>
+        </el-form-item>
+        <el-form-item label="头像地址">
+          <el-input v-model="newUserInfo.headimgurl" autocomplete="off" :rows="4"></el-input>
+        </el-form-item>
+        <el-form-item label="通知">
+          <el-input v-model="newUserInfo.notification" autocomplete="off" :rows="4"></el-input>
         </el-form-item>
         <el-form-item label="创建时间">
           <el-input v-model="newUserInfo.createDate" autocomplete="off"></el-input>
@@ -230,6 +243,9 @@ export default {
         stepInfo: '',
         path: '',
         createDate: '',
+        headimgurl: '',
+        openid: '',
+        notification: '',
       },
       newUserInfo: {
         id : '',
@@ -249,6 +265,9 @@ export default {
         stepInfo: '',
         path: '',
         createDate: '',
+        headimgurl:'',
+        openid: '',
+        notification: '',
       },
       userIndex: 0,
     }
@@ -390,6 +409,9 @@ export default {
         stepInfo: item.stepInfo,
         path: item.path,
         createDate: item.createDate,
+        headimgurl: item.headimgurl,
+        openid: item.openid,
+        notification: item.notification,
       }
       this.editDialogVisible = true
     },

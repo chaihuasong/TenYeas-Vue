@@ -76,7 +76,7 @@ export default new Router({
       component: TenYearsHome,
       meta: {
         title: '十年持志',
-        footShow: false,
+        footShow: true,
       }
     },
     {

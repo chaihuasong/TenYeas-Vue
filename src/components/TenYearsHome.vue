@@ -162,7 +162,7 @@
           placeholder="请输入内容"
           @change="onDailyReportResultChange"
           v-model="share" />
-      <el-button v-if="!editDailyReportMode" style="float: right;margin-top: 10px;margin-bottom: 15px" @click="submitDailyReport"
+      <el-button v-if="!editDailyReportMode" style="float: right;margin-top: 10px;margin-bottom: 50px" @click="submitDailyReport"
                  v-clipboard:copy="dailyReportResult">提交</el-button>
     </el-card>
     <el-dialog title="从模板库中选择" :visible.sync="addTemplateDialogVisible" custom-class="templateStyle">
