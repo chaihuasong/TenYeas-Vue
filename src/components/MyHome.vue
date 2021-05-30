@@ -28,7 +28,7 @@
       <el-col :span="16">
         <el-dropdown trigger="click" @command="handleCommand">
         <span class="el-dropdown-link" style="font-size: 16px">
-        {{ this.gender == 1 ? "男" : "女" }}<i class="el-icon-arrow-down el-icon--right"></i>
+        {{ this.gender === '1' ? "男" : "女" }}<i class="el-icon-arrow-down el-icon--right"></i>
         </span>
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item command="0">女</el-dropdown-item>
@@ -199,6 +199,7 @@ export default {
           birthday: this.birthday,
           info: this.info,
           stepInfo: this.stepInfo,
+          gender: this.gender,
         })
         axios({
           method: "POST",
