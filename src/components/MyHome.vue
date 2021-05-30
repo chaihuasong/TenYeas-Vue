@@ -84,7 +84,7 @@
         实施步骤：
       </el-col>
       <el-col :span="16">
-        <textarea rows="4" class="multiLineInputStyle" v-model="this.stepInfo" @change="onInputChange"/>
+        <textarea :rows="this.stepInfoRows" class="multiLineInputStyle" v-model="this.stepInfo" @change="onInputChange"/>
       </el-col>
     </el-row>
 
@@ -159,6 +159,7 @@ export default {
       remainningTime: '',
       lastImgUrl: '',
       notification: false,
+      stepInfoRows: 6,
 
       newUserInfo: {
         name  : '',
@@ -307,6 +308,9 @@ export default {
           this.notification = res.data.notification === '1'
 
           this.lastImgUrl = this.headimgurl
+          if (this.stepInfo.length > 150) {
+            this.stepInfoRows = 10
+          }
           console.log('this.notification:' + res.data.notification)
         } else {
           alert("信息获取失败，请先填写立志信息！")

@@ -763,7 +763,7 @@ export default {
       }
 
       if (data !== '') {
-        data = this.name + ' ' + this.getDateFormat(this.selectedDate) + '\n' + data
+        data = this.nickname + ' ' + this.getDateFormat(this.selectedDate) + '\n' + data
       }
 
       if (this.share !== undefined && this.share !== null && this.share !== '') {
