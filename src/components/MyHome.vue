@@ -51,7 +51,7 @@
         城市：
       </el-col>
       <el-col :span="16">
-        <input class="inputStyle" v-model="this.province" @change="onInputChange"/>
+        <input class="inputStyle" v-model="province" @change="onInputChange"/>
       </el-col>
     </el-row>
     <el-row style="text-align: left; margin-left: 30px;margin-top: 15px">
@@ -76,7 +76,7 @@
         立志信息：
       </el-col>
       <el-col :span="16">
-        <textarea rows="4" class="multiLineInputStyle" v-model="this.info" @change="onInputChange"/>
+        <textarea rows="4" class="multiLineInputStyle" v-model="info" @change="onInputChange"/>
       </el-col>
     </el-row>
     <el-row style="text-align: left; margin-left: 20px;margin-top: 15px;margin-right: 20px">
@@ -84,7 +84,7 @@
         实施步骤：
       </el-col>
       <el-col :span="16">
-        <textarea :rows="this.stepInfoRows" class="multiLineInputStyle" v-model="this.stepInfo" @change="onInputChange"/>
+        <textarea :rows="stepInfoRows" class="multiLineInputStyle" v-model="stepInfo" @change="onInputChange"/>
       </el-col>
     </el-row>
 
@@ -160,20 +160,6 @@ export default {
       lastImgUrl: '',
       notification: false,
       stepInfoRows: 7,
-
-      newUserInfo: {
-        name  : '',
-        nickname: '',
-        gender: '',
-        telephone: '',
-        province: '',
-        birthday: '',
-        chujie: '',
-        open: '',
-        info: '',
-        stepInfo: '',
-        notification: false,
-      },
     };
   },
   mounted: function () {
