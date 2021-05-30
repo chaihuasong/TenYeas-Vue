@@ -36,6 +36,10 @@
       </el-table-column>
       <el-table-column prop="path" label="文件名" width="80">
       </el-table-column>
+      <el-table-column prop="planInfoFlag" label="是否展开" width="60">
+      </el-table-column>
+      <el-table-column prop="notification" label="通知开关" width="60">
+      </el-table-column>
       <el-table-column prop="createDate" label="创建时间" width="200">
       </el-table-column>
     </el-table>
@@ -83,9 +87,9 @@
       </el-table-column>
       <el-table-column prop="path" label="文件名" width="80">
       </el-table-column>
-      <el-table-column prop="planInfoFlag" label="是否展开" width="80">
+      <el-table-column prop="planInfoFlag" label="是否展开" width="60">
       </el-table-column>
-      <el-table-column prop="notification" label="通知" width="80">
+      <el-table-column prop="notification" label="通知开关" width="60">
       </el-table-column>
       <el-table-column prop="createDate" label="创建时间" width="100">
       </el-table-column>
