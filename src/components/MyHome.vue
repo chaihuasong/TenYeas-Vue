@@ -187,24 +187,30 @@ export default {
       })
     },
     onInputChange() {
-      let data = qs.stringify({
-        id: this.unionid,
-        nickname: this.nickname,
-        province: this.province,
-        birthday: this.birthday,
-        info: this.info,
-        stepInfo: this.stepInfo,
-      })
-      axios({
-        method: "POST",
-        url: this.serverUrl + "update",
-        data: data,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
+      this.$confirm('是否保存修改？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'info'
       }).then(() => {
-        console.log("success")
-        this.$message.success("更新成功")
+        let data = qs.stringify({
+          id: this.unionid,
+          nickname: this.nickname,
+          province: this.province,
+          birthday: this.birthday,
+          info: this.info,
+          stepInfo: this.stepInfo,
+        })
+        axios({
+          method: "POST",
+          url: this.serverUrl + "update",
+          data: data,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }).then(() => {
+          console.log("success")
+          this.$message.success("更新成功")
+        })
       })
     },
     handleCommand(command) {
