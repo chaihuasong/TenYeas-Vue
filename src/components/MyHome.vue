@@ -76,7 +76,7 @@
         立志信息：
       </el-col>
       <el-col :span="16">
-        <textarea rows="3" class="multiLineInputStyle" v-model="this.info" @change="onInputChange"/>
+        <textarea rows="4" class="multiLineInputStyle" v-model="this.info" @change="onInputChange"/>
       </el-col>
     </el-row>
     <el-row style="text-align: left; margin-left: 20px;margin-top: 15px;margin-right: 20px">
@@ -159,7 +159,7 @@ export default {
       remainningTime: '',
       lastImgUrl: '',
       notification: false,
-      stepInfoRows: 6,
+      stepInfoRows: 7,
 
       newUserInfo: {
         name  : '',

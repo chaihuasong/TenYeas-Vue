@@ -28,10 +28,10 @@ export default new Router({
     {
       path: '/',
       name: 'TenYears',
-      redirect: '/index',
+      redirect: '/tenyearsHome',
       meta: {
-        title: '十年立志',
-        footShow: false,
+        title: '十年持志',
+        footShow: true,
       }
     },
     {

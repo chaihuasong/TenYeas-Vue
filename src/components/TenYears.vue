@@ -536,6 +536,7 @@ export default {
             // this.stepInfoDialogVisible = false
             this.buttonText = '修改'
             console.log(res)
+            this.$router.push("/tenyearsHome");
           } else {
             alert('信息提交失败，请刷新页面后重试，注意刷新后数据会丢失！')
           }

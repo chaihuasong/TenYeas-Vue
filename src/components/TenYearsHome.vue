@@ -245,6 +245,7 @@ export default {
       calendarValue: new Date(),
       share: '',
       note: '',
+      notification: '0',
       monthsNotesList: [],
       template: {},
       templateId: '0',
@@ -811,6 +812,31 @@ export default {
           this.$message.warning("保存出错！\n" + res.statusText)
         } else {
           this.$message.success("内容已成功提交并已复制到剪贴板！")
+          if (this.monthsNotesList !== null && this.monthsNotesList.length === 0) {
+            if (this.notification === undefined || this.notification === null || this.notification === '' || this.notification === '0') {
+              this.$confirm('是否打开通知提醒功能？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'info'
+              }).then(() => {
+                let data = qs.stringify({
+                  id: this.unionid,
+                  notification: '1',
+                })
+                axios({
+                  method: "POST",
+                  url: this.serverUrl + "update",
+                  data: data,
+                  headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                  }
+                }).then(() => {
+                  console.log("success")
+                  this.$message.success("每日打卡通知提醒功能已开启")
+                })
+              })
+            }
+          }
         }
       });
     },
@@ -1141,6 +1167,7 @@ export default {
             this.language = res.data.language
             this.groupId = res.data.groupId
             this.gender = res.data.sex + ''
+            this.notification = res.data.notification
             this.getUserInfoByUnionId()
           }
         });
