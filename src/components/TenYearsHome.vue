@@ -40,7 +40,13 @@
             <el-col v-if="this.path !== ''" :span="4">
               <el-image style="width: 40px; height: 80px;margin-top: 5px"
                         :src="'http://htzchina.org/imgs/tenyears/' + this.path"
-                        :preview-src-list="['http://htzchina.org/imgs/tenyears/' + this.path]"/>
+
+                        :preview-src-list="['http://htzchina.org/imgs/tenyears/' + this.path]">
+                <div slot="error">
+                  <el-image style="width: 40px; height: 50px;margin-top: 5px"
+                            :src="require('../assets/img/not_found.jpg')" />
+                </div>
+              </el-image>
             </el-col>
           </el-row>
         </el-card>

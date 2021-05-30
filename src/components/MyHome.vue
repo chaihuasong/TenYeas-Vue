@@ -5,7 +5,12 @@
           style="width: 60px; height: 60px;border-radius:50%;float: left;margin-left: 10%;margin-top: 40px"
           :src="this.headimgurl"
           :preview-src-list="[this.headimgurl.substr(0, this.headimgurl.lastIndexOf('/')) + '/0']"
-          fit="cover"/>
+          fit="cover">
+        <div slot="error">
+          <el-image style="width: 60px; height: 60px"
+                    :src="require('../assets/img/not_found.jpg')" />
+        </div>
+      </el-image>
       <div style="float: left;color: white;font-weight: bold;margin-top: 60px;margin-left: 20px">{{ this.nickname }}
       </div>
     </div>
