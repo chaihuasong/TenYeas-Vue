@@ -77,9 +77,9 @@
       </el-table-column>
       <el-table-column prop="open" label="公开" width="40" :formatter="gongkaiFormatter">
       </el-table-column>
-      <el-table-column prop="info" label="立志信息">
+      <el-table-column prop="info" label="立志信息" width="150" >
       </el-table-column>
-      <el-table-column prop="stepInfo" label="实施步骤">
+      <el-table-column prop="stepInfo" label="实施步骤" width="250" >
       </el-table-column>
       <el-table-column prop="path" label="文件名" width="80">
       </el-table-column>
