@@ -35,6 +35,36 @@
         </el-card>
       </el-col>
     </el-row>
+
+    <el-row style="margin-bottom: 20px;">
+      <el-col :span="6">
+        <el-card style="width:250px; height: 140px;">
+          <div class="el-card-list">
+            <p><span class="el-card-big-font">{{ yesterdayVisitCount }}</span></p>
+            <p style="font-size: 14px;padding-top: 10px;">
+              昨日访问量
+            </p>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card style="width:250px; height: 140px;">
+          <div class="el-card-list">
+            <p><span class="el-card-big-font">{{ dailyVisitCount }}</span></p>
+            <p style="font-size: 14px;padding-top: 10px;">
+              今日访问量
+            </p>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card style="width:250px; height: 140px;">
+          <p><span class="el-card-big-font">{{ totalVisitCount }}</span></p>
+          <p style="font-size: 14px;padding-top: 10px;">总访问量</p>
+        </el-card>
+      </el-col>
+    </el-row>
+
     <el-row>
       <el-col :span="11">
         <el-card style="width:1066px; height: 350px;">
@@ -62,6 +92,9 @@ export default {
       dailyReportCount: 0,
       yesterdayReportCount: 0,
       userCount: 0,
+      totalVisitCount: 0,
+      dailyVisitCount: 0,
+      yesterdayVisitCount: 0,
       monthsReportCountList: [],
     };
   },
@@ -72,6 +105,9 @@ export default {
     this.getYesterdayReportCount()
     this.getTotalReportCount()
     this.getUserCount()
+    this.getDailyVisitCount()
+    this.getYesterdayVisitCount()
+    this.getTotalVisitCount()
     this.getMonthData()
     // this.drawPie2('echarts')
   },
@@ -133,6 +169,41 @@ export default {
         }
       }).then((res) => {
         this.userCount = res.data.length
+      })
+    },
+    getDailyVisitCount() {
+      axios({
+        method: "GET",
+        url: this.serverUrl + "getVisitCount?date=" + this.getDateFormat(new Date()),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        this.dailyVisitCount = res.data.count
+      })
+    },
+    getYesterdayVisitCount() {
+      axios({
+        method: "GET",
+        url: this.serverUrl + "getVisitCount?date=" + this.getDateFormat(new Date(Date.now() - 24 * 3600*1000)),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        this.yesterdayVisitCount = res.data.count === undefined ? 0 : res.data.count
+      })
+    },
+    getTotalVisitCount() {
+      axios({
+        method: "GET",
+        url: this.serverUrl + "getAllVisitCount",
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        for (let i = 0; i < res.data.length; i++) {
+          this.totalVisitCount += res.data[i].count
+        }
       })
     },
     drawPie(id) {

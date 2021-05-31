@@ -301,8 +301,22 @@ export default {
     this.getLastMonthInfo()
     this.getHalfYearInfo()
     this.getAllDefaultReportsLists()
+    this.visited()
   },
   methods: {
+    visited() {
+      let data = qs.stringify({
+        date: this.getDateFormat(new Date()),
+      })
+      axios({
+        method: "POST",
+        url: this.serverUrl + "visited",
+        data: data,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      })
+    },
     getDefaultReportTemplate1() {
       axios({
         method: "GET",
