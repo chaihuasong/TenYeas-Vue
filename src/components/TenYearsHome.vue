@@ -817,7 +817,7 @@ export default {
         if (res.status !== 200) {
           this.$message.warning("保存出错！\n" + res.statusText)
         } else {
-          this.$message.success("内容已成功提交并已复制到剪贴板！")
+          this.$message.success("内容已成功提交并已复制，可粘贴到微信群。")
           if (this.monthsNotesList !== null && this.monthsNotesList.length === 0) {
             if (this.notification === undefined || this.notification === null || this.notification === '' || this.notification === '0') {
               this.$confirm('是否打开通知提醒功能？', '提示', {

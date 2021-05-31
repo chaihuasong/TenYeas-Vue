@@ -27,7 +27,7 @@
     <div style="text-align: left;margin-left: 5px;color: #e5288a">基本信息</div>
     <div style="width: 100%;height: 1px;background-color: #e7ecf1;margin-top: 5px"/>
     <el-row style="text-align: left; margin-left: 30px;margin-top: 15px">
-      <el-col :span="8" style="font-weight: bold">
+      <el-col :span="8" style="font-weight: bold;font-size: 16px">
         性别：
       </el-col>
       <el-col :span="16">
@@ -44,7 +44,7 @@
       </el-col>
     </el-row>
     <el-row style="text-align: left; margin-left: 30px;margin-top: 15px">
-      <el-col :span="8" style="font-weight: bold">
+      <el-col :span="8" style="font-weight: bold;font-size: 16px">
         昵称：
       </el-col>
       <el-col :span="16">
@@ -52,7 +52,7 @@
       </el-col>
     </el-row>
     <el-row style="text-align: left; margin-left: 30px;margin-top: 15px">
-      <el-col :span="8" style="font-weight: bold">
+      <el-col :span="8" style="font-weight: bold;font-size: 16px">
         城市：
       </el-col>
       <el-col :span="16">
@@ -60,7 +60,7 @@
       </el-col>
     </el-row>
     <el-row style="text-align: left; margin-left: 30px;margin-top: 15px">
-      <el-col :span="8" style="font-weight: bold;padding-top: 10px">
+      <el-col :span="8" style="font-weight: bold;font-size: 16px;padding-top: 5px">
         生日：
       </el-col>
       <el-col :span="16">
@@ -77,7 +77,7 @@
       </el-col>
     </el-row>
     <el-row style="text-align: left; margin-left: 20px;margin-top: 15px;margin-right: 20px">
-      <el-col :span="8" style="font-weight: bold">
+      <el-col :span="8" style="font-weight: bold;font-size: 16px;padding-top: 4px">
         立志信息：
       </el-col>
       <el-col :span="16">
@@ -85,7 +85,7 @@
       </el-col>
     </el-row>
     <el-row style="text-align: left; margin-left: 20px;margin-top: 15px;margin-right: 20px">
-      <el-col :span="8" style="font-weight: bold">
+      <el-col :span="8" style="font-weight: bold;font-size: 16px;padding-top: 4px">
         实施步骤：
       </el-col>
       <el-col :span="16">
@@ -345,16 +345,6 @@ input, textarea {
   outline: none;
 }
 
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-
 a {
   color: #42b983;
 }
@@ -368,14 +358,14 @@ a {
   font-size: 16px;
 }
 .inputStyle {
-  border-left-width:0px;
-  border-top-width:0px;
-  border-right-width:0px;
-  border-bottom-width:0px;
+  border-left-width:0;
+  border-top-width:0;
+  border-right-width:0;
+  border-bottom-width:0;
   border-bottom-color:lightgray;
   width: 100%;
   height: auto;
-  font-size: 18px;
+  font-size: 16px;
   text-align: left;
   color: #8c939d;
   margin: 0 0;
@@ -384,14 +374,14 @@ a {
   border-radius: 0;
 }
 .multiLineInputStyle {
-  border-left-width:0px;
-  border-top-width:0px;
-  border-right-width:0px;
-  border-bottom-width:0px;
+  border-left-width:0;
+  border-top-width:0;
+  border-right-width:0;
+  border-bottom-width:0;
   border-bottom-color:lightgray;
   width: 100%;
   height: auto;
-  font-size: 18px;
+  font-size: 16px;
   text-align: left;
   color: #8c939d;
   -webkit-appearance: none;
