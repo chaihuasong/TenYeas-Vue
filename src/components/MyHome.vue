@@ -273,7 +273,7 @@ export default {
     getData() {
       this.unionid = this.$store.getters.getUnionid
       if (this.unionid != null) {
-        this.unionid = this.unionid.replaceAll("\"", "")
+        this.unionid = this.unionid.replace("\"", "").replace("\"", "")
       }
       console.log("getData unionid:" + this.unionid)
       axios({
