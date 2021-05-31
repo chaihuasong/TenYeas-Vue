@@ -179,7 +179,7 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        this.dailyVisitCount = res.data.count
+        this.dailyVisitCount = res.data.count === undefined ? 0 : res.data.count
       })
     },
     getYesterdayVisitCount() {
