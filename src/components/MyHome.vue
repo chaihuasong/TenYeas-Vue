@@ -177,6 +177,7 @@ export default {
     notificationChange() {
       let data = qs.stringify({
         id: this.unionid,
+        gender: this.gender,
         notification: this.notification ? '1' : '0',
       })
       axios({
