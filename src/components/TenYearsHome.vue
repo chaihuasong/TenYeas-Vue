@@ -1216,7 +1216,6 @@ export default {
             this.language = res.data.language
             this.groupId = res.data.groupId
             this.gender = res.data.sex + ''
-            this.notification = res.data.notification === '1'
             this.getUserInfoByUnionId()
           }
         });
@@ -1254,6 +1253,7 @@ export default {
           this.wechatid = res.data.wechatid
           this.province = res.data.province
           this.path = res.data.path
+          this.notification = res.data.notification === '1'
           let planInfoFlag = res.data.planInfoFlag
           if (planInfoFlag !== undefined && planInfoFlag !== null && planInfoFlag !== '') {
             this.planInfoFlag = ['']
