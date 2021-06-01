@@ -168,9 +168,21 @@
           placeholder="请输入内容"
           @change="onDailyReportResultChange"
           v-model="share" />
-      <el-button v-if="!editDailyReportMode" style="float: right;margin-top: 10px;margin-bottom: 50px" @click="submitDailyReport"
+      <el-button v-if="!editDailyReportMode" style="float: right;margin-top: 10px;margin-bottom: 10px" @click="submitDailyReport"
                  v-clipboard:copy="dailyReportResult">提交</el-button>
     </el-card>
+    <el-row style="text-align: left; margin-left: 20px;margin-top: 10px">
+      <el-col :span="16" style="font-weight: bold">
+        <span>打卡提醒</span>
+      </el-col>
+      <el-col :span="8">
+        <el-switch
+            style="margin-left: 5px;margin-top: 2px;margin-bottom: 80px"
+            @change="notificationChange"
+            v-model="notification">
+        </el-switch>
+      </el-col>
+    </el-row>
     <el-dialog title="从模板库中选择" :visible.sync="addTemplateDialogVisible" custom-class="templateStyle">
       <el-checkbox-group v-model="newReportLists">
         <el-row style="margin-top: 10px;font-size: 16px;" v-for="item in allDefaultReportsLists" :key="item.template">
@@ -251,7 +263,7 @@ export default {
       calendarValue: new Date(),
       share: '',
       note: '',
-      notification: '0',
+      notification: false,
       monthsNotesList: [],
       template: {},
       templateId: '0',
@@ -304,6 +316,23 @@ export default {
     this.visited()
   },
   methods: {
+    notificationChange() {
+      let data = qs.stringify({
+        id: this.unionid,
+        notification: this.notification ? '1' : '0',
+      })
+      axios({
+        method: "POST",
+        url: this.serverUrl + "update",
+        data: data,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then(() => {
+        console.log("success")
+        this.$message.success("每日打卡通知提醒功能已" + (this.notification ? "开启" : "关闭"))
+      })
+    },
     visited() {
       let data = qs.stringify({
         date: this.getDateFormat(new Date()),
@@ -833,7 +862,7 @@ export default {
         } else {
           this.$message.success("内容已成功提交并已复制，可粘贴到微信群。")
           if (this.monthsNotesList !== null && this.monthsNotesList.length === 0) {
-            if (this.notification === undefined || this.notification === null || this.notification === '' || this.notification === '0') {
+            if (this.notification === undefined || this.notification === null || this.notification === '' || this.notification === false) {
               this.$confirm('是否打开通知提醒功能？', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
@@ -1187,7 +1216,7 @@ export default {
             this.language = res.data.language
             this.groupId = res.data.groupId
             this.gender = res.data.sex + ''
-            this.notification = res.data.notification
+            this.notification = res.data.notification === '1'
             this.getUserInfoByUnionId()
           }
         });
