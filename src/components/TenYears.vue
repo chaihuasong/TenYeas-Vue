@@ -354,6 +354,13 @@ export default {
         this.unionid = uid.replace("\"","").replace("\"","")
         console.log("unionid:" + this.unionid)
         this.getUserInfoByUnionId()
+
+        //修复bug
+        if (this.openid === '' || this.openid === null || this.openid === undefined) {
+          console.log("openid!!!!!!!!!!!!!!:" + this.openid)
+          this.$store.commit('$_setUnionid', '')
+          this.getData()
+        }
         return;
       }
       let openid = getOpenId()
@@ -369,12 +376,14 @@ export default {
           }
         }).then((res) => {
           if (res != null && res.data != null && res.data !== '') {
-            console.log("openid:" + res)
+            console.log("openid:" + res.data.openid)
             console.log("unionid:" + res.data.unionid)
             console.log("sex:" + res.data.sex)
             this.unionid = res.data.unionid
             if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
               alert("信息获取失败，请关注“黄庭书院”公众号后重试！")
+            } else {
+              this.$store.commit('$_setUnionid', this.unionid)
             }
             this.nickname = res.data.nickname
             this.openid = res.data.openid
@@ -419,11 +428,39 @@ export default {
           this.daixie = res.data.daixie
           this.chujie = res.data.chujie
           this.wechatid = res.data.wechatid
-          this.province = res.data.province
+
+          if (res.data.nickname !== '') {
+            this.nickname = res.data.nickname
+          }
+          if (res.data.openid !== '') {
+            this.openid = res.data.openid
+          }
+          if (res.data.headimgurl !== '') {
+            this.headimgurl = res.data.headimgurl
+          }
+          if (res.data.country !== '') {
+            this.country = res.data.country
+          }
+          if (res.data.city !== '') {
+            this.city = res.data.city
+          }
+          if (res.data.province !== '' && res.data.city !== '') {
+            this.province = res.data.province + this.city
+          }
+          if (res.data.language !== '') {
+            this.language = res.data.language
+          }
+          if (res.data.groupId !== '') {
+            this.groupId = res.data.groupId
+          }
 
           this.buttonText = '修改'
           this.daixieDisabled = true
           this.daixie = '0'
+
+          if (res.data.openid === '') {
+            this.buttonText = '请重新提交'
+          }
         }
       });
     },
