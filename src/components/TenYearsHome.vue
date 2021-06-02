@@ -171,18 +171,6 @@
       <el-button v-if="!editDailyReportMode" style="float: right;margin-top: 10px;margin-bottom: 10px" @click="submitDailyReport"
                  v-clipboard:copy="dailyReportResult">提交</el-button>
     </el-card>
-    <el-row style="text-align: left; margin-left: 20px;margin-top: 10px">
-      <el-col :span="16" style="font-weight: bold">
-        <span>打卡提醒</span>
-      </el-col>
-      <el-col :span="8">
-        <el-switch
-            style="margin-left: 5px;margin-top: 2px;margin-bottom: 80px"
-            @change="notificationChange"
-            v-model="notification">
-        </el-switch>
-      </el-col>
-    </el-row>
     <el-dialog title="从模板库中选择" :visible.sync="addTemplateDialogVisible" custom-class="templateStyle">
       <el-checkbox-group v-model="newReportLists">
         <el-row style="margin-top: 10px;font-size: 16px;" v-for="item in allDefaultReportsLists" :key="item.template">
@@ -196,6 +184,18 @@
         <el-button type="primary" @click="confirmAddTemplate()">确 定</el-button>
       </div>
     </el-dialog>
+    <el-row style="float: left; text-align: left; margin-left: 20px;margin-top: 10px">
+      <el-col :span="16" style="float: left; font-weight: bold">
+        <span>打卡提醒</span>
+      </el-col>
+      <el-col :span="8">
+        <el-switch
+            style="float: left; margin-left: 100px;margin-top: 2px;margin-bottom: 80px"
+            @change="notificationChange"
+            v-model="notification">
+        </el-switch>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
