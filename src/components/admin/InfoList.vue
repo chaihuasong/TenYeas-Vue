@@ -8,6 +8,8 @@
       </el-table-column>
       <el-table-column prop="number" label="NO." width="60">
       </el-table-column>
+      <el-table-column prop="openid" label="openid" width="60">
+      </el-table-column>
       <el-table-column prop="name" label="姓名" width="70">
       </el-table-column>
       <el-table-column prop="wechatid" label="微信号" width="110">
