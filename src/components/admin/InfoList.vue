@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-input v-model="search" placeholder="请输入姓名" style="width: 200px;float: left"  v-on:input ="searchData"></el-input>
+    <el-input v-model="search" placeholder="请输入姓名或昵称" style="width: 200px;float: left"  v-on:input ="searchData"></el-input>
     <el-button type="primary" icon="el-icon-search" style="margin-left: 20px; float: left" @click="searchData">搜索</el-button>
     <el-button type="primary" icon="el-icon-download" @click="outTab" style="float: right;margin-right: 20px; text-align: center">导出</el-button>
     <el-table :data="tableData" id="out-table" style="height: 0px;width: 0px">
@@ -299,7 +299,7 @@ export default {
       return year + "-" + month + "-" + dates
     },
     genderFormatter(row) {
-      if (row.gender == 1) {
+      if (row.gender === 1) {
         return "男";
       } else {
         return "女";

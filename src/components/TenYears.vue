@@ -208,6 +208,9 @@ export default {
       smallScreen: false,
       buttonText: '提交',
       capturedSuccess: false,
+      notification: '',
+      maxAge: '',
+      planInfoFlag: '',
     };
   },
   mounted: function () {
@@ -457,6 +460,9 @@ export default {
           this.buttonText = '修改'
           this.daixieDisabled = true
           this.daixie = '0'
+          this.notification = res.data.notification
+          this.planInfoFlag = res.data.planInfoFlag
+          this.maxAge = res.data.maxAge
 
           if (res.data.openid === '') {
             this.buttonText = '请重新提交'
@@ -546,7 +552,10 @@ export default {
         city: this.city,
         language: this.language,
         groupId: this.groupId,
-        createDate: time
+        createDate: time,
+        notification: this.notification,
+        planInfoFlag: this.planInfoFlag,
+        maxAge: this.maxAge,
       })
       axios({
         method: "POST",
