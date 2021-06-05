@@ -2,10 +2,20 @@
   <div>
     <el-input v-model="search" placeholder="请输入姓名或昵称" style="width: 200px;float: left"  v-on:input ="searchData"></el-input>
     <el-button type="primary" icon="el-icon-search" style="margin-left: 20px; float: left" @click="searchData">搜索</el-button>
+    <el-date-picker
+        v-model="filterDate"
+        type="date"
+        format="yyyy-MM-dd"
+        placeholder="选择日期"
+        icon="el-icon-search"
+        @change="searchByDate"
+        style="margin-left: 20px; float: left" />
     <el-button type="primary" icon="el-icon-download" @click="outTab" style="float: right;margin-right: 20px; text-align: center">导出</el-button>
 
     <el-table :data="tableData" id="out-table" style="height: 0px;width: 0px">>
       <el-table-column prop="id" label="id" width="80">
+      </el-table-column>
+      <el-table-column prop="date" label="日期" width="80">
       </el-table-column>
       <el-table-column prop="userId" label="用户ID" width="100">
       </el-table-column>
@@ -70,6 +80,8 @@
     <el-table :data="tableData.slice((currentPage-1)*pageSize,currentPage*pageSize)">
       <el-table-column prop="id" label="id" width="80">
       </el-table-column>
+      <el-table-column prop="date" label="日期" width="80">
+      </el-table-column>
       <el-table-column prop="userId" label="用户ID" width="100">
       </el-table-column>
       <el-table-column prop="wechatid" label="微信号" width="100">
@@ -77,6 +89,14 @@
       <el-table-column prop="name" label="姓名" width="100">
       </el-table-column>
       <el-table-column prop="nickname" label="昵称" width="100">
+      </el-table-column>
+      <el-table-column label="头像" width="80">
+        <template slot-scope="scope">
+          <el-image
+              style="width: 60px; height: 60px"
+              :src="tableData[(currentPage - 1) * pageSize + scope.$index].headimgurl"
+              :preview-src-list="[tableData[(currentPage - 1) * pageSize + scope.$index].headimgurl != null ? tableData[(currentPage - 1) * pageSize + scope.$index].headimgurl.substring(0, tableData[(currentPage - 1) * pageSize + scope.$index].headimgurl.lastIndexOf('/')) + '/0' : null]" />
+        </template>
       </el-table-column>
       <el-table-column prop="gender" label="性别" width="100" :formatter="genderFormatter">
       </el-table-column>
@@ -276,6 +296,7 @@ export default {
       search: '',
       delDialogVisible: false,
       editDialogVisible: false,
+      filterDate: '',
       valueInfo: {
         id : '',
         userId: '',
@@ -555,14 +576,38 @@ export default {
     handleCurrentChange(val) {
       this.currentPage = val
     },
-    searchData() {
-      if (this.search ==='') {
+    searchByDate() {
+      if (this.filterDate ==='') {
         this.getData()
         return
       }
       axios({
         method: "GET",
-        url: this.serverUrl + "getReportInfoByNameOrNickNameLike?name=" + this.search,
+        url: this.serverUrl + "getReportInfoByDateForAdmin?date=" + this.getDateFormat(this.filterDate),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        console.log(res.data)
+        if (res.data !== null && res.data !== '') {
+          this.tableData = res.data
+        } else {
+          this.$message.warning("无数据")
+        }
+      })
+    },
+    searchData() {
+      if (this.search ==='') {
+        this.getData()
+        return
+      }
+      let formatDate = null;
+      if (this.filterDate !== null && this.filterDate !== '' ) {
+        formatDate = this.getDateFormat(this.filterDate)
+      }
+      axios({
+        method: "GET",
+        url: this.serverUrl + "getReportInfoByNameOrNickNameLike?name=" + this.search + "&date=" + formatDate,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -591,6 +636,14 @@ export default {
         FileSaver.saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'DailyReport_Info_' + fileStr + '.xlsx')
       } catch (e) { if (typeof console !== 'undefined') console.log(e, wbout) }
       return wbout
+    },
+    getDateFormat(date) {
+      let year = date.getFullYear()
+      let month = date.getMonth() + 1
+      if (month < 10) month = '0' + month
+      let day = date.getDate()
+      if (day < 10) day = '0' + day
+      return year + "-" + month + "-" + day
     },
   }
 }
