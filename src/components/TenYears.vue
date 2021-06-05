@@ -390,7 +390,7 @@ export default {
             this.headimgurl = res.data.headimgurl
             this.country = res.data.country
             this.city = res.data.city
-            this.province = res.data.province + this.city
+            this.province = res.data.province+res.data.city
             this.language = res.data.language
             this.groupId = res.data.groupId
             this.gender = res.data.sex + ''
@@ -444,8 +444,8 @@ export default {
           if (res.data.city !== '') {
             this.city = res.data.city
           }
-          if (res.data.province !== '' && res.data.city !== '') {
-            this.province = res.data.province + this.city
+          if (res.data.province !== '') {
+            this.province = res.data.province
           }
           if (res.data.language !== '') {
             this.language = res.data.language
