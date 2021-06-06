@@ -504,7 +504,6 @@ export default {
     },
     getMonthNotes() {
       if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
-        this.$message.warning("信息获取失败，请关注“黄庭书院”公众号后刷新页面重试！")
         return
       }
       let currentDate = this.getDateFormat(this.calendarValue)
@@ -769,7 +768,7 @@ export default {
         return
       }
       if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
-        this.$message.warning("信息获取失败，请关注“黄庭书院”公众号后刷新页面重试！")
+        this.$message.warning("信息获取失败，请刷新页面重试，注意刷新后数据会丢失！")
         return
       }
       if (this.state === '' || this.state === undefined || this.state.trim().length === 0) {
@@ -1206,7 +1205,8 @@ export default {
             console.log("sex:" + res.data.sex)
             this.unionid = res.data.unionid
             if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
-              alert("信息获取失败，请关注“黄庭书院”公众号后刷新页面重试！")
+              alert("信息获取失败，请刷新页面重试！")
+              return;
             }
             this.$store.commit('$_setUnionid', this.unionid)
             this.nickname = res.data.nickname
@@ -1227,7 +1227,7 @@ export default {
     },
     getUserInfoByUnionId() {
       if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
-        this.$message.warning("信息获取失败，请关注“黄庭书院”公众号后刷新页面重试！")
+        this.$message.warning("信息获取失败，请刷新页面重试！")
         return
       }
       axios({

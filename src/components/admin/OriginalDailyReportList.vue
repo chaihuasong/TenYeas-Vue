@@ -7,9 +7,9 @@
       </el-table-column>
       <el-table-column prop="date" label="日期" width="100">
       </el-table-column>
-      <el-table-column prop="note" label="总结" width="100">
+      <el-table-column prop="note" label="总结" width="200">
       </el-table-column>
-      <el-table-column prop="templateId" label="模板" width="100">
+      <el-table-column prop="templateId" label="模板" width="80">
       </el-table-column>
       <el-table-column prop="state" label="状态" width="80" :formatter="stateFormatter">
       </el-table-column>
