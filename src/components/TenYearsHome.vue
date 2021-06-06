@@ -110,11 +110,13 @@
       <el-radio-group v-model="state" style="margin-bottom: 10px;text-align: left">
         <el-radio label="1" style="width: 90%;float: left">精气神得到长养，朝着目标<span style="margin-left: 10px;margin-right: 5px;font-size: 20px;font-weight: bold">+</span></el-radio>
         <br/>
-        <el-radio label="0" style="width: 90%;float: left;margin-top: 10px;margin-bottom: 5px">精气神没有长养，偏离目标<span style="margin-left: 10px;margin-right: 5px;font-size: 14px;font-weight: bold">一</span></el-radio>
+        <el-radio label="0" style="width: 90%;float: left;margin-top: 10px;margin-bottom: 5px">精气神没有长养，偏离目标<span style="margin-left: 10px;margin-right: 5px;font-size: 20px;font-weight: bold">-</span></el-radio>
       </el-radio-group>
       <el-input
           type="textarea"
           :rows="3"
+          maxlength="15"
+          show-word-limit
           placeholder="请输入内容"
           v-model="note" />
       <el-button style="float: right;margin-top: 10px;margin-bottom: 10px" @click="submitDailyNote">提交</el-button>
@@ -161,10 +163,10 @@
                      style="background: lightcyan;margin-top: 10px"></el-button>
         </el-col>
       </el-row>
-      <div style="float: left; margin-bottom: 10px;margin-top: 15px;font-weight: bold;text-align: left">每日分享（选填）</div>
+      <div style="float: left; margin-bottom: 10px;margin-top: 15px;font-weight: bold;text-align: left">心得体会</div>
       <el-input
           type="textarea"
-          :rows="3"
+          :rows="5"
           placeholder="请输入内容"
           @change="onDailyReportResultChange"
           v-model="share" />
