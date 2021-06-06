@@ -465,7 +465,7 @@ export default {
     getData() {
       axios({
         method: "GET",
-        url: this.serverUrl + "getAllReportInfo",
+        url: this.serverUrl + "getAllReportInfoWithUserInfo",
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }

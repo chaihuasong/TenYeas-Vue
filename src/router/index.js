@@ -13,13 +13,13 @@ import MyHome from "@/components/MyHome";
 import Error from "@/components/Error";
 import HTQ from "@/components/HTQ";
 import DailyReport from "@/components/DailyReport";
-import DailyReportList from "@/components/admin/DailyReportList";
 import TenYearsHome from "@/components/TenYearsHome";
 import HalfYearInfoList from "@/components/admin/HalfYearInfoList";
 import MonthInfoList from "@/components/admin/MonthInfoList";
 import TemplateTab from "@/components/settings/TemplateTab";
 import TenYearsHtmlTab from "@/components/settings/TenYearsHtmlTab";
 import AdminHome from "@/components/admin/AdminHome";
+import DailyReportTab from "@/components/admin/DailyReportTab";
 
 Vue.use(Router)
 
@@ -127,7 +127,7 @@ export default new Router({
         {
           path: 'reportList',
           name: 'reportList',
-          component: DailyReportList,
+          component: DailyReportTab,
           meta: {
             title: '管理后台',
             footShow: false,
