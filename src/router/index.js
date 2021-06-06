@@ -20,6 +20,7 @@ import TemplateTab from "@/components/settings/TemplateTab";
 import TenYearsHtmlTab from "@/components/settings/TenYearsHtmlTab";
 import AdminHome from "@/components/admin/AdminHome";
 import DailyReportTab from "@/components/admin/DailyReportTab";
+import Notification from "@/components/settings/Notification";
 
 Vue.use(Router)
 
@@ -164,6 +165,15 @@ export default new Router({
           path: 'monthInfoList',
           name: 'monthInfoList',
           component: MonthInfoList,
+          meta: {
+            title: '管理后台',
+            footShow: false,
+          },
+        },
+        {
+          path: 'notification',
+          name: 'notification',
+          component: Notification,
           meta: {
             title: '管理后台',
             footShow: false,

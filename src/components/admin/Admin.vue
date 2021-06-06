@@ -28,6 +28,9 @@
               <el-menu-item index="/home/templateTab">编辑模板</el-menu-item>
             </el-menu-item-group>
             <el-menu-item-group>
+              <el-menu-item index="/home/notification">通知</el-menu-item>
+            </el-menu-item-group>
+            <el-menu-item-group>
               <el-menu-item index="/home/tenYearsHtmlTab">页面修改</el-menu-item>
             </el-menu-item-group>
           </el-submenu>

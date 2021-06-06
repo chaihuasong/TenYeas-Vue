@@ -109,6 +109,19 @@
       </el-col>
     </el-row>
 
+    <el-row style="text-align: left; margin-left: 30px;margin-top: 20px">
+      <el-col :span="10" style="font-weight: bold">
+        <span>内容能否公开</span>
+      </el-col>
+      <el-col :span="14">
+        <el-switch
+            style="margin-left: 5px"
+            @change="openChange"
+            v-model="open">
+        </el-switch>
+      </el-col>
+    </el-row>
+
     <div style="margin-bottom: 150px"/>
   </div>
 </template>
@@ -135,7 +148,7 @@ export default {
       stepInfo: '',
       createDate: '',
       birthday: '1988',
-      open: '',
+      open: false,
       daixie: '',
       chujie: '',
       wechatid: '',
@@ -174,6 +187,24 @@ export default {
     this.configDiv()
   },
   methods: {
+    openChange() {
+      let data = qs.stringify({
+        id: this.unionid,
+        gender: this.gender,
+        open: this.open ? '1' : '0',
+      })
+      axios({
+        method: "POST",
+        url: this.serverUrl + "update",
+        data: data,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then(() => {
+        console.log("success")
+        this.$message.success("操作成功")
+      })
+    },
     notificationChange() {
       let data = qs.stringify({
         id: this.unionid,
@@ -298,7 +329,7 @@ export default {
           this.stepInfo = res.data.stepInfo
           this.createDate = res.data.createDate
           this.birthday = res.data.birthday
-          this.open = res.data.open
+          this.open = res.data.open === '1'
           this.daixie = res.data.daixie
           this.chujie = res.data.chujie
           this.wechatid = res.data.wechatid
