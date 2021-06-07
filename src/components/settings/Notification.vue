@@ -46,7 +46,6 @@
 
 import axios from "axios";
 import global from "@/components/Common";
-import qs from "qs";
 
 export default {
   data() {
@@ -88,20 +87,21 @@ export default {
 
       let requestData = {
         notifyList: notifyList,
-        notificationInfo: this.notificationInfo
+        notificationInfo: this.notificationInfo,
       }
-
-      console.log(qs.stringify(requestData))
-
       axios({
         method: "POST",
         url: this.serverUrl + "notify",
-        data: qs.stringify(requestData),
+        data: requestData,
         headers: {
-          'Content-Type': 'application/json;charset=utf-8'
+          'Content-Type': 'application/json;charset=UTF-8'
         }
-      }).then(() => {
-        this.$message.success("操作成功！")
+      }).then((res) => {
+        if (res.data === 'success') {
+          this.$message.success("操作成功！")
+        } else {
+          this.$message.warning("操作失败！")
+        }
       })
     },
     checkLogin() {
