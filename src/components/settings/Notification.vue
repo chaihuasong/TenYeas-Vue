@@ -80,7 +80,7 @@ export default {
   methods: {
     onNotify() {
       let notifyList = []
-      this.value.forEach((label, index) => {
+      this.value.forEach(index => {
         let item = this.data[index]
         notifyList.push(item)
       })
