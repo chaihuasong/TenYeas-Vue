@@ -62,7 +62,7 @@ export default {
         keyword2: '00:00-24:00',
         keyword2Color: '#C4C400',
         remark: '自律从打卡开始~',
-        remarkColor: '',
+        remarkColor: '#743A3A',
         url: 'http://htzchina.org/tenyears/#/tenyearsHome',
       },
     }
