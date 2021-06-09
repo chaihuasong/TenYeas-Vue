@@ -46,7 +46,6 @@
 
 import axios from "axios";
 import global from "@/components/Common";
-import qs from "qs";
 
 export default {
   data() {
@@ -59,11 +58,11 @@ export default {
         first: '每日养气功课，一起来完成今日打卡！',
         firstColor: '#743A3A',
         keyword1: '养气功课',
-        keyword1Color: '#FF0000',
+        keyword1Color: '#C4C400',
         keyword2: '00:00-24:00',
-        keyword2Color: '#C4C400',
+        keyword2Color: '#888888',
         remark: '自律从打卡开始~',
-        remarkColor: '',
+        remarkColor: '#888888',
         url: 'http://htzchina.org/tenyears/#/tenyearsHome',
       },
     }
@@ -81,27 +80,28 @@ export default {
   methods: {
     onNotify() {
       let notifyList = []
-      this.value.forEach((label, index) => {
+      this.value.forEach(index => {
         let item = this.data[index]
         notifyList.push(item)
       })
 
       let requestData = {
         notifyList: notifyList,
-        notificationInfo: this.notificationInfo
+        notificationInfo: this.notificationInfo,
       }
-
-      console.log(qs.stringify(requestData))
-
       axios({
         method: "POST",
         url: this.serverUrl + "notify",
-        data: qs.stringify(requestData),
+        data: requestData,
         headers: {
-          'Content-Type': 'application/json;charset=utf-8'
+          'Content-Type': 'application/json;charset=UTF-8'
         }
-      }).then(() => {
-        this.$message.success("操作成功！")
+      }).then((res) => {
+        if (res.data === 'success') {
+          this.$message.success("操作成功！")
+        } else {
+          this.$message.warning("操作失败！")
+        }
       })
     },
     checkLogin() {
