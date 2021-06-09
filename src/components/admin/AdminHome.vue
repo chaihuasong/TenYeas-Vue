@@ -66,10 +66,16 @@
     </el-row>
 
     <el-row>
-      <el-col :span="11">
+      <el-col :span="12">
         <el-card style="width:1066px; height: 350px;">
           <div id="daily_report" :style="{width:'500px',height: '300px'}" style="float: left;"></div>
           <div id="echarts" :style="{width:'500px', height: '300px'}" style="float: left;"></div>
+        </el-card>
+      </el-col>
+      <el-col :span="12">
+        <el-card style="width:1066px; height: 350px;">
+          <div id="china" :style="{width:'500px',height: '300px'}" style="float: left;"></div>
+          <div id="china_echarts" :style="{width:'500px', height: '300px'}" style="float: left;"></div>
         </el-card>
       </el-col>
     </el-row>
@@ -80,6 +86,7 @@
 import * as echarts from 'echarts'
 import axios from "axios";
 import global from "@/components/Common";
+// import '@/assets/echarts/map/js/china.js'
 
 export default {
   data() {
@@ -96,6 +103,7 @@ export default {
       dailyVisitCount: 0,
       yesterdayVisitCount: 0,
       monthsReportCountList: [],
+      monthsVisitCountList: [],
     };
   },
   //调用
@@ -109,22 +117,48 @@ export default {
     this.getYesterdayVisitCount()
     this.getTotalVisitCount()
     this.getMonthData()
+    this.$nextTick(()=>{
+      this.initEchartMap();
+    })
     // this.drawPie2('echarts')
   },
   methods: {
+    //初始化中国地图
+    initEchartMap() {
+      //let mapDiv = document.getElementById('china_echarts');
+      //let myChart = echarts.init(mapDiv);
+      //myChart.setOption(this.options);
+    },
     getMonthData() {
-      axios({
+      let me = this
+      axios.all([this.getMonthReportData(), this.getMonthVisitData()])
+          .then(axios.spread(function (monthReports, monthVisits) {
+            console.log('monthReports:' + monthReports.data)
+            console.log('monthVisits:' + monthVisits.data)
+            let thisMonth = new Date().getMonth()
+            me.monthsReportCountList = monthReports.data
+            me.monthsReportCountList.splice(thisMonth + 1, 12 - thisMonth)
+            me.monthsVisitCountList = monthVisits.data
+            me.monthsVisitCountList.splice(thisMonth + 1, 12 - thisMonth)
+            me.drawPie('daily_report')
+      }));
+    },
+    getMonthReportData() {
+      return axios({
         method: "GET",
         url: this.serverUrl + "getReportInfoCountListByYear?year=" + new Date().getFullYear(),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
-      }).then((res) => {
-        console.log(res.data)
-        this.monthsReportCountList = res.data
-        let thisMonth = new Date().getMonth()
-        this.monthsReportCountList.splice(thisMonth + 1, 12 - thisMonth)
-        this.drawPie('daily_report')
+      })
+    },
+    getMonthVisitData() {
+      return axios({
+        method: "GET",
+        url: this.serverUrl + "getVisitCountByYear?year=" + new Date().getFullYear(),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
       })
     },
     getDailyReportCount() {
@@ -210,7 +244,7 @@ export default {
       this.charts = echarts.init(document.getElementById(id))
       this.charts.setOption({
         title: {
-          text: new Date().getFullYear() + '年度打卡统计'
+          text: new Date().getFullYear() + '年度统计'
         },
         xAxis: {
           type: 'category',
@@ -232,10 +266,16 @@ export default {
           }
         },
         series: [{
-          name: '统计',
+          name: '打卡数',
           type: 'line',
           data: this.monthsReportCountList
-        }]
+        },
+          {
+            name: '访问量',
+            type: 'line',
+            data: this.monthsVisitCountList
+          }
+          ]
       })
     },
     drawPie2(id) {
