@@ -37,7 +37,12 @@
           <el-input v-model="notificationInfo.url" autocomplete="off"></el-input>
         </el-form-item>
       </el-form>
-      <el-button type="primary" icon="el-icon-search" style="margin-right: 20%;margin-top: 20px;margin-bottom: 20%; float: right" @click="onNotify">通知</el-button>
+      <el-button type="primary" style="margin-left: 20%;margin-top: 20px;margin-bottom: 20%; float: left"
+                 @click="saveNotification">保存通知
+      </el-button>
+      <el-button type="primary" icon="el-icon-message"
+                 style="margin-right: 20%;margin-top: 20px;margin-bottom: 20%; float: right" @click="onNotify">发起通知
+      </el-button>
     </el-card>
   </div>
 </template>
@@ -46,6 +51,7 @@
 
 import axios from "axios";
 import global from "@/components/Common";
+import qs from "qs";
 
 export default {
   data() {
@@ -55,6 +61,7 @@ export default {
       value: [],
       users: [],
       notificationInfo: {
+        id: '1',
         first: '每日养气功课，一起来完成今日打卡！',
         firstColor: '#743A3A',
         keyword1: '养气功课',
@@ -76,14 +83,48 @@ export default {
       this.$router.push("/admin");
     }
     document.title = this.$route.meta.title
+    this.getNotification();
   },
   methods: {
+    saveNotification() {
+      let data = qs.stringify(this.notificationInfo)
+      console.log(data)
+      axios({
+        method: "POST",
+        url: this.serverUrl + "saveNotification",
+        data: data,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        if (res.data === 'success') {
+          this.$message.success("保存成功！")
+        } else {
+          this.$message.warning("保存失败！")
+        }
+      })
+    },
+    getNotification() {
+      axios({
+        method: "GET",
+        url: this.serverUrl + "getNotification",
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        this.notificationInfo = res.data
+      })
+    },
     onNotify() {
       let notifyList = []
       this.value.forEach(index => {
         let item = this.data[index]
         notifyList.push(item)
       })
+      if(notifyList.length === 0) {
+        this.$message.warning("未选择通知对象!")
+        return
+      }
 
       let requestData = {
         notifyList: notifyList,
