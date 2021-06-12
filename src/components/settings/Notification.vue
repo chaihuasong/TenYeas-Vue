@@ -1,6 +1,7 @@
 <template>
   <div>
     <el-card>
+      <el-checkbox v-model="notifyChecked" @change="notifyCheckedChange" style="margin-right: 20%;margin-bottom: 20px">过滤未打开通知人员名单</el-checkbox>
       <el-transfer
           filterable
           filter-placeholder="请输入姓名"
@@ -57,6 +58,7 @@ export default {
   data() {
     return {
       serverUrl: global.httpUrl,
+      notifyChecked: false,
       data: [],
       value: [],
       users: [],
@@ -86,6 +88,20 @@ export default {
     this.getNotification();
   },
   methods: {
+    notifyCheckedChange() {
+      this.data = []
+      this.users.forEach((user, index) => {
+        if (this.notifyChecked && user.notification === '1') {
+          console.log("skip user:" + user.name)
+        } else {
+          this.data.push({
+            label: user.name,
+            key: index,
+            openid: user.openid,
+          })
+        }
+      })
+    },
     saveNotification() {
       let data = qs.stringify(this.notificationInfo)
       console.log(data)
