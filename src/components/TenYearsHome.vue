@@ -869,6 +869,7 @@ export default {
               this.$confirm('是否打开通知提醒功能？', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
+                confirmButtonClass: 'confirmButtonClass',
                 type: 'info'
               }).then(() => {
                 let data = qs.stringify({

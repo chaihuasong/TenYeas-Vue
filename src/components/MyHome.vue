@@ -200,6 +200,7 @@ export default {
       this.$confirm('是否清空缓存？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
+        confirmButtonClass: 'confirmButtonClass',
         type: 'info'
       }).then(() => {
         this.$store.commit('$_setUnionid', '')
@@ -246,6 +247,7 @@ export default {
       this.$confirm('是否保存修改？', '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
+          confirmButtonClass: 'confirmButtonClass',
           type: 'info'
         }).then(() => {
           let data = qs.stringify({
@@ -437,5 +439,15 @@ a {
   color: #8c939d;
   -webkit-appearance: none;
   border-radius: 0;
+}
+.confirmButtonClass {
+  float: right;
+  margin-right: 15%;
+  width: 80px;
+}
+.confirmButtonClass {
+  float: right;
+  margin-right: 15%;
+  width: 80px;
 }
 </style>
