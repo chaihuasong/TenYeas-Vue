@@ -18,11 +18,47 @@
 <script>
 import TabBar from "./tabbar/TabBar";
 import TabBarItem from "./tabbar/TabBarItem";
+import qs from "qs";
+import axios from "axios";
+import global from "@/components/Common";
 export default {
   name: 'MainTabBar',
   components: {
     TabBar,
     TabBarItem
+  },
+  data() {
+    return {
+      serverUrl: global.httpUrl,
+    }
+  },
+  mounted() {
+    this.$nextTick(()=>{
+      this.visited()
+    })
+  },
+  methods: {
+    visited() {
+      let data = qs.stringify({
+        date: this.getDateFormat(new Date()),
+      })
+      axios({
+        method: "POST",
+        url: this.serverUrl + "visited",
+        data: data,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      })
+    },
+    getDateFormat(date) {
+      let year = date.getFullYear()
+      let month = date.getMonth() + 1
+      if (month < 10) month = '0' + month
+      let day = date.getDate()
+      if (day < 10) day = '0' + day
+      return year + "-" + month + "-" + day
+    },
   }
 }
 </script>

@@ -315,9 +315,23 @@ export default {
     this.getLastMonthInfo()
     this.getHalfYearInfo()
     this.getAllDefaultReportsLists()
-    this.visited()
+    this.visitedUser()
   },
   methods: {
+    visitedUser() {
+      let data = qs.stringify({
+        date: this.getDateFormat(new Date()),
+        userId: this.unionid
+      })
+      axios({
+        method: "POST",
+        url: this.serverUrl + "visitedUser",
+        data: data,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      })
+    },
     notificationChange() {
       let data = qs.stringify({
         id: this.unionid,
@@ -334,19 +348,6 @@ export default {
       }).then(() => {
         console.log("success")
         this.$message.success("每日打卡通知提醒功能已" + (this.notification ? "开启" : "关闭"))
-      })
-    },
-    visited() {
-      let data = qs.stringify({
-        date: this.getDateFormat(new Date()),
-      })
-      axios({
-        method: "POST",
-        url: this.serverUrl + "visited",
-        data: data,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
       })
     },
     getDefaultReportTemplate1() {

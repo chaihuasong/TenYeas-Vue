@@ -65,6 +65,35 @@
       </el-col>
     </el-row>
 
+    <el-row style="margin-bottom: 20px;">
+      <el-col :span="6">
+        <el-card style="width:250px; height: 140px;">
+          <div class="el-card-list">
+            <p><span class="el-card-big-font">{{ yesterdayVisitedUser }}</span></p>
+            <p style="font-size: 14px;padding-top: 10px;">
+              昨日访客量
+            </p>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card style="width:250px; height: 140px;">
+          <div class="el-card-list">
+            <p><span class="el-card-big-font">{{ dailyVisitedUser }}</span></p>
+            <p style="font-size: 14px;padding-top: 10px;">
+              今日访客量
+            </p>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card style="width:250px; height: 140px;">
+          <p><span class="el-card-big-font">{{ totalVisitedUser }}</span></p>
+          <p style="font-size: 14px;padding-top: 10px;">总访客量</p>
+        </el-card>
+      </el-col>
+    </el-row>
+
     <el-row>
       <el-col :span="12">
         <el-card style="width:1066px; height: 350px;">
@@ -102,6 +131,9 @@ export default {
       totalVisitCount: 0,
       dailyVisitCount: 0,
       yesterdayVisitCount: 0,
+      totalVisitedUser: 0,
+      dailyVisitedUser: 0,
+      yesterdayVisitedUser: 0,
       monthsReportCountList: [],
       monthsVisitCountList: [],
     };
@@ -116,6 +148,9 @@ export default {
     this.getDailyVisitCount()
     this.getYesterdayVisitCount()
     this.getTotalVisitCount()
+    this.getDailyVisitedUser()
+    this.getYesterdayVisitedUser()
+    this.getTotalVisitedUser()
     this.getMonthData()
     this.$nextTick(()=>{
       this.initEchartMap();
@@ -240,6 +275,43 @@ export default {
         }
       })
     },
+
+
+    getDailyVisitedUser() {
+      axios({
+        method: "GET",
+        url: this.serverUrl + "getVisitedUserCount?date=" + this.getDateFormat(new Date()),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        this.dailyVisitedUser = res.data.count === undefined ? 0 : res.data.count
+      })
+    },
+    getYesterdayVisitedUser() {
+      axios({
+        method: "GET",
+        url: this.serverUrl + "getVisitedUserCount?date=" + this.getDateFormat(new Date(Date.now() - 24 * 3600*1000)),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        this.yesterdayVisitedUser = res.data.count === undefined ? 0 : res.data.count
+      })
+    },
+    getTotalVisitedUser() {
+      axios({
+        method: "GET",
+        url: this.serverUrl + "getAllVisitedUserCount",
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        console.log(res.data)
+        this.totalVisitedUser = res.data.count === undefined ? 0 : res.data.count
+      })
+    },
+
     drawPie(id) {
       this.charts = echarts.init(document.getElementById(id))
       this.charts.setOption({
