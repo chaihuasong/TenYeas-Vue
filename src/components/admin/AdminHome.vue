@@ -285,7 +285,7 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        this.dailyVisitedUser = res.data.count === undefined ? 0 : res.data.count
+        this.dailyVisitedUser = res.data.length
       })
     },
     getYesterdayVisitedUser() {
@@ -307,8 +307,7 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        console.log(res.data)
-        this.totalVisitedUser = res.data.count === undefined ? 0 : res.data.count
+        this.totalVisitedUser = res.data.length
       })
     },
 

@@ -122,6 +122,15 @@
       </el-col>
     </el-row>
 
+    <el-row style="text-align: left; margin-left: 30px;margin-top: 20px" @click.native="clearUnionId">
+      <el-col :span="10" style="font-weight: bold">
+        <span>清空缓存</span>
+      </el-col>
+      <el-col :span="14">
+        <i class="el-icon-arrow-right" style="margin-left: 10px"></i>
+      </el-col>
+    </el-row>
+
     <div style="margin-bottom: 150px"/>
   </div>
 </template>
@@ -187,6 +196,16 @@ export default {
     this.configDiv()
   },
   methods: {
+    clearUnionId() {
+      this.$confirm('是否清空缓存？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'info'
+      }).then(() => {
+        this.$store.commit('$_setUnionid', '')
+        this.$router.push("/tenyearsHome");
+      })
+    },
     openChange() {
       let data = qs.stringify({
         id: this.unionid,
@@ -225,11 +244,11 @@ export default {
     },
     onInputChange() {
       this.$confirm('是否保存修改？', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'info'
-      }).then(() => {
-        let data = qs.stringify({
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'info'
+        }).then(() => {
+          let data = qs.stringify({
           id: this.unionid,
           nickname: this.nickname,
           province: this.province,
