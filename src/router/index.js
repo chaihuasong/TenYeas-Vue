@@ -21,6 +21,7 @@ import TenYearsHtmlTab from "@/components/settings/TenYearsHtmlTab";
 import AdminHome from "@/components/admin/AdminHome";
 import DailyReportTab from "@/components/admin/DailyReportTab";
 import Notification from "@/components/settings/Notification";
+import Statistics from "@/components/Statistics";
 
 Vue.use(Router)
 
@@ -66,6 +67,15 @@ export default new Router({
       path: '/myHome',
       name: 'myHome',
       component: MyHome,
+      meta: {
+        title: '我的',
+        footShow: true,
+      }
+    },
+    {
+      path: '/statistics',
+      name: 'statistics',
+      component: Statistics,
       meta: {
         title: '我的',
         footShow: true,
