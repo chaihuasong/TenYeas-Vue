@@ -296,7 +296,7 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        this.yesterdayVisitedUser = res.data.count === undefined ? 0 : res.data.count
+        this.yesterdayVisitedUser = res.data.length
       })
     },
     getTotalVisitedUser() {
