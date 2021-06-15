@@ -1213,8 +1213,15 @@ export default {
             console.log("sex:" + res.data.sex)
             this.unionid = res.data.unionid
             if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
-              alert("信息获取失败，请刷新页面重试！")
-              return;
+              this.$alert('您还未填写过立志卡，点击确定跳转到填写界面', '立志信息不存在', {
+                confirmButtonText: '确定',
+                confirmButtonClass: 'confirmButtonClass',
+                callback: action => {
+                  console.log(action)
+                  this.$router.push("/index");
+                }
+              })
+              return
             }
             this.$store.commit('$_setUnionid', this.unionid)
             this.nickname = res.data.nickname
