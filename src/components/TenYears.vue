@@ -384,7 +384,14 @@ export default {
             console.log("sex:" + res.data.sex)
             this.unionid = res.data.unionid
             if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
-              alert("信息获取失败，请关注“黄庭书院”公众号后重试！")
+              this.$alert('请先关注“黄庭书院”公众号，点击确定跳转到关注界面', '需关注公众号', {
+                confirmButtonText: '确定',
+                confirmButtonClass: 'confirmButtonClass',
+                callback: () => {
+                  window.location.href = "https://mp.weixin.qq.com/mp/profile_ext?action=home&__biz=MzU5NjgwNDUxMA==&scene=123#wechat_redirect"
+                }
+              })
+              return
             } else {
               this.$store.commit('$_setUnionid', this.unionid)
             }
@@ -717,5 +724,10 @@ li {
 
 a {
   color: #42b983;
+}
+.confirmButtonClass {
+  float: right;
+  margin-right: 15%;
+  width: 80px;
 }
 </style>
