@@ -1,12 +1,12 @@
 <template>
   <div>
 
-
     <el-card style="float: left; width: 100%;margin-top: 10px">
-      <span style="font-weight: bold">您已坚持打卡</span>
+      <span style="font-weight: bold">您已累计坚持打卡</span>
       <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{this.totalReportCount}}</span> 天
       <br/>
-      <span style="font-weight: bold">当月已打卡</span>
+      <br/>
+      <span style="font-weight: bold">本月已打卡</span>
       <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{this.currentMonthReportCount}}</span> 天
     </el-card>
 
@@ -16,8 +16,6 @@
 
 <script>
 import axios from 'axios'
-import html2canvas from "html2canvas";
-import qs from "qs";
 import global from "@/components/Common";
 
 export default {
@@ -30,13 +28,14 @@ export default {
       serverUrl: global.httpUrl,
       currentMonthReportCount: 0,
       totalReportCount: 0,
+      totalReportList: [],
+      templateIdList: [],
     };
   },
   mounted: function () {
     document.title = this.$route.meta.title
     console.log("myHome getData")
     this.getData()
-    this.configDiv()
   },
   methods: {
     getData() {
@@ -57,9 +56,56 @@ export default {
         if (res.data != null && res.data !== '') {
           console.log("getById res:" + res)
           console.log("getById res.data:" + res.data)
-
+          let downloadTemplateList = []
+          let templateList = []
+          let templateIndexList = []
+          this.totalReportList = res.data
+          this.totalReportCount = this.totalReportList.length
+          for (let i = 0; i < this.totalReportCount; i++) {
+            console.log(this.totalReportList[i])
+            let tempId = this.totalReportList[i].templateId
+            this.templateIdList.push(tempId)
+            let contains = false
+            if (downloadTemplateList.length > 0) {
+              for (let i = 0; i < downloadTemplateList.length; i++) {
+                if (downloadTemplateList[i] === tempId) {
+                  contains = true
+                }
+              }
+            }
+            if (!contains) {
+              downloadTemplateList.push(tempId)
+            }
+            templateIndexList.push(downloadTemplateList.length - 1)
+          }
+          console.log("this.templateIdList:" + this.templateIdList)
+          console.log("downloadTemplateList:" + downloadTemplateList)
+          let urlArray = []
+          for (let i = 0; i < downloadTemplateList.length; i++) {
+            urlArray.push(this.serverUrl + "getReportTemplateById?id=" + downloadTemplateList[i])
+          }
+          console.log("urlArray:" + urlArray)
+          let promiseArray = urlArray.map(url => axios.get(url));
+          console.log("urlArray:" + urlArray)
+          console.log("promiseArray:" + promiseArray)
+          axios.all(promiseArray)
+              .then(function(results) {
+                let resArray = results.map(r => r.data)
+                console.log(resArray)
+                console.log("templateIndexList:" + templateIndexList)
+                for (let i = 0; i < templateIndexList.length; i++) {
+                  templateList = resArray[templateIndexList[i]]
+                  console.log("templateList:" + templateList)
+                }
+                console.log("\n")
+                console.log("\n")
+                console.log("\n")
+                console.log("\n")
+                console.log("\n")
+                console.log("\n")
+              })
         } else {
-          this.$message.warning("未查到任何数据，请联系管理员！")
+          this.$message.warning("未查到任何数据！")
         }
       });
     },
