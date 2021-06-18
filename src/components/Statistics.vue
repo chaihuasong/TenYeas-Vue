@@ -57,27 +57,43 @@ export default {
           console.log("getById res:" + res)
           console.log("getById res.data:" + res.data)
           let downloadTemplateList = []
+          let totalValueList = []
           let templateList = []
           let templateIndexList = []
+          let resultReportList = []
           this.totalReportList = res.data
           this.totalReportCount = this.totalReportList.length
           for (let i = 0; i < this.totalReportCount; i++) {
-            console.log(this.totalReportList[i])
             let tempId = this.totalReportList[i].templateId
             this.templateIdList.push(tempId)
-            let contains = false
-            if (downloadTemplateList.length > 0) {
-              for (let i = 0; i < downloadTemplateList.length; i++) {
-                if (downloadTemplateList[i] === tempId) {
-                  contains = true
+            let reportItem = this.totalReportList[i]
+            console.log(reportItem)
+            let index = downloadTemplateList.indexOf(tempId)
+            if (index < 0) {
+              downloadTemplateList.push(tempId)
+              totalValueList.push(reportItem)
+            } else {
+              //累加操作
+              let tempItem = totalValueList[index]
+              console.log("tempItem:" + tempItem)
+              let totalItem = {}
+              for (let i = 1; i <= 20; i++) {
+                if (reportItem['value' + i] === null || reportItem['value' + i] === '' || reportItem['value' + i] === undefined) {
+                  //console.log("continue")
+                  continue
+                }
+                totalItem['value' + i] = (tempItem['value' + i] === null || tempItem['value' + i] === '' || tempItem['value' + i] === undefined) ? 0 : parseInt(tempItem['value' + i]) + parseInt(reportItem['value' + i])
+                if(i === 9) {
+                  console.log("tempItem[value" + i + "]:" + tempItem['value' + i])
+                  console.log("reportItem[value" + i + "]:" + reportItem['value' + i])
+                  console.log("totalItem[value" + i + "]:" + totalItem['value' + i])
                 }
               }
-            }
-            if (!contains) {
-              downloadTemplateList.push(tempId)
+              totalValueList[index] = totalItem
             }
             templateIndexList.push(downloadTemplateList.length - 1)
           }
+          console.log("totalValueList:" + totalValueList.length)
           console.log("this.templateIdList:" + this.templateIdList)
           console.log("downloadTemplateList:" + downloadTemplateList)
           let urlArray = []
@@ -92,11 +108,21 @@ export default {
               .then(function(results) {
                 let resArray = results.map(r => r.data)
                 console.log(resArray)
-                console.log("templateIndexList:" + templateIndexList)
-                for (let i = 0; i < templateIndexList.length; i++) {
-                  templateList = resArray[templateIndexList[i]]
+                console.log("totalValueList:" + totalValueList)
+                for (let i = 0; i < resArray.length; i++) {
+                  templateList = resArray[i]
                   console.log("templateList:" + templateList)
+                  let valueItem = totalValueList[i]
+                  for (let j = 0; j < templateList.length; j++) {
+                    let value = valueItem['value' + (j + 1)]
+                    if (value === null || value === '' || value === undefined) continue
+                    let item = templateList[j].split('_')[0] + valueItem['value' + (j + 1)] + templateList[j].split('_')[1]
+                    resultReportList.push(item)
+                  }
+                  console.log("111:"+resultReportList)
                 }
+                console.log("------->"+resultReportList)
+                console.log("------->"+resultReportList)
                 console.log("\n")
                 console.log("\n")
                 console.log("\n")
