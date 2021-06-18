@@ -3,11 +3,23 @@
 
     <el-card style="float: left; width: 100%;margin-top: 10px">
       <span style="font-weight: bold">您已累计坚持打卡</span>
-      <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{this.totalReportCount}}</span> 天
+      <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{ this.totalReportCount }}</span> 天
       <br/>
       <br/>
       <span style="font-weight: bold">本月已打卡</span>
-      <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{this.currentMonthReportCount}}</span> 天
+      <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{ this.currentMonthReportCount }}</span> 天
+      <br/>
+    </el-card>
+
+    <el-card style="float: left; width: 100%;margin-top: 10px">
+      <div v-for="(item, index) in mergedResultReportList" v-bind:key='index'
+           style="float: left;font-size: 18px;margin-left: 20%;margin-right: 20%">
+        {{index + 1}}.
+        {{mergedResultList[index].split('_')[0]}}
+        <span  style="font-size: 22px;color: #66b1ff">{{mergedResultValueList[index]}}</span>
+        {{mergedResultList[index].split('_')[1]}}
+      </div>
+      <br/>
     </el-card>
 
     <div style="margin-bottom: 150px"/>
@@ -30,6 +42,9 @@ export default {
       totalReportCount: 0,
       totalReportList: [],
       templateIdList: [],
+      mergedResultReportList: [],
+      mergedResultList: [],
+      mergedResultValueList: [],
     };
   },
   mounted: function () {
@@ -38,15 +53,24 @@ export default {
     this.getData()
   },
   methods: {
+    getDateFormat(date) {
+      let year = date.getFullYear()
+      let month = date.getMonth() + 1
+      if (month < 10) month = '0' + month
+      let day = date.getDate()
+      if (day < 10) day = '0' + day
+      return year + "-" + month + "-" + day
+    },
     getData() {
       this.unionid = this.$store.getters.getUnionid
       if (this.unionid != null) {
         this.unionid = this.unionid.replace("\"", "").replace("\"", "")
       }
+      let _this = this
       console.log("getData unionid:" + this.unionid)
       axios({
         method: "GET",
-        url: this.serverUrl + "getReportInfoListById?userId=" + this.unionid,
+        url: this.serverUrl + "getReportInfoListById?userId=oJuR60ziKywhvpvU997867RqJT0E",// + this.unionid,
         data: null,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -60,75 +84,71 @@ export default {
           let totalValueList = []
           let templateList = []
           let templateIndexList = []
-          let resultReportList = []
+
+          let currentDate = this.getDateFormat(new Date())
+          let monthDate = currentDate.substr(0, currentDate.lastIndexOf('-') + 1)
           this.totalReportList = res.data
           this.totalReportCount = this.totalReportList.length
           for (let i = 0; i < this.totalReportCount; i++) {
             let tempId = this.totalReportList[i].templateId
             this.templateIdList.push(tempId)
             let reportItem = this.totalReportList[i]
-            console.log(reportItem)
             let index = downloadTemplateList.indexOf(tempId)
+
+            if (reportItem.date.startsWith(monthDate)) {
+              this.currentMonthReportCount++
+            }
             if (index < 0) {
               downloadTemplateList.push(tempId)
               totalValueList.push(reportItem)
             } else {
               //累加操作
               let tempItem = totalValueList[index]
-              console.log("tempItem:" + tempItem)
               let totalItem = {}
               for (let i = 1; i <= 20; i++) {
                 if (reportItem['value' + i] === null || reportItem['value' + i] === '' || reportItem['value' + i] === undefined) {
-                  //console.log("continue")
+                  totalItem['value' + i] = tempItem['value' + i]
                   continue
                 }
                 totalItem['value' + i] = (tempItem['value' + i] === null || tempItem['value' + i] === '' || tempItem['value' + i] === undefined) ? 0 : parseInt(tempItem['value' + i]) + parseInt(reportItem['value' + i])
-                if(i === 9) {
-                  console.log("tempItem[value" + i + "]:" + tempItem['value' + i])
-                  console.log("reportItem[value" + i + "]:" + reportItem['value' + i])
-                  console.log("totalItem[value" + i + "]:" + totalItem['value' + i])
-                }
               }
               totalValueList[index] = totalItem
             }
             templateIndexList.push(downloadTemplateList.length - 1)
           }
-          console.log("totalValueList:" + totalValueList.length)
-          console.log("this.templateIdList:" + this.templateIdList)
-          console.log("downloadTemplateList:" + downloadTemplateList)
           let urlArray = []
           for (let i = 0; i < downloadTemplateList.length; i++) {
             urlArray.push(this.serverUrl + "getReportTemplateById?id=" + downloadTemplateList[i])
           }
-          console.log("urlArray:" + urlArray)
           let promiseArray = urlArray.map(url => axios.get(url));
           console.log("urlArray:" + urlArray)
           console.log("promiseArray:" + promiseArray)
           axios.all(promiseArray)
-              .then(function(results) {
+              .then(function (results) {
                 let resArray = results.map(r => r.data)
                 console.log(resArray)
-                console.log("totalValueList:" + totalValueList)
                 for (let i = 0; i < resArray.length; i++) {
                   templateList = resArray[i]
-                  console.log("templateList:" + templateList)
                   let valueItem = totalValueList[i]
                   for (let j = 0; j < templateList.length; j++) {
                     let value = valueItem['value' + (j + 1)]
                     if (value === null || value === '' || value === undefined) continue
-                    let item = templateList[j].split('_')[0] + valueItem['value' + (j + 1)] + templateList[j].split('_')[1]
-                    resultReportList.push(item)
+
+                    if (_this.mergedResultList.length === 0 || _this.mergedResultList.indexOf(templateList[j]) < 0) {
+                      _this.mergedResultList.push(templateList[j])
+                      _this.mergedResultValueList.push(valueItem['value' + (j + 1)])
+                    } else {
+                      //合并操作
+                      let index = _this.mergedResultList.indexOf(templateList[j])
+                      _this.mergedResultValueList[index] = parseInt(_this.mergedResultValueList[index]) + parseInt(valueItem['value' + (j + 1)])
+                    }
                   }
-                  console.log("111:"+resultReportList)
                 }
-                console.log("------->"+resultReportList)
-                console.log("------->"+resultReportList)
-                console.log("\n")
-                console.log("\n")
-                console.log("\n")
-                console.log("\n")
-                console.log("\n")
-                console.log("\n")
+                for (let i = 0; i < _this.mergedResultList.length; i++) {
+                  let item = _this.mergedResultList[i].split('_')[0] + _this.mergedResultValueList[i] + _this.mergedResultList[i].split('_')[1]
+                  _this.mergedResultReportList.push(item)
+                }
+                console.log("mergedResultReportList------->" + _this.mergedResultReportList)
               })
         } else {
           this.$message.warning("未查到任何数据！")
@@ -176,12 +196,13 @@ a {
 .el-icon-arrow-down {
   font-size: 16px;
 }
+
 .inputStyle {
-  border-left-width:0;
-  border-top-width:0;
-  border-right-width:0;
-  border-bottom-width:0;
-  border-bottom-color:lightgray;
+  border-left-width: 0;
+  border-top-width: 0;
+  border-right-width: 0;
+  border-bottom-width: 0;
+  border-bottom-color: lightgray;
   width: 100%;
   height: auto;
   font-size: 16px;
@@ -192,12 +213,13 @@ a {
   -webkit-appearance: none;
   border-radius: 0;
 }
+
 .multiLineInputStyle {
-  border-left-width:0;
-  border-top-width:0;
-  border-right-width:0;
-  border-bottom-width:0;
-  border-bottom-color:lightgray;
+  border-left-width: 0;
+  border-top-width: 0;
+  border-right-width: 0;
+  border-bottom-width: 0;
+  border-bottom-color: lightgray;
   width: 100%;
   height: auto;
   font-size: 16px;
@@ -206,6 +228,7 @@ a {
   -webkit-appearance: none;
   border-radius: 0;
 }
+
 .confirmButtonClass {
   float: right;
   margin-right: 15%;
