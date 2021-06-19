@@ -1,7 +1,7 @@
 <template>
   <div>
-
-    <el-card style="float: left; width: 100%;margin-top: 10px">
+    <div style="font-size: 18px;font-weight: bold;float: left;margin-left: 10px;margin-bottom: 5px">总览</div>
+    <el-card style="width: 100%;margin-top: 10px;margin-bottom: 20px">
       <span style="font-weight: bold">您已累计坚持打卡</span>
       <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{ this.totalReportCount }}</span> 天
       <br/>
@@ -11,24 +11,27 @@
       <br/>
     </el-card>
 
-    <el-card style="float: left; width: 100%;margin-top: 10px">
-      <div v-for="(item, index) in mergedResultReportList" v-bind:key='index'
-           style="float: left;font-size: 18px;margin-left: 20%;margin-right: 20%">
+    <div id="statistics_charts" :style="{width:'100%',height: '280px'}"></div>
+
+    <div style="font-size: 18px;font-weight: bold;float: left;margin-left: 10px;margin-bottom: 5px">数据汇总</div>
+    <el-card style="width: 100%;margin-top: 10px;margin-bottom: 10px">
+      <div v-for="(item, index) in mergedResultList" v-bind:key='index'
+           style="float: left;font-size: 18px;margin-left: 20%;margin-right: 20%;margin-bottom: 5px">
         {{index + 1}}.
         {{mergedResultList[index].split('_')[0]}}
         <span  style="font-size: 22px;color: #66b1ff">{{mergedResultValueList[index]}}</span>
         {{mergedResultList[index].split('_')[1]}}
       </div>
-      <br/>
     </el-card>
 
-    <div style="margin-bottom: 150px"/>
+    <div style="margin-bottom: 100px"/>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
 import global from "@/components/Common";
+import * as echarts from "echarts";
 
 export default {
   name: 'TenYears',
@@ -42,17 +45,83 @@ export default {
       totalReportCount: 0,
       totalReportList: [],
       templateIdList: [],
-      mergedResultReportList: [],
       mergedResultList: [],
       mergedResultValueList: [],
+      last7DaysDate: [],
+      last7DaysReportedDate: [],
+      last7DaysReportList: [],
+      last7DaysReportTemplateList: [],
+      last7DaysReportUnitList: [],
+      last7DaysReportValue: [],
     };
   },
   mounted: function () {
     document.title = this.$route.meta.title
     console.log("myHome getData")
+    this.initData()
     this.getData()
   },
   methods: {
+    drawPie(id) {
+      this.charts = echarts.init(document.getElementById(id))
+      let xAxis = []
+      for (let i= 0; i < this.last7DaysDate.length; i++) {
+        let date = this.last7DaysDate[i]
+        xAxis.push(date.substring(date.indexOf('-') + 1).replace('-', '/'))
+      }
+      let series = []
+      for (let i = 0; i < this.last7DaysReportValue.length; i++) {
+        let value = {}
+        let name = this.last7DaysReportTemplateList[i]
+        //if (name === '家人陪伴') continue
+        value['name'] = name
+        value['type'] = 'line'
+        value['data'] = this.last7DaysReportValue[i]
+        series.push(value)
+      }
+      this.charts.setOption({
+        title: {
+          text: '最近7天统计'
+        },
+        xAxis: {
+          type: 'category',
+          data: xAxis,
+          axisLabel: {
+            interval:0,
+            rotate:40
+          },
+        },
+        tooltip: {
+          trigger: 'axis'
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '3%',
+          top: '36%',
+          containLabel: true
+        },
+        yAxis: {
+          type: 'value',
+          axisLabel: {
+            formatter: '{value}'
+          }
+        },
+        series: series,
+        legend:{
+          show: true,
+          top: "12%",
+          orient: 'horizontal',
+        }
+      })
+    },
+    initData() {
+      for (let i = 7; i > 0; i--) {
+        let date = this.getDateFormat(new Date(Date.now() - i * 24 * 60 * 60 * 1000))
+        this.last7DaysDate.push(date)
+      }
+      console.log('last7DaysDate:' + this.last7DaysDate)
+    },
     getDateFormat(date) {
       let year = date.getFullYear()
       let month = date.getMonth() + 1
@@ -70,7 +139,7 @@ export default {
       console.log("getData unionid:" + this.unionid)
       axios({
         method: "GET",
-        url: this.serverUrl + "getReportInfoListById?userId=oJuR60ziKywhvpvU997867RqJT0E",// + this.unionid,
+        url: this.serverUrl + "getReportInfoListById?userId=" + this.unionid,
         data: null,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -84,6 +153,11 @@ export default {
           let totalValueList = []
           let templateList = []
           let templateIndexList = []
+          let last7DaysTemplateIndexList = []
+
+          let last7DaysReportTemplateListTemp = []
+          let last7DaysReportValueTemp = []
+          let last7DaysReportUnitListTemp = []
 
           let currentDate = this.getDateFormat(new Date())
           let monthDate = currentDate.substr(0, currentDate.lastIndexOf('-') + 1)
@@ -115,10 +189,21 @@ export default {
               totalValueList[index] = totalItem
             }
             templateIndexList.push(downloadTemplateList.length - 1)
+
+            //获取过去7天数据
+            for (let j = 0; j < this.last7DaysDate.length; j++) {
+              if (reportItem.date === this.last7DaysDate[j]) {
+                this.last7DaysReportList.push(reportItem)
+                this.last7DaysReportedDate.push(reportItem.date)
+                last7DaysTemplateIndexList.push(downloadTemplateList.indexOf(reportItem.templateId))
+              }
+            }
           }
           let urlArray = []
           for (let i = 0; i < downloadTemplateList.length; i++) {
-            urlArray.push(this.serverUrl + "getReportTemplateById?id=" + downloadTemplateList[i])
+            if (downloadTemplateList[i] !== null && downloadTemplateList[i] !== '' && downloadTemplateList[i] !== undefined) {
+              urlArray.push(this.serverUrl + "getReportTemplateById?id=" + downloadTemplateList[i])
+            }
           }
           let promiseArray = urlArray.map(url => axios.get(url));
           console.log("urlArray:" + urlArray)
@@ -133,6 +218,8 @@ export default {
                   for (let j = 0; j < templateList.length; j++) {
                     let value = valueItem['value' + (j + 1)]
                     if (value === null || value === '' || value === undefined) continue
+                    if (templateList[j] === null || templateList[j] === '' || templateList[j] === undefined) continue
+                    if (templateList[j] === '禅坐_分钟') templateList[j] = '静坐_分钟'
 
                     if (_this.mergedResultList.length === 0 || _this.mergedResultList.indexOf(templateList[j]) < 0) {
                       _this.mergedResultList.push(templateList[j])
@@ -144,11 +231,60 @@ export default {
                     }
                   }
                 }
-                for (let i = 0; i < _this.mergedResultList.length; i++) {
-                  let item = _this.mergedResultList[i].split('_')[0] + _this.mergedResultValueList[i] + _this.mergedResultList[i].split('_')[1]
-                  _this.mergedResultReportList.push(item)
+                console.log("_this.last7DaysReportList:" + _this.last7DaysReportList.length)
+                console.log(last7DaysTemplateIndexList)
+                for (let i = 0; i < _this.last7DaysReportList.length; i++) {
+                  let reportInfo = _this.last7DaysReportList[i]
+                  let template = resArray[last7DaysTemplateIndexList[i]]
+                  for (let j = 0; j < template.length; j++) {
+                    let value = []
+                    let title = template[j].split('_')[0]
+                    let unit = template[j].split('_')[1]
+                    let tempValue = reportInfo['value' + (j + 1)]
+                    if (tempValue === null || tempValue === '' || tempValue === undefined) {
+                      tempValue = '0'
+                    }
+                    if (last7DaysReportTemplateListTemp.indexOf(title) < 0) {
+                      last7DaysReportTemplateListTemp.push(title)
+                      last7DaysReportUnitListTemp.push(unit)
+                      value[0] = tempValue
+                      last7DaysReportValueTemp.push(value)
+                    } else {
+                      value = last7DaysReportValueTemp[j]
+                      value[i] = tempValue
+                      last7DaysReportValueTemp[j] = value
+                    }
+                  }
                 }
-                console.log("mergedResultReportList------->" + _this.mergedResultReportList)
+                console.log(last7DaysReportTemplateListTemp)
+                console.log(last7DaysReportUnitListTemp)
+                console.log(last7DaysReportValueTemp)
+                console.log(_this.last7DaysDate)
+                console.log(_this.last7DaysReportedDate)
+                console.log('=============begin======================')
+                // 根据结果进行最终排序
+                for (let i = 0; i < _this.last7DaysDate.length; i++) {
+                  for (let j = 0; j < _this.last7DaysReportedDate.length; j++) {
+                    if (_this.last7DaysDate[i] === _this.last7DaysReportedDate[j]) {
+                      console.log(_this.last7DaysDate[i] + '---->' + last7DaysReportTemplateListTemp[j])
+                      _this.last7DaysReportTemplateList[i] = last7DaysReportTemplateListTemp[j]
+                      _this.last7DaysReportUnitList[i] = last7DaysReportUnitListTemp[j]
+                      _this.last7DaysReportValue[i] = last7DaysReportValueTemp[j]
+                      break
+                    }
+                    let empty = []
+                    for (let k = 0; k < last7DaysReportValueTemp[0].length; k++) {
+                      empty.push('0')
+                    }
+                    _this.last7DaysReportValue[i] = empty
+                  }
+                }
+                console.log('=============after======================')
+                console.log(_this.last7DaysReportTemplateList)
+                console.log(_this.last7DaysReportUnitList)
+                console.log(_this.last7DaysReportValue)
+
+                _this.drawPie('statistics_charts')
               })
         } else {
           this.$message.warning("未查到任何数据！")

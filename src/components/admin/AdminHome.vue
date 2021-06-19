@@ -324,6 +324,12 @@ export default {
         tooltip: {
           trigger: 'axis'
         },
+        legend:{
+          width:10,
+          height:10,
+          orient:'horizontal',
+          left:'right'
+        },
         grid: {
           left: '3%',
           right: '4%',
