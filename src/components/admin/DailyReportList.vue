@@ -615,6 +615,7 @@ export default {
       }).then((res) => {
         console.log(res.data)
         if (res.data !== null && res.data !== '') {
+          this.currentPage = 1
           this.tableData = res.data
         } else {
           this.$message.warning("无数据")

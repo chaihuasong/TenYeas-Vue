@@ -3,11 +3,10 @@
     <div style="font-size: 18px;font-weight: bold;float: left;margin-left: 10px;margin-bottom: 5px">总览</div>
     <el-card style="width: 100%;margin-top: 10px;margin-bottom: 20px">
       <span style="font-weight: bold">您已累计坚持打卡</span>
-      <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{ this.totalReportCount }}</span> 天
-      <br/>
+      <span style="font-weight:bold;font-size: 22px;color: #66b1ff;margin-left: 5px">{{ this.totalReportCount }}</span> 天
       <br/>
       <span style="font-weight: bold">本月已打卡</span>
-      <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{ this.currentMonthReportCount }}</span> 天
+      <span style="font-weight:bold;font-size: 22px;color: #66b1ff;margin-left: 5px">{{ this.currentMonthReportCount }}</span> 天
       <br/>
     </el-card>
 
@@ -152,12 +151,7 @@ export default {
           let downloadTemplateList = []
           let totalValueList = []
           let templateList = []
-          let templateIndexList = []
           let last7DaysTemplateIndexList = []
-
-          let last7DaysReportTemplateListTemp = []
-          let last7DaysReportValueTemp = []
-          let last7DaysReportUnitListTemp = []
 
           let currentDate = this.getDateFormat(new Date())
           let monthDate = currentDate.substr(0, currentDate.lastIndexOf('-') + 1)
@@ -188,7 +182,6 @@ export default {
               }
               totalValueList[index] = totalItem
             }
-            templateIndexList.push(downloadTemplateList.length - 1)
 
             //获取过去7天数据
             for (let j = 0; j < this.last7DaysDate.length; j++) {
@@ -196,6 +189,7 @@ export default {
                 this.last7DaysReportList.push(reportItem)
                 this.last7DaysReportedDate.push(reportItem.date)
                 last7DaysTemplateIndexList.push(downloadTemplateList.indexOf(reportItem.templateId))
+                console.log(reportItem.templateId + " " + reportItem.date + " downloadTemplateList.indexOf(reportItem.templateId):" + downloadTemplateList.indexOf(reportItem.templateId))
               }
             }
           }
@@ -208,6 +202,8 @@ export default {
           let promiseArray = urlArray.map(url => axios.get(url));
           console.log("urlArray:" + urlArray)
           console.log("promiseArray:" + promiseArray)
+          console.log("downloadTemplateList:" + downloadTemplateList)
+          console.log("last7DaysTemplateIndexList:" + last7DaysTemplateIndexList)
           axios.all(promiseArray)
               .then(function (results) {
                 let resArray = results.map(r => r.data)
@@ -231,58 +227,66 @@ export default {
                     }
                   }
                 }
-                console.log("_this.last7DaysReportList:" + _this.last7DaysReportList.length)
-                console.log(last7DaysTemplateIndexList)
-                for (let i = 0; i < _this.last7DaysReportList.length; i++) {
-                  let reportInfo = _this.last7DaysReportList[i]
+                // console.log("_this.last7DaysReportList:" + _this.last7DaysReportList.length)
+                // console.log(last7DaysTemplateIndexList)
+                let last7DaysTemplateMergedList = []
+                let last7DaysTemplateList = []
+                for (let i = 0; i < last7DaysTemplateIndexList.length; i++) {
                   let template = resArray[last7DaysTemplateIndexList[i]]
-                  for (let j = 0; j < template.length; j++) {
-                    let value = []
-                    let title = template[j].split('_')[0]
-                    let unit = template[j].split('_')[1]
-                    let tempValue = reportInfo['value' + (j + 1)]
-                    if (tempValue === null || tempValue === '' || tempValue === undefined) {
-                      tempValue = '0'
-                    }
-                    if (last7DaysReportTemplateListTemp.indexOf(title) < 0) {
-                      last7DaysReportTemplateListTemp.push(title)
-                      last7DaysReportUnitListTemp.push(unit)
-                      value[0] = tempValue
-                      last7DaysReportValueTemp.push(value)
-                    } else {
-                      value = last7DaysReportValueTemp[j]
-                      value[i] = tempValue
-                      last7DaysReportValueTemp[j] = value
+                  for (let j = 0; template !== undefined && j < template.length; j++) {
+                    if (last7DaysTemplateMergedList.indexOf(template[j]) < 0) {
+                      last7DaysTemplateMergedList.push(template[j])
                     }
                   }
+                  last7DaysTemplateList[i] = template
                 }
-                console.log(last7DaysReportTemplateListTemp)
-                console.log(last7DaysReportUnitListTemp)
-                console.log(last7DaysReportValueTemp)
-                console.log(_this.last7DaysDate)
-                console.log(_this.last7DaysReportedDate)
-                console.log('=============begin======================')
-                // 根据结果进行最终排序
-                for (let i = 0; i < _this.last7DaysDate.length; i++) {
-                  for (let j = 0; j < _this.last7DaysReportedDate.length; j++) {
-                    if (_this.last7DaysDate[i] === _this.last7DaysReportedDate[j]) {
-                      console.log(_this.last7DaysDate[i] + '---->' + last7DaysReportTemplateListTemp[j])
-                      _this.last7DaysReportTemplateList[i] = last7DaysReportTemplateListTemp[j]
-                      _this.last7DaysReportUnitList[i] = last7DaysReportUnitListTemp[j]
-                      _this.last7DaysReportValue[i] = last7DaysReportValueTemp[j]
-                      break
-                    }
-                    let empty = []
-                    for (let k = 0; k < last7DaysReportValueTemp[0].length; k++) {
-                      empty.push('0')
-                    }
-                    _this.last7DaysReportValue[i] = empty
+                // console.log("last7DaysTemplateMergedList:" + last7DaysTemplateMergedList)
+                // console.log("last7DaysTemplateList:" + last7DaysTemplateList.length)
+                // console.log("last7DaysTemplateList:" + last7DaysTemplateList)
+                // console.log(_this.last7DaysReportValue)
+                for (let i = 0; i < last7DaysTemplateMergedList.length; i++) {
+                  //初始化
+                  let value = []
+                  for (let j = 0; j < _this.last7DaysDate.length; j++) {
+                    value[j] = '0'
                   }
+                  _this.last7DaysReportValue[i] = value
                 }
-                console.log('=============after======================')
+
+                for (let i = 0; i < last7DaysTemplateMergedList.length; i++) {
+                  let value = _this.last7DaysReportValue[i]
+                  for (let j = 0; j < _this.last7DaysDate.length; j++) {
+                    let reportIndex = _this.last7DaysReportedDate.indexOf(_this.last7DaysDate[j])
+                    //说明有功课汇报
+                    if (reportIndex >= 0) {
+                      // console.log(_this.last7DaysDate[j] + ' reportIndex ' + reportIndex)
+                      let reportInfo = _this.last7DaysReportList[reportIndex]
+                      let dayIndex = _this.last7DaysDate.indexOf(_this.last7DaysDate[j])
+                      if (last7DaysTemplateList[reportIndex] === undefined) continue
+                      let templateIndex = last7DaysTemplateList[reportIndex].indexOf(last7DaysTemplateMergedList[i])
+                      // console.log(last7DaysTemplateMergedList[i] + ' templateIndex ' + templateIndex)
+                      if (templateIndex >= 0) {
+                        let val = reportInfo['value' + (templateIndex + 1)]
+                        if (val === null || val === '' || val ===undefined) {
+                          val = '0'
+                        }
+                        value[dayIndex] = val
+                      }
+                      // console.log(_this.last7DaysDate[j] + " reportIndex:" + reportIndex + " template:" + template)
+                    }
+                  }
+                  _this.last7DaysReportValue[i] = value
+                }
+
+                for (let i = 0; i < last7DaysTemplateMergedList.length; i++) {
+                  _this.last7DaysReportTemplateList[i] = last7DaysTemplateMergedList[i].split('_')[0]
+                  _this.last7DaysReportUnitList[i] = last7DaysTemplateMergedList[i].split('_')[1]
+                }
                 console.log(_this.last7DaysReportTemplateList)
                 console.log(_this.last7DaysReportUnitList)
                 console.log(_this.last7DaysReportValue)
+                console.log(_this.last7DaysDate)
+                console.log(_this.last7DaysReportedDate)
 
                 _this.drawPie('statistics_charts')
               })
