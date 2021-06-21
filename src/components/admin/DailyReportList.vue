@@ -53,26 +53,26 @@
       </el-table-column>
       <el-table-column prop="value10" label="项目10" width="100" :formatter="value10Formatter">
       </el-table-column>
-      <el-table-column prop="value11" label="项目11" width="100" :formatter="value11Formatter">
-      </el-table-column>
-      <el-table-column prop="value12" label="项目12" width="100" :formatter="value12Formatter">
-      </el-table-column>
-      <el-table-column prop="value13" label="项目13" width="100" :formatter="value13Formatter">
-      </el-table-column>
-      <el-table-column prop="value14" label="项目14" width="100" :formatter="value14Formatter">
-      </el-table-column>
-      <el-table-column prop="value15" label="项目15" width="100" :formatter="value15Formatter">
-      </el-table-column>
-      <el-table-column prop="value16" label="项目16" width="100" :formatter="value16Formatter">
-      </el-table-column>
-      <el-table-column prop="value17" label="项目17" width="100" :formatter="value17Formatter">
-      </el-table-column>
-      <el-table-column prop="value18" label="项目18" width="100" :formatter="value18Formatter">
-      </el-table-column>
-      <el-table-column prop="value19" label="项目19" width="100" :formatter="value19Formatter">
-      </el-table-column>
-      <el-table-column prop="value20" label="项目20" width="100" :formatter="value20Formatter">
-      </el-table-column>
+<!--      <el-table-column prop="value11" label="项目11" width="100" :formatter="value11Formatter">-->
+<!--      </el-table-column>-->
+<!--      <el-table-column prop="value12" label="项目12" width="100" :formatter="value12Formatter">-->
+<!--      </el-table-column>-->
+<!--      <el-table-column prop="value13" label="项目13" width="100" :formatter="value13Formatter">-->
+<!--      </el-table-column>-->
+<!--      <el-table-column prop="value14" label="项目14" width="100" :formatter="value14Formatter">-->
+<!--      </el-table-column>-->
+<!--      <el-table-column prop="value15" label="项目15" width="100" :formatter="value15Formatter">-->
+<!--      </el-table-column>-->
+<!--      <el-table-column prop="value16" label="项目16" width="100" :formatter="value16Formatter">-->
+<!--      </el-table-column>-->
+<!--      <el-table-column prop="value17" label="项目17" width="100" :formatter="value17Formatter">-->
+<!--      </el-table-column>-->
+<!--      <el-table-column prop="value18" label="项目18" width="100" :formatter="value18Formatter">-->
+<!--      </el-table-column>-->
+<!--      <el-table-column prop="value19" label="项目19" width="100" :formatter="value19Formatter">-->
+<!--      </el-table-column>-->
+<!--      <el-table-column prop="value20" label="项目20" width="100" :formatter="value20Formatter">-->
+<!--      </el-table-column>-->
       <el-table-column prop="share" label="每日分享" width="120">
       </el-table-column>
     </el-table>
@@ -126,26 +126,26 @@
       </el-table-column>
       <el-table-column prop="value10" label="项目10" width="100" :formatter="value10Formatter">
       </el-table-column>
-      <el-table-column prop="value11" label="项目11" width="100" :formatter="value11Formatter">
-      </el-table-column>
-      <el-table-column prop="value12" label="项目12" width="100" :formatter="value12Formatter">
-      </el-table-column>
-      <el-table-column prop="value13" label="项目13" width="100" :formatter="value13Formatter">
-      </el-table-column>
-      <el-table-column prop="value14" label="项目14" width="100" :formatter="value14Formatter">
-      </el-table-column>
-      <el-table-column prop="value15" label="项目15" width="100" :formatter="value15Formatter">
-      </el-table-column>
-      <el-table-column prop="value16" label="项目16" width="100" :formatter="value16Formatter">
-      </el-table-column>
-      <el-table-column prop="value17" label="项目17" width="100" :formatter="value17Formatter">
-      </el-table-column>
-      <el-table-column prop="value18" label="项目18" width="100" :formatter="value18Formatter">
-      </el-table-column>
-      <el-table-column prop="value19" label="项目19" width="100" :formatter="value19Formatter">
-      </el-table-column>
-      <el-table-column prop="value20" label="项目20" width="100" :formatter="value20Formatter">
-      </el-table-column>
+<!--      <el-table-column prop="value11" label="项目11" width="100" :formatter="value11Formatter">-->
+<!--      </el-table-column>-->
+<!--      <el-table-column prop="value12" label="项目12" width="100" :formatter="value12Formatter">-->
+<!--      </el-table-column>-->
+<!--      <el-table-column prop="value13" label="项目13" width="100" :formatter="value13Formatter">-->
+<!--      </el-table-column>-->
+<!--      <el-table-column prop="value14" label="项目14" width="100" :formatter="value14Formatter">-->
+<!--      </el-table-column>-->
+<!--      <el-table-column prop="value15" label="项目15" width="100" :formatter="value15Formatter">-->
+<!--      </el-table-column>-->
+<!--      <el-table-column prop="value16" label="项目16" width="100" :formatter="value16Formatter">-->
+<!--      </el-table-column>-->
+<!--      <el-table-column prop="value17" label="项目17" width="100" :formatter="value17Formatter">-->
+<!--      </el-table-column>-->
+<!--      <el-table-column prop="value18" label="项目18" width="100" :formatter="value18Formatter">-->
+<!--      </el-table-column>-->
+<!--      <el-table-column prop="value19" label="项目19" width="100" :formatter="value19Formatter">-->
+<!--      </el-table-column>-->
+<!--      <el-table-column prop="value20" label="项目20" width="100" :formatter="value20Formatter">-->
+<!--      </el-table-column>-->
       <el-table-column prop="share" label="每日分享" width="120">
       </el-table-column>
       <el-table-column label="操作">
