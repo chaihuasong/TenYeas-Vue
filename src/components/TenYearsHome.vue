@@ -1257,6 +1257,7 @@ export default {
           console.log("getById res:" + res)
           console.log("getById res.data:" + res.data)
           this.name = res.data.name
+          this.nickname = res.data.nickname
           this.gender = res.data.gender + ''
           this.wechatgroup = res.data.wechatgroup
           this.telephone = res.data.telephone
