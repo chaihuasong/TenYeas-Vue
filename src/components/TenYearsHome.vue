@@ -834,7 +834,7 @@ export default {
       let inputted = false
       for (let i = 0; i < this.reportLists.length; i++) {
         let value = this.reportLists[i].value.trim() === '' ? '0' : this.reportLists[i].value.trim()
-        if (value !== 0) {
+        if (value !== '0') {
           inputted = true
         }
         data['value' + (i + 1)] = value
