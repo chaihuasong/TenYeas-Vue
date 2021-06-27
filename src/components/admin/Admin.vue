@@ -10,7 +10,7 @@
               <el-menu-item index="/home/adminHome">首页</el-menu-item>
             </el-menu-item-group>
             <el-menu-item-group>
-              <el-menu-item index="/home/infoList">立志列表</el-menu-item>
+              <el-menu-item index="/home/infoList" v-if="this.loginUser === 'admin'">立志列表</el-menu-item>
             </el-menu-item-group>
             <el-menu-item-group>
               <el-menu-item index="/home/reportList">打卡列表</el-menu-item>
@@ -67,7 +67,11 @@ export default {
     return {
       collapseBtnClick: false,
       isCollapse: false,
+      loginUser: '',
     }
+  },
+  mounted() {
+    this.loginUser = this.$store.getters.getUser
   },
   methods: {
     collapseStatus() {
