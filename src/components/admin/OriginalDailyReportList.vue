@@ -268,7 +268,12 @@ export default {
     if (this.checkLogin()) {
       this.getData()
     } else {
-      this.$router.push("/admin");
+      let loginUser = this.$store.getters.getUser
+      if (loginUser === 'admin') {
+        this.$router.push("/admin")
+      } else {
+        this.$router.push("/role")
+      }
     }
     document.title = this.$route.meta.title
   },

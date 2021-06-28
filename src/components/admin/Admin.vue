@@ -88,7 +88,11 @@ export default {
     },
     gotoLogin() {
       this.$store.commit('$_setStorage', "")
-      this.$router.push("/admin")
+      if (this.loginUser === 'admin') {
+        this.$router.push("/admin")
+      } else {
+        this.$router.push("/role")
+      }
     },
   }
 }
