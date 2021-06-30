@@ -525,7 +525,7 @@ export default {
             let item = {
               date: res.data[i].date,
               note: res.data[i].note,
-              templateId: res.data[i].templateId,
+              templateId: res.data[i].value1 != null ? res.data[i].templateId : '',
               state: res.data[i].state,
             }
             this.monthsNotesList.push(item)
@@ -585,9 +585,9 @@ export default {
           }
         } else {
           this.reportLists = JSON.parse(JSON.stringify(this.chujie === '1' ? this.defaultReportLists1 : this.defaultReportLists2))
-          this.templateId = '0'
         }
         this.syncNewReportList()
+        this.syncReportTemplateMode()
       });
     },
     initReportTemplateId() {
@@ -602,10 +602,10 @@ export default {
           }
         }
       }
-      if (templateId === -1) {
+      if (templateId === -1 || isNaN(templateId)) {
         this.reportLists = JSON.parse(JSON.stringify(this.chujie === '1' ? this.defaultReportLists1 : this.defaultReportLists2))
-        this.templateId = '0'
         this.syncNewReportList()
+        this.syncReportTemplateMode()
       } else {
         this.getReportTemplate(templateId)
       }
@@ -696,8 +696,8 @@ export default {
           }
           if (templateId === null) {
             this.reportLists = JSON.parse(JSON.stringify(this.chujie === '1' ? this.defaultReportLists1 : this.defaultReportLists2))
-            this.templateId = '0'
             this.syncNewReportList()
+            this.syncReportTemplateMode()
             return
           }
           axios({
@@ -726,9 +726,9 @@ export default {
               this.onDailyReportResultChange()
             } else {
               this.reportLists = JSON.parse(JSON.stringify(this.chujie === '1' ? this.defaultReportLists1 : this.defaultReportLists2))
-              this.templateId = '0'
             }
             this.syncNewReportList()
+            this.syncReportTemplateMode()
           });
         } else {
           this.initReportTemplateId()
@@ -954,9 +954,35 @@ export default {
       }
       this.editDailyReportMode = !this.editDailyReportMode
     },
+    syncReportTemplateMode() {
+      this.template = {}
+      for (let i = 0; i < this.reportLists.length; i++) {
+        if (this.reportLists[i].title.trim() === '') {
+          this.$message.warning("请输入项目")
+          return
+        }
+        this.template['template' + (i + 1)] = this.reportLists[i].title.trim() + "_" + this.reportLists[i].unit.trim()
+      }
+
+      if (this.template['template1'] === undefined) {
+        this.$message.warning("至少添加一项功课模板！")
+        return
+      }
+
+      let data = qs.stringify(this.template)
+      axios({
+        method: "POST",
+        url: this.serverUrl + "saveTemplate",
+        data: data,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        this.templateId = res.data
+      });
+    },
     resetDefaultTemplate() {
       this.reportLists = []
-      this.templateId = '0'
       for (let i = 0; i < (this.chujie === '1' ? this.defaultReportLists1.length : this.defaultReportLists2.length); i++) {
         let data = {
           title: this.chujie === '1' ? this.defaultReportLists1[i].title : this.defaultReportLists2[i].title,
@@ -966,6 +992,7 @@ export default {
         this.reportLists.push(data);
         this.editDailyReportMode = false
         this.syncNewReportList()
+        this.syncReportTemplateMode()
       }
     },
     addEl() {
@@ -1184,7 +1211,7 @@ export default {
       }, 1000)
     },
     getData() {
-      let uid = this.$store.getters.getUnionid
+      let uid = 'oJuR605rOV6HZP6C3XKD_3_VVxAg'//this.$store.getters.getUnionid
       console.log(uid)
       if (uid !== null && uid !== "") {
         uid = uid.replace("\"","").replace("\"","")

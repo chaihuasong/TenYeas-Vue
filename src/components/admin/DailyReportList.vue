@@ -476,7 +476,6 @@ export default {
         }
       }).then((res) => {
         this.tableData = res.data
-        console.log(this.tableData)
       })
     },
     checkLogin() {
@@ -618,7 +617,6 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        console.log(res.data)
         if (res.data !== null && res.data !== '') {
           this.currentPage = 1
           this.tableData = res.data
