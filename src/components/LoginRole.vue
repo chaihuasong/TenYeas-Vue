@@ -48,8 +48,14 @@ export default {
       // 为表单绑定验证功能
       this.$refs[formName].validate((valid) => {
         if (valid && this.login()) {
-          // 使用 vue-router 路由到指定页面，该方式称之为编程式导航
-          this.$router.push("/roleHome");
+          let user = this.$store.getters.getUser
+          if (user != null && user === 'htzchina') {
+            // 使用 vue-router 路由到指定页面，该方式称之为编程式导航
+            this.$router.push("/home/adminHome");
+          } else {
+            // 使用 vue-router 路由到指定页面，该方式称之为编程式导航
+            this.$router.push("/roleHome");
+          }
         } else {
           this.dialogVisible = true;
           return false;
@@ -59,6 +65,11 @@ export default {
     login() {
       if (this.form.username === 'zhigong' && this.form.password === '123456') {
         this.$store.commit('$_setStorage', Date.now())
+        this.$store.commit('$_setUser', this.this.form.username)
+        return true;
+      } else if (this.form.username === 'htzchina' && this.form.password === 'htz001-a') {
+        this.$store.commit('$_setStorage', Date.now())
+        this.$store.commit('$_setUser', 'htzchina')
         return true;
       }
       this.$message({

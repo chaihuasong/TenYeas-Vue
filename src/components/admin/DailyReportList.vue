@@ -364,7 +364,12 @@ export default {
     if (this.checkLogin()) {
       this.getData()
     } else {
-      this.$router.push("/admin");
+      let loginUser = this.$store.getters.getUser
+      if (loginUser === 'admin') {
+        this.$router.push("/admin")
+      } else {
+        this.$router.push("/role")
+      }
     }
     document.title = this.$route.meta.title
   },
@@ -471,7 +476,6 @@ export default {
         }
       }).then((res) => {
         this.tableData = res.data
-        console.log(this.tableData)
       })
     },
     checkLogin() {
@@ -613,7 +617,6 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        console.log(res.data)
         if (res.data !== null && res.data !== '') {
           this.currentPage = 1
           this.tableData = res.data
