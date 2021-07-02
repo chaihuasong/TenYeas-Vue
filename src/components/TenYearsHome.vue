@@ -130,14 +130,28 @@
 
       <div style="margin-top: 20px;margin-bottom: 15px">
         <el-row :gutter="20" v-for='(list,index) in reportLists' v-bind:key='list.id' style="margin-top: 5px">
-          <el-col :span="8"  v-if="!editDailyReportMode" style="text-align: right;margin-top: 10px">
+          <el-col :span="7"  v-if="!editDailyReportMode" style="text-align: right;margin-top: 10px">
             <span>{{ list.title }}</span>
           </el-col>
           <el-col v-if="editDailyReportMode" :span="8" style="text-align: right">
             <el-input v-model="list.title" placeholder="请输入项目" disabled></el-input>
           </el-col>
-          <el-col :span="8" v-if="!editDailyReportMode">
-            <el-input type="number" v-model="list.value" placeholder="请输入" @change="onDailyReportResultChange"></el-input>
+          <el-col :span="list.title === '站桩' || list.title === '禅坐' || list.title === '静坐' ? 5 : 8" v-if="!editDailyReportMode">
+            <el-input type="number" pattern="\d*" v-model="list.value" placeholder="" @change="onDailyReportResultChange"></el-input>
+          </el-col>
+          <el-col :span="list.title === '站桩' || list.title === '禅坐' || list.title === '静坐' ? 5 : 8" v-if="!editDailyReportMode && list.title === '站桩' && zhanZhuangCount === 2">
+            <el-input type="number" pattern="\d*" v-model="zhanZhuangValue2" @change="onDailyReportResultChange"></el-input>
+          </el-col>
+          <el-col :span="list.title === '站桩' || list.title === '禅坐' || list.title === '静坐' ? 5 : 8" v-if="!editDailyReportMode && (list.title === '禅坐' || list.title === '静坐') && jingZuoCount === 2">
+            <el-input type="number" pattern="\d*" v-model="jingzuoValue2" @change="onDailyReportResultChange"></el-input>
+          </el-col>
+          <el-col :span="1" v-if="!editDailyReportMode && (list.title === '站桩') && zhanZhuangCount === 1" style="margin-right: 15px">
+            <el-button icon="el-icon-plus" circle @click="addValue(list.title)"
+                       style="background: lightcyan;margin-top: 6px;" size="mini"></el-button>
+          </el-col>
+          <el-col :span="1" v-if="!editDailyReportMode && (list.title === '禅坐' || list.title === '静坐') && jingZuoCount === 1" style="margin-right: 15px">
+            <el-button icon="el-icon-plus" circle @click="addValue(list.title)"
+                       style="background: lightcyan;margin-top: 6px;" size="mini"></el-button>
           </el-col>
           <el-col :span="4" v-if="editDailyReportMode">
             <el-input disabled/>
@@ -276,6 +290,12 @@ export default {
       allDefaultReportsLists: [],
       reportLists: [],
       newReportLists: [],
+
+      jingZuoCount: 1, //可以多次站桩, 默认一次
+      zhanZhuangCount: 1, //可以多次静坐， 默认一次
+      jingzuoValue2: '',
+      zhanZhuangValue2: '',
+
       pickerOptions: {
         disabledDate(time) {
           return time.getTime() > Date.now();
@@ -318,6 +338,13 @@ export default {
     this.visitedUser()
   },
   methods: {
+    addValue(title) {
+      if (title === '站桩') {
+        this.zhanZhuangCount = 2
+      } else {
+        this.jingZuoCount = 2
+      }
+    },
     visitedUser() {
       let data = qs.stringify({
         date: this.getDateFormat(new Date()),
@@ -646,6 +673,10 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
+        this.jingZuoCount = 1
+        this.zhanZhuangCount = 1
+        this.jingzuoValue2 = ''
+        this.zhanZhuangValue2 = ''
         if (res.data !== null && res.data !== '') {
           this.note = res.data.note
           this.share = res.data.share
@@ -716,6 +747,15 @@ export default {
                 let unit = resp.data[i].split('_').length === 2 ? resp.data[i].split('_')[1] : ''
                 let value = reports[i].replace(title, '')
                 value = value.replace(unit, '')
+                if (value !== '' && value.indexOf('+') > 0 && title === '站桩') {
+                  this.zhanZhuangCount = 2
+                  this.zhanZhuangValue2 = value.split('+')[1]
+                  value = value.split('+')[0]
+                } else if (value !== '' && value.indexOf('+') > 0 && (title === '静坐' || title === '禅坐')) {
+                  this.jingZuoCount = 2
+                  this.jingzuoValue2 = value.split('+')[1]
+                  value = value.split('+')[0]
+                }
                 let cope = {
                   title: title,
                   value: value,
@@ -811,7 +851,14 @@ export default {
       for (let i = 0; i < this.reportLists.length; i++) {
         if (this.reportLists[i].value.trim() === '' || this.reportLists[i].value.trim() === '0') continue
         index++
-        let value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + this.reportLists[i].unit
+        let value = null;
+        if (this.reportLists[i].title === '站桩' && this.zhanZhuangCount == 2 && this.zhanZhuangValue2 !== '') {
+          value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + '+' + this.zhanZhuangValue2 + this.reportLists[i].unit
+        } else if ((this.reportLists[i].title === '静坐' || this.reportLists[i].title === '禅坐') && this.jingZuoCount == 2 && this.jingzuoValue2 !== '') {
+          value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + '+' + this.jingzuoValue2 + this.reportLists[i].unit
+        } else {
+          value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + this.reportLists[i].unit
+        }
         data += '\n' + value
       }
 
@@ -837,7 +884,13 @@ export default {
         if (value !== '0') {
           inputted = true
         }
-        data['value' + (i + 1)] = value
+        if (this.reportLists[i].title === '站桩' && this.zhanZhuangCount === 2 && this.zhanZhuangValue2 !== '') {
+          data['value' + (i + 1)] = value + '+' + this.zhanZhuangValue2
+        } else if ((this.reportLists[i].title === '静坐' || this.reportLists[i].title === '禅坐') && this.jingZuoCount === 2 && this.jingzuoValue2 !== '') {
+          data['value' + (i + 1)] = value + '+' + this.jingzuoValue2
+        } else {
+          data['value' + (i + 1)] = value
+        }
       }
 
       if (!inputted) {

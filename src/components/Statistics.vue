@@ -174,9 +174,21 @@ export default {
               let tempItem = totalValueList[index]
               let totalItem = {}
               for (let i = 1; i <= 20; i++) {
+                //可能包含'+'号
+                let tmp = tempItem['value' + i]
+                if (tmp !== null && tmp.toString().indexOf('+') > 0) {
+                  tmp = parseInt(tmp.split('+')[0]) + parseInt(tmp.split('+')[1])
+                  tempItem['value' + i] = tmp
+                }
                 if (reportItem['value' + i] === null || reportItem['value' + i] === '' || reportItem['value' + i] === undefined) {
-                  totalItem['value' + i] = tempItem['value' + i]
+                  totalItem['value' + i] = tmp
                   continue
+                }
+                //可能包含'+'号
+                let tmpReportItem = reportItem['value' + i]
+                if (tmpReportItem !== null && tmpReportItem.toString().indexOf('+') > 0) {
+                  tmpReportItem = parseInt(tmpReportItem.split('+')[0]) + parseInt(tmpReportItem.split('+')[1])
+                  reportItem['value' + i] = tmpReportItem
                 }
                 totalItem['value' + i] = (tempItem['value' + i] === null || tempItem['value' + i] === '' || tempItem['value' + i] === undefined) ? 0 : parseInt(tempItem['value' + i]) + parseInt(reportItem['value' + i])
               }
@@ -217,13 +229,19 @@ export default {
                     if (templateList[j] === null || templateList[j] === '' || templateList[j] === undefined) continue
                     if (templateList[j] === '禅坐_分钟') templateList[j] = '静坐_分钟'
 
+                    // 可能包含'+'号
+                    let tmp = valueItem['value' + (j + 1)]
+                    if (tmp !== null && tmp.toString().indexOf('+') > 0) {
+                      tmp = parseInt(tmp.split('+')[0]) + parseInt(tmp.split('+')[1])
+                      valueItem['value' + (j + 1)] = tmp
+                    }
                     if (_this.mergedResultList.length === 0 || _this.mergedResultList.indexOf(templateList[j]) < 0) {
                       _this.mergedResultList.push(templateList[j])
                       _this.mergedResultValueList.push(valueItem['value' + (j + 1)])
                     } else {
                       //合并操作
                       let index = _this.mergedResultList.indexOf(templateList[j])
-                      _this.mergedResultValueList[index] = parseInt(_this.mergedResultValueList[index]) + parseInt(valueItem['value' + (j + 1)])
+                      _this.mergedResultValueList[index] = parseInt(_this.mergedResultValueList[index]) + parseInt(tmp)
                     }
                   }
                 }
