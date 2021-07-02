@@ -181,7 +181,7 @@ export default {
                   tempItem['value' + i] = tmp
                 }
                 if (reportItem['value' + i] === null || reportItem['value' + i] === '' || reportItem['value' + i] === undefined) {
-                  totalItem['value' + i] = tmp
+                  totalItem['value' + i] = tempItem['value' + i]
                   continue
                 }
                 //可能包含'+'号
@@ -241,7 +241,7 @@ export default {
                     } else {
                       //合并操作
                       let index = _this.mergedResultList.indexOf(templateList[j])
-                      _this.mergedResultValueList[index] = parseInt(_this.mergedResultValueList[index]) + parseInt(tmp)
+                      _this.mergedResultValueList[index] = parseInt(_this.mergedResultValueList[index]) + parseInt(valueItem['value' + (j + 1)])
                     }
                   }
                 }
