@@ -726,7 +726,9 @@ export default {
           this.state = res.data.state
           this.sutraRead = res.data.sutraRead
           this.sutraStudy = res.data.sutraStudy
-          this.kuanLiangMiao = res.data.kuanLiangMiao
+          if (res.data.kuanLiangMiao !== null && res.data.kuanLiangMiao != '') {
+            this.kuanLiangMiao = res.data.kuanLiangMiao
+          }
           this.kuanLiangMiaoCount = res.data.kuanLiangMiaoCount
           console.log(res.data)
           let reports = []
@@ -904,11 +906,17 @@ export default {
         } else if ((this.reportLists[i].title === '静坐' || this.reportLists[i].title === '禅坐') && this.jingZuoCount == 2 && this.jingzuoValue2 !== '') {
           value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + '+' + this.jingzuoValue2 + this.reportLists[i].unit
         } else if (this.reportLists[i].title === '诵读经典' && this.sutraRead !== '') {
-          value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + this.reportLists[i].unit + '，诵读' + this.sutraRead.lastIndexOf('《') > 0 ? this.sutraRead : '《' + this.sutraRead + this.sutraRead.lastIndexOf('》') > 0 ? '' : '》'
+          value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + this.reportLists[i].unit
+          if (this.sutraRead !== '') {
+            value = value + '，诵读' + (this.sutraRead.lastIndexOf('《') > 0 ? this.sutraRead : '《' + this.sutraRead + (this.sutraRead.lastIndexOf('》') > 0 ? '' : '》'))
+          }
         } else if (this.reportLists[i].title === '经典学习' && this.sutraStudy !== '') {
-          value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + this.reportLists[i].unit + '，学习' + this.sutraStudy.lastIndexOf('《') > 0 ? this.sutraStudy : '《' + this.sutraStudy + this.sutraStudy.lastIndexOf('》') > 0 ? '' : '》'
+          value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + this.reportLists[i].unit
+          if (this.sutraStudy !== '') {
+            value = value + '，学习' + (this.sutraStudy.lastIndexOf('《') > 0 ? this.sutraStudy : '《' + this.sutraStudy + (this.sutraStudy.lastIndexOf('》') > 0 ? '' : '》'))
+          }
         } else if (this.reportLists[i].title === '宽两秒' && this.kuanLiangMiao !== '') {
-          value = index + '. ' + this.kuanLiangMiao + this.reportLists[i].value.trim() + this.reportLists[i].unit + this.kuanLiangMiaoCount !== '' ? '，总' + this.kuanLiangMiaoCount + '次' : ''
+          value = index + '. ' + this.kuanLiangMiao + this.reportLists[i].value.trim() + this.reportLists[i].unit + (this.kuanLiangMiaoCount !== '' ? '，总' + this.kuanLiangMiaoCount + '次' : '')
         } else {
           value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + this.reportLists[i].unit
         }
