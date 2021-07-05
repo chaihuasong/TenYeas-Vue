@@ -329,13 +329,13 @@ export default {
       kuanLiangMiao: '宽两秒',
       kuanLiangMiaoCount: '',
       kuanLiangMiaoOptions: [{
-        value: '1',
+        value: '宽两秒',
         label: '宽两秒'
       }, {
-        value: '2',
+        value: '成人成己',
         label: '成人成己'
       }, {
-        value: '3',
+        value: '大小先后',
         label: '大小先后'
       }],
 
