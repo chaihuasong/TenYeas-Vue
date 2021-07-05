@@ -907,12 +907,12 @@ export default {
           value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + '+' + this.jingzuoValue2 + this.reportLists[i].unit
         } else if (this.reportLists[i].title === '诵读经典' && this.sutraRead !== '') {
           value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + this.reportLists[i].unit
-          if (this.sutraRead !== '') {
+          if (this.sutraRead !== null && this.sutraRead !== '') {
             value = value + '，诵读' + (this.sutraRead.lastIndexOf('《') > 0 ? this.sutraRead : '《' + this.sutraRead + (this.sutraRead.lastIndexOf('》') > 0 ? '' : '》'))
           }
         } else if (this.reportLists[i].title === '经典学习' && this.sutraStudy !== '') {
           value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + this.reportLists[i].unit
-          if (this.sutraStudy !== '') {
+          if (this.sutraStudy !== null && this.sutraStudy !== '') {
             value = value + '，学习' + (this.sutraStudy.lastIndexOf('《') > 0 ? this.sutraStudy : '《' + this.sutraStudy + (this.sutraStudy.lastIndexOf('》') > 0 ? '' : '》'))
           }
         } else if (this.reportLists[i].title === '宽两秒' && this.kuanLiangMiao !== '') {
