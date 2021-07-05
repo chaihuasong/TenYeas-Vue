@@ -134,7 +134,7 @@
             <span>{{ list.title }}</span>
           </el-col>
           <el-col :span="7"  v-if="!editDailyReportMode && list.title === '宽两秒'" style="text-align: right;margin-top: 10px">
-            <el-select v-model="kuanLiangMiao" size="medium" class="kuanLiangMiaoStyle" style="width: 105px;">
+            <el-select v-model="kuanLiangMiao" size="medium" class="kuanLiangMiaoStyle" style="width: 107px;">
               <el-option
                   v-for="item in kuanLiangMiaoOptions"
                   :key="item.value"
@@ -1593,7 +1593,7 @@ a {
   border-bottom-color:lightgray;
   width: 100%;
   height: 100%;
-  font-size: 12px;
+  font-size: 13px;
   text-align: center;
   margin: 15px 0;
   padding: 0 0;
@@ -1602,10 +1602,10 @@ a {
 }
 .kuanLiangMiaoStyle {
   position:absolute;
-  clip:rect(2px 100px 30px 2px);
-  left: 20px;
+  clip:rect(2px 102px 30px 2px);
+  left: 10px;
   top: 0;
-  width:100px;
+  width:102px;
   font-size:16px;
 }
 .el-collapse .el-collapse-item .el-collapse-item__header {
