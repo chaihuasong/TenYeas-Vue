@@ -179,13 +179,13 @@
             <span>{{ list.unit }}</span><span v-if="list.title === '诵读经典'">，诵读</span><span v-if="list.title === '经典学习'">，学习</span><span v-if="list.title === '宽两秒'">，总</span>
           </el-col>
           <el-col :span="5" v-if="!editDailyReportMode && list.title === '诵读经典'" style="text-align: left;padding: 0 0">
-            <input class="dailyReportInfoInputStyle" v-model="sutraRead" @change="onDailyReportResultChange" />
+            <input class="dailyReportInfoInputTextStyle" v-model="sutraRead" @change="onDailyReportResultChange" />
           </el-col>
           <el-col :span="5" v-if="!editDailyReportMode && list.title === '经典学习'" style="text-align: left;padding: 0 0">
-            <input class="dailyReportInfoInputStyle" v-model="sutraStudy" @change="onDailyReportResultChange" />
+            <input class="dailyReportInfoInputTextStyle" v-model="sutraStudy" @change="onDailyReportResultChange" />
           </el-col>
           <el-col :span="4" v-if="!editDailyReportMode && list.title === '宽两秒'" style="text-align: left;padding: 0 0">
-            <input class="dailyReportInfoInputStyle" v-model="kuanLiangMiaoCount" @change="onDailyReportResultChange" />
+            <input class="dailyReportInfoInputStyle" type="number" pattern="\d*" v-model="kuanLiangMiaoCount" @change="onDailyReportResultChange" />
           </el-col>
           <el-col :span="1" v-if="!editDailyReportMode && list.title === '宽两秒'" style="margin-top: 10px;text-align: left;padding: 0 0">
             <span>次</span>
@@ -1581,6 +1581,21 @@ a {
   font-size: 18px;
   text-align: center;
   margin: 10px 0;
+  padding: 0 0;
+  -webkit-appearance: none;
+  border-radius: 0;
+}
+.dailyReportInfoInputTextStyle {
+  border-left-width:0px;
+  border-top-width:0px;
+  border-right-width:0px;
+  border-bottom-width:1px;
+  border-bottom-color:lightgray;
+  width: 100%;
+  height: 100%;
+  font-size: 12px;
+  text-align: center;
+  margin: 15px 0;
   padding: 0 0;
   -webkit-appearance: none;
   border-radius: 0;
