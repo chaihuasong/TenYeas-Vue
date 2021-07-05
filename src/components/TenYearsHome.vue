@@ -129,11 +129,11 @@
       <br/>
 
       <div style="margin-top: 20px;margin-bottom: 15px">
-        <el-row :gutter="20" v-for='(list,index) in reportLists' v-bind:key='list.id' style="margin-top: 5px">
-          <el-col :span="7"  v-if="!editDailyReportMode && list.title !== '宽两秒'" style="text-align: right;margin-top: 10px">
+        <el-row :gutter="10" v-for='(list,index) in reportLists' v-bind:key='list.id' style="margin-top: 5px">
+          <el-col :span="(zaoQiTimeVisiable && list.title === '早起') || ( zaoShuiTimeVisiable && list.title === '早睡') ? 5 : 7" v-if="!editDailyReportMode && list.title !== '宽两秒'" style="text-align: right;margin-top: 10px">
             <span>{{ list.title }}</span>
           </el-col>
-          <el-col :span="7"  v-if="!editDailyReportMode && list.title === '宽两秒'" style="text-align: right;margin-top: 10px">
+          <el-col :span="7" v-if="!editDailyReportMode && list.title === '宽两秒'" style="text-align: right;margin-top: 10px">
             <el-select v-model="kuanLiangMiao" size="medium" class="kuanLiangMiaoStyle" style="width: 107px;">
               <el-option
                   v-for="item in kuanLiangMiaoOptions"
@@ -146,7 +146,7 @@
           <el-col v-if="editDailyReportMode" :span="8" style="text-align: right">
             <el-input v-model="list.title" placeholder="请输入项目" disabled></el-input>
           </el-col>
-          <el-col :span="list.title === '站桩' || list.title === '禅坐' || list.title === '静坐' || list.title === '诵读经典' || list.title === '经典学习' || list.title === '宽两秒' ? 4 : 7" v-if="!editDailyReportMode">
+          <el-col :span="(list.title === '站桩' || list.title === '禅坐' || list.title === '静坐' || list.title === '诵读经典' || list.title === '经典学习' || list.title === '宽两秒') ? 4 : 7" v-if="(!editDailyReportMode  && list.title !== '早睡' && list.title !== '早起')">
             <input class="dailyReportInfoInputStyle" type="number" pattern="\d*" v-model="list.value" placeholder="" @change="onDailyReportResultChange" />
           </el-col>
           <el-col :span="1" v-if="!editDailyReportMode && (list.title === '站桩') && zhanZhuangCount === 2" style="margin-top: 10px">
@@ -193,6 +193,65 @@
           <el-col :span="4">
             <el-button v-if="editDailyReportMode" icon="el-icon-minus" circle @click="del(index)"></el-button>
           </el-col>
+          <el-col :span="5" v-if="!editDailyReportMode && list.title === '早睡'">
+            <el-select v-model="zaoShuiValue" size="medium" class="zaoQiStyle" :class="{'zaoQiStyle2': !zaoShuiTimeVisiable}" style="width: 90px;">
+              <el-option
+                  v-for="item in doneUndoneOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value">
+              </el-option>
+            </el-select>
+          </el-col>
+          <el-col :span="4" v-if="!editDailyReportMode && list.title === '早起'">
+            <el-select v-model="zaoQiValue" size="medium" class="zaoQiStyle" :class="{'zaoQiStyle2': !zaoQiTimeVisiable}" style="width: 90px;">
+              <el-option
+                  v-for="item in doneUndoneOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value">
+              </el-option>
+            </el-select>
+          </el-col>
+
+          <el-col :span="2" v-if="!editDailyReportMode && list.title === '早起' && !zaoQiTimeVisiable" style="margin-right: 5px">
+            <el-button icon="el-icon-plus" circle @click="addTimeValue(list.title)"
+                       style="background: lightcyan;margin-top: 6px;" size="mini"></el-button>
+          </el-col>
+
+          <el-col :span="2" v-if="!editDailyReportMode && list.title === '早睡' && !zaoShuiTimeVisiable" style="margin-right: 5px">
+            <el-button icon="el-icon-plus" circle @click="addTimeValue(list.title)"
+                       style="background: lightcyan;margin-top: 6px;" size="mini"></el-button>
+          </el-col>
+
+          <el-col :span="5" v-if="!editDailyReportMode && list.title === '早起' && zaoQiTimeVisiable">
+            <el-time-select
+                v-model="zaoQiTime"
+                size="medium"
+                style="width: 200%"
+                :picker-options="{
+                  start: '08:30',
+                  step: '00:15',
+                  end: '18:30'
+                }"
+                placeholder="选择时间">
+            </el-time-select>
+          </el-col>
+
+          <el-col :span="5" v-if="!editDailyReportMode && list.title === '早睡' && zaoShuiTimeVisiable">
+            <el-time-select
+                v-model="zaoShuiTime"
+                size="medium"
+                style="width: 200%"
+                :picker-options="{
+                  start: '08:30',
+                  step: '00:15',
+                  end: '18:30'
+                }"
+                placeholder="选择时间">
+            </el-time-select>
+          </el-col>
+
         </el-row>
       </div>
       <el-row>
@@ -338,6 +397,19 @@ export default {
         value: '大小先后',
         label: '大小先后'
       }],
+      zaoShuiValue: '1',
+      zaoQiValue: '1',
+      zaoQiTimeVisiable: false,
+      zaoShuiTimeVisiable: false,
+      zaoQiTime: '',
+      zaoShuiTime: '',
+      doneUndoneOptions:[{
+        value: '1',
+        label: '完成'
+      }, {
+        value: '0',
+        label: '未完成'
+      }],
 
       pickerOptions: {
         disabledDate(time) {
@@ -381,6 +453,13 @@ export default {
     this.visitedUser()
   },
   methods: {
+    addTimeValue(title) {
+      if (title === '早起') {
+        this.zaoQiTimeVisiable = true
+      } else if (title === '早睡') {
+        this.zaoShuiTimeVisiable =true
+      }
+    },
     addValue(title) {
       if (title === '站桩') {
         this.zhanZhuangCount = 2
@@ -439,6 +518,21 @@ export default {
             }
             this.defaultReportLists1.push(item)
           }
+          this.defaultReportLists1.push({
+            title: '早起',
+            unit: null,
+            value: '',
+          })
+          this.defaultReportLists1.push({
+            title: '早睡',
+            unit: null,
+            value: '',
+          })
+          this.defaultReportLists1.push({
+            title: '三餐素',
+            unit: null,
+            value: '',
+          })
         }
       });
     },
@@ -1329,7 +1423,7 @@ export default {
       }, 1000)
     },
     getData() {
-      let uid = this.$store.getters.getUnionid
+      let uid = 'oJuR605rOV6HZP6C3XKD_3_VVxAg'//this.$store.getters.getUnionid
       console.log(uid)
       if (uid !== null && uid !== "") {
         uid = uid.replace("\"","").replace("\"","")
@@ -1599,6 +1693,22 @@ a {
   padding: 0 0;
   -webkit-appearance: none;
   border-radius: 0;
+}
+.zaoQiStyle {
+  position:absolute;
+  clip:rect(2px 85px 30px 2px);
+  left: 80px;
+  top: 2px;
+  width:85px;
+  font-size:16px;
+}
+.zaoQiStyle2 {
+  position:absolute;
+  clip:rect(2px 85px 30px 2px);
+  left: 110px;
+  top: 2px;
+  width:85px;
+  font-size:16px;
 }
 .kuanLiangMiaoStyle {
   position:absolute;
