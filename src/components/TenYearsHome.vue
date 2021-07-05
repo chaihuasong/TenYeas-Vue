@@ -136,14 +136,20 @@
           <el-col v-if="editDailyReportMode" :span="8" style="text-align: right">
             <el-input v-model="list.title" placeholder="请输入项目" disabled></el-input>
           </el-col>
-          <el-col :span="list.title === '站桩' || list.title === '禅坐' || list.title === '静坐' ? 5 : 8" v-if="!editDailyReportMode">
-            <el-input type="number" pattern="\d*" v-model="list.value" placeholder="" @change="onDailyReportResultChange"></el-input>
+          <el-col :span="list.title === '站桩' || list.title === '禅坐' || list.title === '静坐' || list.title === '诵读经典' || list.title === '经典学习' ? 4 : 7" v-if="!editDailyReportMode">
+            <input class="dailyReportInfoInputStyle" type="number" pattern="\d*" v-model="list.value" placeholder="" @change="onDailyReportResultChange" />
           </el-col>
-          <el-col :span="list.title === '站桩' || list.title === '禅坐' || list.title === '静坐' ? 5 : 8" v-if="!editDailyReportMode && list.title === '站桩' && zhanZhuangCount === 2">
-            <el-input type="number" pattern="\d*" v-model="zhanZhuangValue2" @change="onDailyReportResultChange"></el-input>
+          <el-col :span="1" v-if="!editDailyReportMode && (list.title === '站桩') && zhanZhuangCount === 2" style="margin-top: 10px">
+            <span style="color: #909399">+</span>
           </el-col>
-          <el-col :span="list.title === '站桩' || list.title === '禅坐' || list.title === '静坐' ? 5 : 8" v-if="!editDailyReportMode && (list.title === '禅坐' || list.title === '静坐') && jingZuoCount === 2">
-            <el-input type="number" pattern="\d*" v-model="jingzuoValue2" @change="onDailyReportResultChange"></el-input>
+          <el-col :span="1" v-if="!editDailyReportMode && (list.title === '禅坐' || list.title === '静坐') && jingZuoCount === 2" style="margin-top: 10px;text-align: center">
+            <span style="color: #909399">+</span>
+          </el-col>
+          <el-col :span="list.title === '站桩' || list.title === '禅坐' || list.title === '静坐' ? 4 : 6" v-if="!editDailyReportMode && list.title === '站桩' && zhanZhuangCount === 2">
+            <input class="dailyReportInfoInputStyle" type="number" pattern="\d*" v-model="zhanZhuangValue2" @change="onDailyReportResultChange" />
+          </el-col>
+          <el-col :span="list.title === '站桩' || list.title === '禅坐' || list.title === '静坐' ? 4 : 6" v-if="!editDailyReportMode && (list.title === '禅坐' || list.title === '静坐') && jingZuoCount === 2">
+            <input class="dailyReportInfoInputStyle" type="number" pattern="\d*" v-model="jingzuoValue2" @change="onDailyReportResultChange" />
           </el-col>
           <el-col :span="1" v-if="!editDailyReportMode && (list.title === '站桩') && zhanZhuangCount === 1" style="margin-right: 15px">
             <el-button icon="el-icon-plus" circle @click="addValue(list.title)"
@@ -159,8 +165,14 @@
           <el-col :span="8" v-if="editDailyReportMode">
             <el-input v-model="list.unit" placeholder="请输入单位" disabled></el-input>
           </el-col>
-          <el-col :span="4" v-if="!editDailyReportMode" style="margin-top: 10px;text-align: left">
-            <span>{{ list.unit }}</span>
+          <el-col :span="6" v-if="!editDailyReportMode" style="margin-top: 10px;text-align: left;padding: 0 0">
+            <span>{{ list.unit }}</span><span v-if="list.title === '诵读经典'">，诵读</span><span v-if="list.title === '经典学习'">，学习</span>
+          </el-col>
+          <el-col :span="5" v-if="!editDailyReportMode && list.title === '诵读经典'" style="text-align: left;padding: 0 0">
+            <input class="dailyReportInfoInputStyle" v-model="sutraRead" @change="onDailyReportResultChange" />
+          </el-col>
+          <el-col :span="5" v-if="!editDailyReportMode && list.title === '经典学习'" style="text-align: left;padding: 0 0">
+            <input class="dailyReportInfoInputStyle" v-model="sutraStudy" @change="onDailyReportResultChange" />
           </el-col>
           <el-col :span="4">
             <el-button v-if="editDailyReportMode" icon="el-icon-minus" circle @click="del(index)"></el-button>
@@ -295,6 +307,8 @@ export default {
       zhanZhuangCount: 1, //可以多次静坐， 默认一次
       jingzuoValue2: '',
       zhanZhuangValue2: '',
+      sutraRead: '',
+      sutraStudy: '',
 
       pickerOptions: {
         disabledDate(time) {
@@ -681,6 +695,8 @@ export default {
           this.note = res.data.note
           this.share = res.data.share
           this.state = res.data.state
+          this.sutraRead = res.data.sutraRead
+          this.sutraStudy = res.data.sutraStudy
           console.log(res.data)
           let reports = []
           reports.push(res.data.value1)
@@ -856,6 +872,10 @@ export default {
           value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + '+' + this.zhanZhuangValue2 + this.reportLists[i].unit
         } else if ((this.reportLists[i].title === '静坐' || this.reportLists[i].title === '禅坐') && this.jingZuoCount == 2 && this.jingzuoValue2 !== '') {
           value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + '+' + this.jingzuoValue2 + this.reportLists[i].unit
+        } else if (this.reportLists[i].title === '诵读经典' && this.sutraRead !== '') {
+          value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + this.reportLists[i].unit + '，诵读' + this.sutraRead.lastIndexOf('《') > 0 ? this.sutraRead : '《' + this.sutraRead + this.sutraRead.lastIndexOf('》') > 0 ? '' : '》'
+        } else if (this.reportLists[i].title === '经典学习' && this.sutraStudy !== '') {
+          value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + this.reportLists[i].unit + '，学习' + this.sutraStudy.lastIndexOf('《') > 0 ? this.sutraStudy : '《' + this.sutraStudy + this.sutraStudy.lastIndexOf('》') > 0 ? '' : '》'
         } else {
           value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + this.reportLists[i].unit
         }
@@ -904,6 +924,8 @@ export default {
       data['state'] = this.state
       data['note'] = this.note
       data['share'] = this.share
+      data['sutraRead'] = this.sutraRead
+      data['sutraStudy'] = this.sutraStudy
 
       axios({
         method: "POST",
@@ -1501,6 +1523,21 @@ a {
   font-size: 18px;
   text-align: center;
   margin: 0 0;
+  padding: 0 0;
+  -webkit-appearance: none;
+  border-radius: 0;
+}
+.dailyReportInfoInputStyle {
+  border-left-width:0px;
+  border-top-width:0px;
+  border-right-width:0px;
+  border-bottom-width:1px;
+  border-bottom-color:lightgray;
+  width: 100%;
+  height: 100%;
+  font-size: 18px;
+  text-align: center;
+  margin: 10px 0;
   padding: 0 0;
   -webkit-appearance: none;
   border-radius: 0;
