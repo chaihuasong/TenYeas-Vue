@@ -810,6 +810,8 @@ export default {
           this.state = res.data.state
           this.sutraRead = res.data.sutraRead
           this.sutraStudy = res.data.sutraStudy
+          this.zaoQiTime = res.data.zaoQiTime
+          this.zaoShuiTime = res.data.zaoShuiTime
           if (res.data.kuanLiangMiao !== null && res.data.kuanLiangMiao != '') {
             this.kuanLiangMiao = res.data.kuanLiangMiao
           }
