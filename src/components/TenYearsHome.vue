@@ -230,9 +230,9 @@
                 size="medium"
                 style="width: 200%"
                 :picker-options="{
-                  start: '08:30',
+                  start: '03:00',
                   step: '00:15',
-                  end: '18:30'
+                  end: '07:00'
                 }"
                 placeholder="选择时间">
             </el-time-select>
@@ -244,9 +244,9 @@
                 size="medium"
                 style="width: 200%"
                 :picker-options="{
-                  start: '08:30',
+                  start: '19:00',
                   step: '00:15',
-                  end: '18:30'
+                  end: '23:00'
                 }"
                 placeholder="选择时间">
             </el-time-select>
@@ -401,14 +401,14 @@ export default {
       zaoQiValue: '1',
       zaoQiTimeVisiable: false,
       zaoShuiTimeVisiable: false,
-      zaoQiTime: '',
-      zaoShuiTime: '',
+      zaoQiTime: '05:00',
+      zaoShuiTime: '20:00',
       doneUndoneOptions:[{
         value: '1',
-        label: '完成'
+        label: '做到'
       }, {
         value: '0',
-        label: '未完成'
+        label: '未做到'
       }],
 
       pickerOptions: {
@@ -518,21 +518,6 @@ export default {
             }
             this.defaultReportLists1.push(item)
           }
-          this.defaultReportLists1.push({
-            title: '早起',
-            unit: null,
-            value: '',
-          })
-          this.defaultReportLists1.push({
-            title: '早睡',
-            unit: null,
-            value: '',
-          })
-          this.defaultReportLists1.push({
-            title: '三餐素',
-            unit: null,
-            value: '',
-          })
         }
       });
     },
@@ -992,27 +977,31 @@ export default {
       let data = ''
       let index = 0;
       for (let i = 0; i < this.reportLists.length; i++) {
-        if (this.reportLists[i].value.trim() === '' || this.reportLists[i].value.trim() === '0') continue
+        if ((this.reportLists[i].title !== '早睡' && this.reportLists[i].title !== '早起') && (this.reportLists[i].value.trim() === '' || this.reportLists[i].value.trim() === '0')) continue
         index++
         let value = null;
-        if (this.reportLists[i].title === '站桩' && this.zhanZhuangCount == 2 && this.zhanZhuangValue2 !== '') {
-          value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + '+' + this.zhanZhuangValue2 + this.reportLists[i].unit
-        } else if ((this.reportLists[i].title === '静坐' || this.reportLists[i].title === '禅坐') && this.jingZuoCount == 2 && this.jingzuoValue2 !== '') {
-          value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + '+' + this.jingzuoValue2 + this.reportLists[i].unit
-        } else if (this.reportLists[i].title === '诵读经典' && this.sutraRead !== '') {
-          value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + this.reportLists[i].unit
+        if (this.reportLists[i].title === '站桩' && this.zhanZhuangCount === 2 && this.zhanZhuangValue2 !== null && this.zhanZhuangValue2 !== '') {
+          value = index + '. ' + this.reportLists[i].title + '：' + this.reportLists[i].value.trim() + '+' + this.zhanZhuangValue2 + this.reportLists[i].unit
+        } else if ((this.reportLists[i].title === '静坐' || this.reportLists[i].title === '禅坐') && this.jingZuoCount == 2 && this.jingzuoValue2 !== null && this.jingzuoValue2 !== '') {
+          value = index + '. ' + this.reportLists[i].title + '：' + this.reportLists[i].value.trim() + '+' + this.jingzuoValue2 + this.reportLists[i].unit
+        } else if (this.reportLists[i].title === '诵读经典' && this.sutraRead !== null && this.sutraRead !== '') {
+          value = index + '. ' + this.reportLists[i].title + '：' + this.reportLists[i].value.trim() + this.reportLists[i].unit
           if (this.sutraRead !== null && this.sutraRead !== '') {
-            value = value + '，诵读' + (this.sutraRead.lastIndexOf('《') > 0 ? this.sutraRead : '《' + this.sutraRead + (this.sutraRead.lastIndexOf('》') > 0 ? '' : '》'))
+            value = value + '，诵读' + (this.sutraRead.indexOf('《') >= 0 ? this.sutraRead : '《' + this.sutraRead + (this.sutraRead.indexOf('》') > 0 ? '' : '》'))
           }
-        } else if (this.reportLists[i].title === '经典学习' && this.sutraStudy !== '') {
-          value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + this.reportLists[i].unit
+        } else if (this.reportLists[i].title === '经典学习' && this.sutraStudy !== null && this.sutraStudy !== '') {
+          value = index + '. ' + this.reportLists[i].title + '：' + this.reportLists[i].value.trim() + this.reportLists[i].unit
           if (this.sutraStudy !== null && this.sutraStudy !== '') {
-            value = value + '，学习' + (this.sutraStudy.lastIndexOf('《') > 0 ? this.sutraStudy : '《' + this.sutraStudy + (this.sutraStudy.lastIndexOf('》') > 0 ? '' : '》'))
+            value = value + '，学习' + (this.sutraStudy.indexOf('《') > 0 ? this.sutraStudy : '《' + this.sutraStudy + (this.sutraStudy.indexOf('》') > 0 ? '' : '》'))
           }
-        } else if (this.reportLists[i].title === '宽两秒' && this.kuanLiangMiao !== '') {
-          value = index + '. ' + this.kuanLiangMiao + this.reportLists[i].value.trim() + this.reportLists[i].unit + (this.kuanLiangMiaoCount !== '' ? '，总' + this.kuanLiangMiaoCount + '次' : '')
+        } else if (this.reportLists[i].title === '宽两秒' && this.kuanLiangMiao !== null && this.kuanLiangMiao !== '') {
+          value = index + '. ' + this.kuanLiangMiao + '：' + this.reportLists[i].value.trim() + this.reportLists[i].unit + (this.kuanLiangMiaoCount !== '' ? '，总' + this.kuanLiangMiaoCount + '次' : '')
+        } else if (this.reportLists[i].title === '早睡') {
+          value = index + '. ' + this.reportLists[i].title + '：' + (this.zaoShuiValue === '1' ? '' : '未') + '做到'
+        } else if (this.reportLists[i].title === '早起') {
+          value = index + '. ' + this.reportLists[i].title + '：' + (this.zaoQiValue === '1' ? '' : '未') + '做到'
         } else {
-          value = index + '. ' + this.reportLists[i].title + this.reportLists[i].value.trim() + this.reportLists[i].unit
+          value = index + '. ' + this.reportLists[i].title + '：' + this.reportLists[i].value.trim() + (this.reportLists[i].unit !== null && this.reportLists[i].unit !== '' ? this.reportLists[i].unit : '')
         }
         data += '\n' + value
       }
@@ -1043,6 +1032,10 @@ export default {
           data['value' + (i + 1)] = value + '+' + this.zhanZhuangValue2
         } else if ((this.reportLists[i].title === '静坐' || this.reportLists[i].title === '禅坐') && this.jingZuoCount === 2 && this.jingzuoValue2 !== '') {
           data['value' + (i + 1)] = value + '+' + this.jingzuoValue2
+        } else if ((this.reportLists[i].title === '早睡')) {
+          data['value' + (i + 1)] = this.zaoShuiValue
+        } else if ((this.reportLists[i].title === '早起')) {
+          data['value' + (i + 1)] = this.zaoQiValue
         } else {
           data['value' + (i + 1)] = value
         }
@@ -1063,6 +1056,12 @@ export default {
       data['sutraStudy'] = this.sutraStudy
       data['kuanLiangMiao'] = this.kuanLiangMiao
       data['kuanLiangMiaoCount'] = this.kuanLiangMiaoCount
+      if (this.zaoShuiTimeVisiable) {
+        data['zaoShuiTime'] = this.zaoShuiTime
+      }
+      if (this.zaoQiTimeVisiable) {
+        data['zaoQiTime'] = this.zaoQiTime
+      }
 
       axios({
         method: "POST",
