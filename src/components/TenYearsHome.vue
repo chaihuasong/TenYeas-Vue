@@ -804,6 +804,11 @@ export default {
         this.zhanZhuangCount = 1
         this.jingzuoValue2 = ''
         this.zhanZhuangValue2 = ''
+        this.kuanLiangMiaoCount = ''
+        this.sutraRead = ''
+        this.sutraStudy = ''
+        this.zaoQiTimeVisible = false
+        this.zaoShuiTimeVisible = false
         if (res.data !== null && res.data !== '') {
           this.note = res.data.note
           this.share = res.data.share
