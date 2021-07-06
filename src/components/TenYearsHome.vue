@@ -227,6 +227,7 @@
           <el-col :span="5" v-if="!editDailyReportMode && list.title === '早起' && zaoQiTimeVisiable">
             <el-time-select
                 v-model="zaoQiTime"
+                :editable="false"
                 size="medium"
                 style="width: 200%"
                 :picker-options="{
@@ -241,6 +242,7 @@
           <el-col :span="5" v-if="!editDailyReportMode && list.title === '早睡' && zaoShuiTimeVisiable">
             <el-time-select
                 v-model="zaoShuiTime"
+                :editable="false"
                 size="medium"
                 style="width: 200%"
                 :picker-options="{
