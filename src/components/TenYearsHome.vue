@@ -129,8 +129,8 @@
       <br/>
 
       <div style="margin-top: 20px;margin-bottom: 15px">
-        <el-row :gutter="10" v-for='(list,index) in reportLists' v-bind:key='list.id' style="margin-top: 5px">
-          <el-col :span="(zaoQiTimeVisiable && list.title === '早起') || ( zaoShuiTimeVisiable && list.title === '早睡') ? 5 : 7" v-if="!editDailyReportMode && list.title !== '宽两秒'" style="text-align: right;margin-top: 10px">
+        <el-row :gutter="5" v-for='(list,index) in reportLists' v-bind:key='list.id' style="margin-top: 5px">
+          <el-col :span="(zaoQiTimeVisiable && list.title === '早起') || ( zaoShuiTimeVisiable && list.title === '早睡') ? 5 : (list.title === '诵读经典' || list.title === '经典学习' ? 6 : 7)" v-if="!editDailyReportMode && list.title !== '宽两秒'" style="text-align: right;margin-top: 10px">
             <span>{{ list.title }}</span>
           </el-col>
           <el-col :span="7" v-if="!editDailyReportMode && list.title === '宽两秒'" style="text-align: right;margin-top: 10px">
@@ -175,13 +175,16 @@
           <el-col :span="8" v-if="editDailyReportMode">
             <el-input v-model="list.unit" placeholder="请输入单位" disabled></el-input>
           </el-col>
-          <el-col :span="list.title === '宽两秒' ? 4 : 6" v-if="!editDailyReportMode" style="margin-top: 10px;text-align: left;padding: 0 0">
-            <span>{{ list.unit }}</span><span v-if="list.title === '诵读经典'">，诵读</span><span v-if="list.title === '经典学习'">，学习</span><span v-if="list.title === '宽两秒'">，总</span>
+          <el-col :span="list.title === '宽两秒' ? 4 : 7" v-if="!editDailyReportMode && list.title !== '诵读经典' && list.title !== '经典学习'" style="margin-top: 10px;text-align: left;padding: 0 0">
+            <span>{{ list.unit }}</span><span v-if="list.title === '宽两秒'">，总</span>
           </el-col>
-          <el-col :span="5" v-if="!editDailyReportMode && list.title === '诵读经典'" style="text-align: left;padding: 0 0">
+          <el-col :span="7" v-if="!editDailyReportMode && (list.title === '诵读经典' || list.title === '经典学习')" style="margin-top: 10px;text-align: center;padding: 0 0">
+            <span>{{ list.unit }}</span><span v-if="list.title === '诵读经典'">，诵读</span><span v-if="list.title === '经典学习'">，学习</span>
+          </el-col>
+          <el-col :span="6" v-if="!editDailyReportMode && list.title === '诵读经典'" style="text-align: left;padding: 0 0">
             <input class="dailyReportInfoInputTextStyle" v-model="sutraRead" @change="onDailyReportResultChange" />
           </el-col>
-          <el-col :span="5" v-if="!editDailyReportMode && list.title === '经典学习'" style="text-align: left;padding: 0 0">
+          <el-col :span="6" v-if="!editDailyReportMode && list.title === '经典学习'" style="text-align: left;padding: 0 0">
             <input class="dailyReportInfoInputTextStyle" v-model="sutraStudy" @change="onDailyReportResultChange" />
           </el-col>
           <el-col :span="4" v-if="!editDailyReportMode && list.title === '宽两秒'" style="text-align: left;padding: 0 0">
@@ -1688,7 +1691,7 @@ a {
   border-bottom-color:lightgray;
   width: 100%;
   height: 100%;
-  font-size: 13px;
+  font-size: 14px;
   text-align: center;
   margin: 15px 0;
   padding: 0 0;
