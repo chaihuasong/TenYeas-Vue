@@ -130,7 +130,7 @@
 
       <div style="margin-top: 20px;margin-bottom: 15px">
         <el-row :gutter="5" v-for='(list,index) in reportLists' v-bind:key='list.id' style="margin-top: 5px">
-          <el-col :span="(zaoQiTimeVisiable && list.title === '早起') || ( zaoShuiTimeVisiable && list.title === '早睡') ? 5 : (list.title === '诵读经典' || list.title === '经典学习' ? 6 : 7)" v-if="!editDailyReportMode && list.title !== '宽两秒'" style="text-align: right;margin-top: 10px">
+          <el-col :span="(zaoQiTimeVisible && list.title === '早起') || ( zaoShuiTimeVisible && list.title === '早睡') ? 5 : (list.title === '诵读经典' || list.title === '经典学习' ? 6 : 7)" v-if="!editDailyReportMode && list.title !== '宽两秒'" style="text-align: right;margin-top: 10px">
             <span>{{ list.title }}</span>
           </el-col>
           <el-col :span="7" v-if="!editDailyReportMode && list.title === '宽两秒'" style="text-align: right;margin-top: 10px">
@@ -197,7 +197,7 @@
             <el-button v-if="editDailyReportMode" icon="el-icon-minus" circle @click="del(index)"></el-button>
           </el-col>
           <el-col :span="5" v-if="!editDailyReportMode && list.title === '早睡'">
-            <el-select v-model="zaoShuiValue" size="medium" class="zaoQiStyle" :class="{'zaoQiStyle2': !zaoShuiTimeVisiable}" style="width: 90px;">
+            <el-select v-model="zaoShuiValue" size="medium" class="zaoQiStyle" :class="{'zaoQiStyle2': !zaoShuiTimeVisible}" style="width: 90px;">
               <el-option
                   v-for="item in doneUndoneOptions"
                   :key="item.value"
@@ -207,7 +207,7 @@
             </el-select>
           </el-col>
           <el-col :span="4" v-if="!editDailyReportMode && list.title === '早起'">
-            <el-select v-model="zaoQiValue" size="medium" class="zaoQiStyle" :class="{'zaoQiStyle2': !zaoQiTimeVisiable}" style="width: 90px;">
+            <el-select v-model="zaoQiValue" size="medium" class="zaoQiStyle" :class="{'zaoQiStyle2': !zaoQiTimeVisible}" style="width: 90px;">
               <el-option
                   v-for="item in doneUndoneOptions"
                   :key="item.value"
@@ -217,17 +217,17 @@
             </el-select>
           </el-col>
 
-          <el-col :span="2" v-if="!editDailyReportMode && list.title === '早起' && !zaoQiTimeVisiable" style="margin-right: 5px">
+          <el-col :span="2" v-if="!editDailyReportMode && list.title === '早起' && !zaoQiTimeVisible" style="margin-right: 5px">
             <el-button icon="el-icon-plus" circle @click="addTimeValue(list.title)"
                        style="background: lightcyan;margin-top: 6px;" size="mini"></el-button>
           </el-col>
 
-          <el-col :span="2" v-if="!editDailyReportMode && list.title === '早睡' && !zaoShuiTimeVisiable" style="margin-right: 5px">
+          <el-col :span="2" v-if="!editDailyReportMode && list.title === '早睡' && !zaoShuiTimeVisible" style="margin-right: 5px">
             <el-button icon="el-icon-plus" circle @click="addTimeValue(list.title)"
                        style="background: lightcyan;margin-top: 6px;" size="mini"></el-button>
           </el-col>
 
-          <el-col :span="5" v-if="!editDailyReportMode && list.title === '早起' && zaoQiTimeVisiable">
+          <el-col :span="5" v-if="!editDailyReportMode && list.title === '早起' && zaoQiTimeVisible">
             <el-time-select
                 v-model="zaoQiTime"
                 :editable="false"
@@ -242,7 +242,7 @@
             </el-time-select>
           </el-col>
 
-          <el-col :span="5" v-if="!editDailyReportMode && list.title === '早睡' && zaoShuiTimeVisiable">
+          <el-col :span="5" v-if="!editDailyReportMode && list.title === '早睡' && zaoShuiTimeVisible">
             <el-time-select
                 v-model="zaoShuiTime"
                 :editable="false"
@@ -404,8 +404,8 @@ export default {
       }],
       zaoShuiValue: '1',
       zaoQiValue: '1',
-      zaoQiTimeVisiable: false,
-      zaoShuiTimeVisiable: false,
+      zaoQiTimeVisible: false,
+      zaoShuiTimeVisible: false,
       zaoQiTime: '05:00',
       zaoShuiTime: '22:00',
       doneUndoneOptions:[{
@@ -460,9 +460,9 @@ export default {
   methods: {
     addTimeValue(title) {
       if (title === '早起') {
-        this.zaoQiTimeVisiable = true
+        this.zaoQiTimeVisible = true
       } else if (title === '早睡') {
-        this.zaoShuiTimeVisiable =true
+        this.zaoShuiTimeVisible =true
       }
     },
     addValue(title) {
@@ -812,6 +812,8 @@ export default {
           this.sutraStudy = res.data.sutraStudy
           this.zaoQiTime = res.data.zaoQiTime
           this.zaoShuiTime = res.data.zaoShuiTime
+          this.zaoShuiTimeVisible = res.data.zaoShuiTimeVisible === '1'
+          this.zaoQiTimeVisible = res.data.zaoQiTimeVisible === '1'
           if (res.data.kuanLiangMiao !== null && res.data.kuanLiangMiao != '') {
             this.kuanLiangMiao = res.data.kuanLiangMiao
           }
@@ -1004,9 +1006,9 @@ export default {
         } else if (this.reportLists[i].title === '宽两秒' && this.kuanLiangMiao !== null && this.kuanLiangMiao !== '') {
           value = index + '. ' + this.kuanLiangMiao + '：' + this.reportLists[i].value.trim() + this.reportLists[i].unit + (this.kuanLiangMiaoCount !== '' ? '，总' + this.kuanLiangMiaoCount + '次' : '')
         } else if (this.reportLists[i].title === '早睡') {
-          value = index + '. ' + this.reportLists[i].title + '：' + (this.zaoShuiTimeVisiable ? this.zaoShuiTime : (this.zaoShuiValue === '1' ? '' : '未') + '做到')
+          value = index + '. ' + this.reportLists[i].title + '：' + (this.zaoShuiTimeVisible ? this.zaoShuiTime : (this.zaoShuiValue === '1' ? '' : '未') + '做到')
         } else if (this.reportLists[i].title === '早起') {
-          value = index + '. ' + this.reportLists[i].title + '：' + (this.zaoQiTimeVisiable ? this.zaoQiTime : (this.zaoQiValue === '1' ? '' : '未') + '做到')
+          value = index + '. ' + this.reportLists[i].title + '：' + (this.zaoQiTimeVisible ? this.zaoQiTime : (this.zaoQiValue === '1' ? '' : '未') + '做到')
         } else {
           value = index + '. ' + this.reportLists[i].title + '：' + this.reportLists[i].value.trim() + (this.reportLists[i].unit !== null && this.reportLists[i].unit !== '' ? this.reportLists[i].unit : '')
         }
@@ -1063,12 +1065,14 @@ export default {
       data['sutraStudy'] = this.sutraStudy
       data['kuanLiangMiao'] = this.kuanLiangMiao
       data['kuanLiangMiaoCount'] = this.kuanLiangMiaoCount
-      if (this.zaoShuiTimeVisiable) {
+      if (this.zaoShuiTimeVisible) {
         data['zaoShuiTime'] = this.zaoShuiTime
       }
-      if (this.zaoQiTimeVisiable) {
+      if (this.zaoQiTimeVisible) {
         data['zaoQiTime'] = this.zaoQiTime
       }
+      data['zaoShuiTimeVisible'] = (this.zaoShuiTimeVisible ? '1' : '0')
+      data['zaoQiTimeVisible'] = (this.zaoQiTimeVisible ? '1' : '0')
 
       axios({
         method: "POST",
