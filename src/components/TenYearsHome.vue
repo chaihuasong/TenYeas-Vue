@@ -407,7 +407,7 @@ export default {
       zaoQiTimeVisiable: false,
       zaoShuiTimeVisiable: false,
       zaoQiTime: '05:00',
-      zaoShuiTime: '20:00',
+      zaoShuiTime: '22:00',
       doneUndoneOptions:[{
         value: '1',
         label: '做到'
@@ -1004,9 +1004,9 @@ export default {
         } else if (this.reportLists[i].title === '宽两秒' && this.kuanLiangMiao !== null && this.kuanLiangMiao !== '') {
           value = index + '. ' + this.kuanLiangMiao + '：' + this.reportLists[i].value.trim() + this.reportLists[i].unit + (this.kuanLiangMiaoCount !== '' ? '，总' + this.kuanLiangMiaoCount + '次' : '')
         } else if (this.reportLists[i].title === '早睡') {
-          value = index + '. ' + this.reportLists[i].title + '：' + (this.zaoShuiValue === '1' ? '' : '未') + '做到'
+          value = index + '. ' + this.reportLists[i].title + '：' + (this.zaoShuiTimeVisiable ? this.zaoShuiTime : (this.zaoShuiValue === '1' ? '' : '未') + '做到')
         } else if (this.reportLists[i].title === '早起') {
-          value = index + '. ' + this.reportLists[i].title + '：' + (this.zaoQiValue === '1' ? '' : '未') + '做到'
+          value = index + '. ' + this.reportLists[i].title + '：' + (this.zaoQiTimeVisiable ? this.zaoQiTime : (this.zaoQiValue === '1' ? '' : '未') + '做到')
         } else {
           value = index + '. ' + this.reportLists[i].title + '：' + this.reportLists[i].value.trim() + (this.reportLists[i].unit !== null && this.reportLists[i].unit !== '' ? this.reportLists[i].unit : '')
         }
