@@ -1424,7 +1424,7 @@ export default {
       }, 1000)
     },
     getData() {
-      let uid = 'oJuR605rOV6HZP6C3XKD_3_VVxAg'//this.$store.getters.getUnionid
+      let uid = this.$store.getters.getUnionid
       console.log(uid)
       if (uid !== null && uid !== "") {
         uid = uid.replace("\"","").replace("\"","")
