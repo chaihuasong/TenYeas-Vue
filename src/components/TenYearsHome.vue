@@ -1078,6 +1078,7 @@ export default {
       }
       data['zaoShuiTimeVisible'] = (this.zaoShuiTimeVisible ? '1' : '0')
       data['zaoQiTimeVisible'] = (this.zaoQiTimeVisible ? '1' : '0')
+      data['createTime'] = this.getNowTime(new Date())
 
       axios({
         method: "POST",
@@ -1120,6 +1121,20 @@ export default {
           }
         }
       });
+    },
+    getNowTime(date) {
+      let yy = date.getFullYear()
+      let mm = date.getMonth() + 1
+      if (mm < 10) mm = '0' + mm
+      let dd = date.getDate()
+      if (dd < 10) dd = '0' + dd
+      let hh = date.getHours()
+      if (hh < 10) hh = '0' + hh
+      let mf = date.getMinutes()
+      if (mf < 10) mf = '0' + mf
+      let ss = date.getSeconds()
+      if (ss < 10) ss = '0' + ss
+      return yy + '-' + mm + '-' + dd + ' '+ hh + ':' + mf + ':' + ss
     },
     getState(data) {
       for (let i = 0; i < this.monthsNotesList.length; i++) {
