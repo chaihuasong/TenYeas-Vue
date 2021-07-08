@@ -281,7 +281,7 @@
     </el-card>
     <el-dialog title="从模板库中选择" :visible.sync="addTemplateDialogVisible" custom-class="templateStyle">
       <el-checkbox-group v-model="newReportLists">
-        <el-row style="margin-top: 10px;font-size: 16px;" v-for="item in allDefaultReportsLists" :key="item.template">
+        <el-row style="margin-top: 10px;font-size: 16px;" v-for="item in allDefaultReportsLists" :key="item.id">
           <el-col :span="10">
             <el-checkbox :label="item.template" style="height:30px;width: 50px; font-size: 18px;text-align: left;margin-left: 30px" />
           </el-col>
