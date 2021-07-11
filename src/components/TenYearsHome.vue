@@ -1009,7 +1009,7 @@ export default {
             value = value + '，学习' + (this.sutraStudy.indexOf('《') > 0 ? this.sutraStudy : '《' + this.sutraStudy + (this.sutraStudy.indexOf('》') > 0 ? '' : '》'))
           }
         } else if (this.reportLists[i].title === '宽两秒' && this.kuanLiangMiao !== null && this.kuanLiangMiao !== '') {
-          value = index + '. ' + this.kuanLiangMiao + '：' + this.reportLists[i].value.trim() + this.reportLists[i].unit + (this.kuanLiangMiaoCount !== '' ? '，总' + this.kuanLiangMiaoCount + '次' : '')
+          value = index + '. ' + this.kuanLiangMiao + '：' + this.reportLists[i].value.trim() + this.reportLists[i].unit + (this.kuanLiangMiaoCount !== null && this.kuanLiangMiaoCount !== '' ? '，总' + this.kuanLiangMiaoCount + '次' : '')
         } else if (this.reportLists[i].title === '早睡') {
           value = index + '. ' + this.reportLists[i].title + '：' + (this.zaoShuiTimeVisible ? this.zaoShuiTime : (this.zaoShuiValue === '1' ? '' : '未') + '做到')
         } else if (this.reportLists[i].title === '早起') {
