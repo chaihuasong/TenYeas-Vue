@@ -1327,7 +1327,7 @@ export default {
         let data = {
           date: dateFormat.substr(0, dateFormat.lastIndexOf('-')),
           userId: this.unionid,
-          monthInfo: this.lastMonthInfo,
+          monthSummery: this.lastMonthInfo,
         }
         axios({
           method: "POST",
@@ -1397,6 +1397,9 @@ export default {
       }).then((res) => {
         if (res != null && res.data != null && res.data !== '') {
           this.lastMonthInfo = res.data.monthInfo
+          if (res.data.monthSummery != null && res.data.monthSummery !== '') {
+            this.lastMonthInfo = res.data.monthSummery
+          }
         }
       });
     },

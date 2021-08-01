@@ -9,6 +9,8 @@
       </el-table-column>
       <el-table-column prop="monthInfo" label="月度计划" width="250">
       </el-table-column>
+      <el-table-column prop="monthSummery" label="月度总结" width="250">
+      </el-table-column>
       <el-table-column label="操作">
         <template slot-scope="scope">
           <el-button size="mini" @click="editUser(scope.$index, scope.row)">编辑</el-button>
@@ -40,8 +42,11 @@
         <el-form-item label="用户ID">
           <el-input v-model="newMonthInfo.userId" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="半年践行计划">
+        <el-form-item label="月度计划">
           <el-input v-model="newMonthInfo.monthInfo" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="月度总结">
+          <el-input v-model="newMonthInfo.monthSummery" autocomplete="off"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
