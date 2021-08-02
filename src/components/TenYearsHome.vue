@@ -1009,7 +1009,7 @@ export default {
             value = value + '，学习' + (this.sutraStudy.indexOf('《') > 0 ? this.sutraStudy : '《' + this.sutraStudy + (this.sutraStudy.indexOf('》') > 0 ? '' : '》'))
           }
         } else if (this.reportLists[i].title === '宽两秒' && this.kuanLiangMiao !== null && this.kuanLiangMiao !== '') {
-          value = index + '. ' + this.kuanLiangMiao + '：' + this.reportLists[i].value.trim() + this.reportLists[i].unit + (this.kuanLiangMiaoCount !== '' ? '，总' + this.kuanLiangMiaoCount + '次' : '')
+          value = index + '. ' + this.kuanLiangMiao + '：' + this.reportLists[i].value.trim() + this.reportLists[i].unit + (this.kuanLiangMiaoCount !== null && this.kuanLiangMiaoCount !== '' ? '，总' + this.kuanLiangMiaoCount + '次' : '')
         } else if (this.reportLists[i].title === '早睡') {
           value = index + '. ' + this.reportLists[i].title + '：' + (this.zaoShuiTimeVisible ? this.zaoShuiTime : (this.zaoShuiValue === '1' ? '' : '未') + '做到')
         } else if (this.reportLists[i].title === '早起') {
@@ -1327,7 +1327,7 @@ export default {
         let data = {
           date: dateFormat.substr(0, dateFormat.lastIndexOf('-')),
           userId: this.unionid,
-          monthInfo: this.lastMonthInfo,
+          monthSummery: this.lastMonthInfo,
         }
         axios({
           method: "POST",
@@ -1396,7 +1396,9 @@ export default {
         }
       }).then((res) => {
         if (res != null && res.data != null && res.data !== '') {
-          this.lastMonthInfo = res.data.monthInfo
+          if (res.data.monthSummery != null && res.data.monthSummery !== '') {
+            this.lastMonthInfo = res.data.monthSummery
+          }
         }
       });
     },
