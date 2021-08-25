@@ -16,10 +16,11 @@
     <el-card style="width: 100%;margin-top: 10px;margin-bottom: 10px">
       <div v-for="(item, index) in mergedResultList" v-bind:key='index'
            style="float: left;font-size: 18px;margin-left: 20%;margin-right: 20%;margin-bottom: 5px">
-        {{index + 1}}.
-        {{mergedResultList[index].split('_')[0]}}
-        <span  style="font-size: 22px;color: #66b1ff">{{mergedResultValueList[index]}}</span>
-        {{mergedResultList[index].split('_')[1]}}
+        <span v-if="item.split('_')[0] !== '七分饱'">
+          {{index + 1}}.{{item.split('_')[0]}}
+          <span style="font-size: 22px;color: #66b1ff">{{mergedResultValueList[index]}}</span>
+          {{ item.split('_')[0] === '早睡' || item.split('_')[0] === '早起' ? '天' : item.split('_')[1] }}
+        </span>
       </div>
     </el-card>
 
@@ -72,7 +73,7 @@ export default {
       for (let i = 0; i < this.last7DaysReportValue.length; i++) {
         let value = {}
         let name = this.last7DaysReportTemplateList[i]
-        //if (name === '家人陪伴') continue
+        if (name === '七分饱') continue
         value['name'] = name
         value['type'] = 'line'
         value['data'] = this.last7DaysReportValue[i]
