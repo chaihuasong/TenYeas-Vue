@@ -102,6 +102,15 @@
         </el-card>
       </el-col>
       <el-col :span="12">
+        <el-card style="width:1200px; height: 350px;">
+          <div id="daily_report_count" :style="{width:'500px',height: '300px'}" style="float: left;"></div>
+          <div id="echarts_daily_report_count" :style="{width:'500px', height: '300px'}" style="float: left;"></div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <el-row>
+      <el-col :span="12">
         <el-card style="width:1066px; height: 350px;">
           <div id="china" :style="{width:'500px',height: '300px'}" style="float: left;"></div>
           <div id="china_echarts" :style="{width:'500px', height: '300px'}" style="float: left;"></div>
@@ -134,6 +143,8 @@ export default {
       totalVisitedUser: 0,
       dailyVisitedUser: 0,
       yesterdayVisitedUser: 0,
+      dailyReportCountList: [],
+      dailyReportDateList: [],
       monthsReportCountList: [],
       monthsVisitCountList: [],
     };
@@ -141,6 +152,8 @@ export default {
   //调用
   mounted() {
     document.title = this.$route.meta.title
+    this.getDailyReportDateList();
+    this.getDailyReportCountList();
     this.getDailyReportCount()
     this.getYesterdayReportCount()
     this.getTotalReportCount()
@@ -178,6 +191,11 @@ export default {
             me.drawPie('daily_report')
       }));
     },
+    getDailyReportDateList() {
+      for(let i = 14; i >= 0; i--) {
+        this.dailyReportDateList.push(this.getDateFormat(new Date(Date.now() - i * 24 * 3600 * 1000)))
+      }
+    },
     getMonthReportData() {
       return axios({
         method: "GET",
@@ -194,6 +212,18 @@ export default {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
+      })
+    },
+    getDailyReportCountList() {
+      axios({
+        method: "GET",
+        url: this.serverUrl + "getReportCountListByDays?days=14",
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        this.dailyReportCountList = res.data
+        this.drawDailyCount('daily_report_count')
       })
     },
     getDailyReportCount() {
@@ -276,7 +306,6 @@ export default {
       })
     },
 
-
     getDailyVisitedUser() {
       axios({
         method: "GET",
@@ -353,6 +382,52 @@ export default {
             data: this.monthsVisitCountList
           }
           ]
+      })
+    },
+
+    drawDailyCount(id) {
+      console.log("this.dailyReportDateList:" + this.dailyReportDateList)
+      console.log("this.dailyReportCountList:" + this.dailyReportCountList)
+      this.charts = echarts.init(document.getElementById(id))
+      this.charts.setOption({
+        title: {
+          text: '最近两周打卡统计'
+        },
+        xAxis: {
+          type: 'category',
+          data: this.dailyReportDateList,
+          axisLabel: {
+            interval:0,
+            rotate:40
+          },
+        },
+        tooltip: {
+          trigger: 'axis'
+        },
+        legend:{
+          width:10,
+          height:10,
+          orient:'horizontal',
+          left:'right'
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '3%',
+          containLabel: true
+        },
+        yAxis: {
+          type: 'value',
+          axisLabel: {
+            formatter: '{value}'
+          }
+        },
+        series: [{
+          name: '打卡数',
+          type: 'line',
+          data: this.dailyReportCountList
+        },
+        ],
       })
     },
     drawPie2(id) {
