@@ -24,112 +24,119 @@
     <!--        <el-image v-if="this.lastImgUrl != ''" :src="lastImgUrl" style="width: 30px; height: 30px;"></el-image>-->
     <!--      </div>-->
     <!--    </el-card>-->
-    <div style="text-align: left;margin-left: 5px;color: #e5288a">基本信息</div>
-    <div style="width: 100%;height: 1px;background-color: #e7ecf1;margin-top: 5px"/>
-    <el-row style="text-align: left; margin-left: 30px;margin-top: 15px">
-      <el-col :span="8" style="font-weight: bold;font-size: 16px">
-        性别：
-      </el-col>
-      <el-col :span="16">
-        <el-dropdown trigger="click" @command="handleCommand">
-        <span class="el-dropdown-link" style="font-size: 16px">
-        {{ this.gender === '1' ? "男" : "女" }}<i class="el-icon-arrow-down el-icon--right"></i>
-        </span>
-          <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item command="0">女</el-dropdown-item>
-            <br/>
-            <el-dropdown-item command="1">男</el-dropdown-item>
-          </el-dropdown-menu>
-        </el-dropdown>
-      </el-col>
-    </el-row>
-    <el-row style="text-align: left; margin-left: 30px;margin-top: 15px">
-      <el-col :span="8" style="font-weight: bold;font-size: 16px">
-        昵称：
-      </el-col>
-      <el-col :span="16">
-        <input class="inputStyle" v-model="nickname" @change="onInputChange"/>
-      </el-col>
-    </el-row>
-    <el-row style="text-align: left; margin-left: 30px;margin-top: 15px">
-      <el-col :span="8" style="font-weight: bold;font-size: 16px">
-        城市：
-      </el-col>
-      <el-col :span="16">
-        <input class="inputStyle" v-model="province" @change="onInputChange"/>
-      </el-col>
-    </el-row>
-    <el-row style="text-align: left; margin-left: 30px;margin-top: 15px">
-      <el-col :span="8" style="font-weight: bold;font-size: 16px;padding-top: 5px">
-        生日：
-      </el-col>
-      <el-col :span="16">
-        <el-date-picker
-            v-model="birthday"
-            @change="onInputChange"
-            type="date"
-            :clearable="false"
-            :editable="false"
-            format="yyyy-MM-dd"
-            style="width: 150px"
-            placeholder="选择日期">
-        </el-date-picker>
-      </el-col>
-    </el-row>
-    <el-row style="text-align: left; margin-left: 20px;margin-top: 15px;margin-right: 20px">
-      <el-col :span="8" style="font-weight: bold;font-size: 16px;padding-top: 4px">
-        立志信息：
-      </el-col>
-      <el-col :span="16">
-        <textarea rows="5" class="multiLineInputStyle" v-model="info" @change="onInputChange"/>
-      </el-col>
-    </el-row>
-    <el-row style="text-align: left; margin-left: 20px;margin-top: 15px;margin-right: 20px">
-      <el-col :span="8" style="font-weight: bold;font-size: 16px;padding-top: 4px">
-        实施步骤：
-      </el-col>
-      <el-col :span="16">
-        <textarea :rows="stepInfoRows" class="multiLineInputStyle" v-model="stepInfo" @change="onInputChange"/>
-      </el-col>
-    </el-row>
+    <el-collapse style="float: left; width: 100%;margin-top: 20px;">
+      <el-collapse-item title="基本信息" name="1">
+        <el-row style="text-align: left; margin-left: 30px;margin-top: 15px">
+          <el-col :span="8" style="font-weight: bold;font-size: 16px">
+            性别：
+          </el-col>
+          <el-col :span="16">
+            <el-dropdown trigger="click" @command="handleCommand">
+            <span class="el-dropdown-link" style="font-size: 16px">
+            {{ this.gender === '1' ? "男" : "女" }}<i class="el-icon-arrow-down el-icon--right"></i>
+            </span>
+              <el-dropdown-menu slot="dropdown">
+                <el-dropdown-item command="0">女</el-dropdown-item>
+                <br/>
+                <el-dropdown-item command="1">男</el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
+          </el-col>
+        </el-row>
+        <el-row style="text-align: left; margin-left: 30px;margin-top: 15px">
+          <el-col :span="8" style="font-weight: bold;font-size: 16px">
+            昵称：
+          </el-col>
+          <el-col :span="16">
+            <input class="inputStyle" v-model="nickname" @change="onInputChange"/>
+          </el-col>
+        </el-row>
+        <el-row style="text-align: left; margin-left: 30px;margin-top: 15px">
+          <el-col :span="8" style="font-weight: bold;font-size: 16px">
+            城市：
+          </el-col>
+          <el-col :span="16">
+            <input class="inputStyle" v-model="province" @change="onInputChange"/>
+          </el-col>
+        </el-row>
+        <el-row style="text-align: left; margin-left: 30px;margin-top: 15px">
+          <el-col :span="8" style="font-weight: bold;font-size: 16px;padding-top: 5px">
+            生日：
+          </el-col>
+          <el-col :span="16">
+            <el-date-picker
+                v-model="birthday"
+                @change="onInputChange"
+                type="date"
+                :clearable="false"
+                :editable="false"
+                format="yyyy-MM-dd"
+                style="width: 150px"
+                placeholder="选择日期">
+            </el-date-picker>
+          </el-col>
+        </el-row>
+      </el-collapse-item>
+    </el-collapse>
+    <el-collapse style="float: left; width: 100%">
+      <el-collapse-item title="立志信息" name="2">
+        <textarea rows="5" class="multiLineInputStyle" v-model="info" @change="onInputChange" style="margin-left: 20px;margin-right: 20px"/>
+      </el-collapse-item>
+    </el-collapse>
+    <el-collapse style="float: left; width: 100%">
+      <el-collapse-item title="实施步骤" name="3">
+        <textarea rows="stepInfoRows" class="multiLineInputStyle" v-model="stepInfo" @change="onInputChange" style="margin-left: 20px;margin-right: 20px"/>
+      </el-collapse-item>
+    </el-collapse>
 
-    <div style="text-align: left;margin-left: 5px;color: #e5288a;margin-top: 15px">设置</div>
-    <div style="width: 100%;height: 1px;background-color: #e7ecf1;margin-top: 5px"/>
+    <el-collapse style="float: left; width: 100%">
+      <el-collapse-item title="设置" name="4">
+        <el-row style="text-align: left; margin-left: 30px;margin-top: 20px">
+          <el-col :span="10" style="font-weight: bold">
+            <span>打卡提醒{{ notification ? '已开启' : '已关闭' }}</span>
+          </el-col>
+          <el-col :span="14">
+            <el-switch
+                style="margin-left: 5px"
+                @change="notificationChange"
+                v-model="notification">
+            </el-switch>
+          </el-col>
+        </el-row>
 
-    <el-row style="text-align: left; margin-left: 30px;margin-top: 20px">
-      <el-col :span="10" style="font-weight: bold">
-        <span>打卡提醒{{ notification ? '已开启' : '已关闭' }}</span>
-      </el-col>
-      <el-col :span="14">
-        <el-switch
-            style="margin-left: 5px"
-            @change="notificationChange"
-            v-model="notification">
-        </el-switch>
-      </el-col>
-    </el-row>
+        <el-row style="text-align: left; margin-left: 30px;margin-top: 20px">
+          <el-col :span="10" style="font-weight: bold">
+            <span>内容能否公开</span>
+          </el-col>
+          <el-col :span="14">
+            <el-switch
+                style="margin-left: 5px"
+                @change="openChange"
+                v-model="open">
+            </el-switch>
+          </el-col>
+        </el-row>
 
-    <el-row style="text-align: left; margin-left: 30px;margin-top: 20px">
-      <el-col :span="10" style="font-weight: bold">
-        <span>内容能否公开</span>
-      </el-col>
-      <el-col :span="14">
-        <el-switch
-            style="margin-left: 5px"
-            @change="openChange"
-            v-model="open">
-        </el-switch>
-      </el-col>
-    </el-row>
-
-    <el-row style="text-align: left; margin-left: 30px;margin-top: 20px" @click.native="clearUnionId">
-      <el-col :span="10" style="font-weight: bold">
-        <span>清空缓存</span>
-      </el-col>
-      <el-col :span="14">
-        <i class="el-icon-arrow-right" style="margin-left: 10px"></i>
-      </el-col>
-    </el-row>
+        <el-row style="text-align: left; margin-left: 30px;margin-top: 20px" @click.native="clearUnionId">
+          <el-col :span="10" style="font-weight: bold">
+            <span>清空缓存</span>
+          </el-col>
+          <el-col :span="14">
+            <i class="el-icon-arrow-right" style="margin-left: 10px"></i>
+          </el-col>
+        </el-row>
+      </el-collapse-item>
+    </el-collapse>
+    <el-collapse style="float: left; width: 100%" @click.native="gotoGroup">
+      <el-row>
+        <el-col :span="22">
+          <div style="text-align: left;margin-left: 20px;font-weight: bold;margin-top: 10px;margin-bottom: 10px">我的团队 <i style="color: red;font-size: 15px;font-weight: lighter"> 新*</i></div>
+        </el-col>
+        <el-col :span="2">
+          <div class="el-icon-arrow-right" style="margin-top: 12px;margin-bottom: 10px"></div>
+        </el-col>
+      </el-row>
+    </el-collapse>
 
     <div style="margin-bottom: 150px"/>
   </div>
@@ -291,7 +298,10 @@ export default {
         this.$message.success("更新成功")
       })
     },
-    PYQ() {
+    gotoGroup() {
+      this.$router.push("/group")
+    },
+    gotoHTQ() {
       this.$router.push("/htq")
     },
     getBirthday() {
@@ -432,7 +442,7 @@ a {
   border-right-width:0;
   border-bottom-width:0;
   border-bottom-color:lightgray;
-  width: 100%;
+  width: 90%;
   height: auto;
   font-size: 16px;
   text-align: left;

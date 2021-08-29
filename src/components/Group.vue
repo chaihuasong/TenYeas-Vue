@@ -1,0 +1,405 @@
+<template>
+  <div>
+    <div style="float: left">
+      <el-image style="width: 100%; height: 150px; float: left; z-index: 0"
+                :src="require('../assets/img/group_header.png')"/>
+      <!--      <div style="position: absolute;color: white;font-weight: bold;font-size:20px; margin-top: 15px;margin-left: 85%;"><i class="el-icon-plus" @click="add"></i></div>-->
+      <div style="position: absolute;margin-top: 5px;margin-left: 82%; z-index: 1">
+        <el-popover
+            placement="top"
+            v-model="addListDialogVisible"
+            style="z-index: 2"
+            ref="popover_add">
+          <div style="text-align: center;margin-top: 5px;height: 30px;font-size: 16px" @click="showNewGroupDialog">创建组+</div>
+          <div style="width: 100%;height: 1px;background-color: #d8d9d9"/>
+          <div style="text-align:center;margin-top:5px;height: 30px;font-size: 16px" @click="showJoinGroupDialog">申请入组</div>
+          <el-button class="el-icon-plus" style="background-color: unset;border-width: 0;color: white;" slot="reference"
+                     v-popover:popover_add></el-button>
+        </el-popover>
+      </div>
+    </div>
+
+    <el-dialog title="创建新组" :visible.sync="addGroupFormDialogVisible" customClass="customDialogWidth">
+      <el-form :model="groupInfo">
+        <el-form-item label="组名称" style="margin: 0">
+          <el-input v-model="groupInfo.groupName" autocomplete="off" placeholder="请输入名称"></el-input>
+        </el-form-item>
+        <el-form-item label="备注" style="margin: 0">
+          <el-input type="textarea" v-model="groupInfo.note" autocomplete="off" placeholder="备注" :rows="2"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="addGroupFormDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="addGroup">创 建</el-button>
+      </div>
+    </el-dialog>
+
+    <el-dialog title="申请入组" :visible.sync="joinGroupFormDialogVisible" customClass="customDialogWidth">
+      <el-input v-model="joinGroupId" autocomplete="off" placeholder="请输入组ID"></el-input>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="joinGroupFormDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="joinGroup">申 请</el-button>
+      </div>
+    </el-dialog>
+
+    <div style="float: left;width: 100%">
+      <el-tabs v-model="activeName" @tab-click="handleClick" type="card">
+        <el-tab-pane label="我的分组" name="myGroup">
+          <div v-if="myGroup.length > 0" style="color: #fa02c4;float: left;text-align: left;margin-bottom: 5px;margin-left: 10px">我创建的</div>
+          <el-collapse style="float: left; width: 100%" accordion v-model="myGroupSelectedName">
+            <div v-for="item in myGroup" v-bind:key="item !== null ? item.groupId : null">
+              <el-collapse-item :title="item != null ? item.groupName : null" style="min-height: 50px" :name="item.groupId">
+                <div style="text-align: left;margin-left: 15px">组ID: {{item.groupId}}</div>
+                <div style="float: right;margin-top: 10px">
+                  <el-button @click="modifyGroup(item.groupId, item.groupName, item.note)">修改</el-button>
+                  <el-popconfirm title="确定删除吗？" @confirm="deleteGroup(item.id)">
+                    <el-button slot="reference">删除</el-button>
+                  </el-popconfirm>
+                </div>
+              </el-collapse-item>
+            </div>
+          </el-collapse>
+          <div v-if="myJoinGroup.length > 0" style="color: #fa02c4;float: left;text-align: left;margin-bottom: 5px;margin-left: 10px">我加入的</div>
+          <el-collapse style="float: left; width: 100%" accordion >
+            <div v-for="item in myJoinGroup" v-bind:key="item !== null ? item.groupId : null">
+              <el-collapse-item :title="item != null ? item.groupName : null" style="min-height: 50px">
+                <div style="text-align: left">组ID: {{item.groupId}}</div>
+              </el-collapse-item>
+            </div>
+          </el-collapse>
+          <div v-if="emptyShow">
+            <el-image style="width: 150px; height: 150px; float: left; margin-left: 30%"
+                      :src="require('../assets/img/empty.png')"/>
+            <div style="float: left; width: 80%; margin-left: 10%; color: gray">您还未加入任何组，请点击图片右上角的 “<span
+                style="font-size: 20px">+</span>” 图标创建或点击如下按钮申请入组。
+            </div>
+            <div style="float: left;margin-top: 20px;margin-left: 38%">
+              <el-popover
+                  placement="top"
+                  v-model="joinGroupDialogVisible">
+                <p>请输入您要加入组的ID:</p>
+                <el-input type="text" placeholder="ID" v-model="joinGroupId"></el-input>
+                <div style="text-align: right;margin-top: 5px">
+                  <el-button type="primary" size="mini" @click="joinGroup">申请</el-button>
+                </div>
+                <el-button type="primary" slot="reference">申请入组</el-button>
+              </el-popover>
+            </div>
+          </div>
+        </el-tab-pane>
+        <el-tab-pane label="打卡日志" name="dailyReport">打卡日志</el-tab-pane>
+      </el-tabs>
+    </div>
+
+    <!-- 编辑 -->
+    <el-dialog title="编辑" :visible.sync="editDialogVisible" customClass="customDialogWidth">
+      <el-form ref="form" :model="newGroupInfo" label-width="80px">
+        <el-form-item label="组ID">
+          <el-input v-model="newGroupInfo.groupId" autocomplete="off" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="组名称">
+          <el-input v-model="newGroupInfo.groupName" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="组备注">
+          <el-input v-model="newGroupInfo.note" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="editDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="realModifyGroup">确 定</el-button>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import axios from 'axios'
+import qs from "qs";
+import global from "@/components/Common";
+
+export default {
+  name: 'TenYears',
+  props: {
+    msg: String
+  },
+  data() {
+    return {
+      serverUrl: global.httpUrl,
+      name: '',
+      gender: '1',
+      telephone: '',
+      wechatgroup: '',
+      info: '',
+      stepInfo: '',
+      createDate: '',
+      birthday: '1988',
+      open: '',
+      daixie: '',
+      chujie: '',
+      wechatid: '',
+
+      unionid: '',
+      nickname: '',
+      openid: '',
+      headimgurl: '',
+      country: '',
+      province: '',
+      city: '',
+      language: '',
+      groupId: '',
+      imgUrl: '',
+      groupInfo: {
+        id: '',
+        groupId: '',
+        groupName: '',
+        owner: '',
+        note: '',
+        time: 0
+      },
+      newGroupInfo: {
+        id: '',
+        groupId: '',
+        groupName: '',
+        owner: '',
+        note: '',
+        time: 0
+      },
+      groupsInfo: {
+        id: '',
+        groupId: '',
+        unionId: '',
+        state: '',
+        time: 0
+      },
+      joinGroupId: '',
+
+      editDialogVisible: false,
+      joinGroupDialogVisible: false,
+      addListDialogVisible: false,
+      addGroupFormDialogVisible: false,
+      joinGroupFormDialogVisible: false,
+      myGroup: [],
+      myJoinGroup: [],
+      emptyShow: false,
+      activeName: 'myGroup',
+      myGroupSelectedName: '',
+
+      myGroupQueryDone: false,
+      myGroupsQueryDone: false,
+    };
+  },
+  mounted: function () {
+    document.title = this.$route.meta.title
+    console.log("group getInfo")
+    this.getUserInfo()
+    this.getData()
+  },
+  methods: {
+    deleteGroup(id) {
+      axios({
+        method: "POST",
+        url: this.serverUrl + "deleteGroup?id=" + id,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        console.log("createGroup res:" + res.data)
+        this.$message.success("已删除！")
+        this.getData()
+      })
+    },
+    realModifyGroup() {
+      axios({
+        method: "POST",
+        url: this.serverUrl + "modifyGroup",
+        data: qs.stringify(this.newGroupInfo),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        console.log("createGroup res:" + res.data)
+        this.$message.success("修改成功！")
+        this.editDialogVisible = false
+        this.getData()
+      })
+    },
+    modifyGroup(groupId, groupName, note) {
+      this.editDialogVisible = true
+      this.newGroupInfo.groupId = groupId
+      this.newGroupInfo.groupName = groupName
+      this.newGroupInfo.note = note
+    },
+    handleClick(tab, event) {
+      console.log(tab, event);
+    },
+    joinGroup() {
+      if (this.joinGroupId === null || this.joinGroupId === '') {
+        this.$message.warning("请输入组ID")
+        return;
+      }
+      if (this.joinGroupId.length !== 11 && !this.joinGroupId.startsWith("HTZ-")) {
+        this.$message.warning("请输入正确的组ID")
+        return;
+      }
+      this.joinGroupFormDialogVisible = false
+      this.joinGroupDialogVisible = false
+      let data = qs.stringify({
+        groupId: this.joinGroupId,
+        unionId: this.unionid
+      })
+      axios({
+        method: "POST",
+        url: this.serverUrl + "joinGroup",
+        data: data,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        const result = res.data;
+        console.log("joinGroup res:" + result)
+        if (result !== null) {
+          if (result === 0) {
+            this.$message.success("申请已发出，请等待组长审批")
+          } else if (result === 1) {
+            this.$message.warning("申请的组不存在")
+          } else if (result === 2) {
+            this.$message.warning("你已在组中，无需申请")
+          } else if (result === 3) {
+            this.$message.success("已再次提交申请")
+          } else if (result === 4) {
+            this.$message.warning("无法申请加入自己的组")
+          } else if (result === 5) {
+            this.$message.success("已再次提交申请")
+          }
+        } else {
+          this.$message.error("请求失败，请再次尝试")
+        }
+      })
+    },
+    addGroup() {
+      this.addGroupFormDialogVisible = false
+
+      let data = qs.stringify({
+        groupName: this.groupInfo.groupName,
+        owner: this.unionid,
+        note: this.groupInfo.note,
+        time: new Date().getTime()
+      })
+      axios({
+        method: "POST",
+        url: this.serverUrl + "createGroup",
+        data: data,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        console.log("createGroup res:" + res.data)
+        this.groupInfo.groupId = res.data
+        this.$message.success("已创建成功！")
+        this.getData()
+      })
+    },
+    showNewGroupDialog() {
+      this.addListDialogVisible = false
+      this.addGroupFormDialogVisible = true
+    },
+    showJoinGroupDialog() {
+      this.addListDialogVisible = false
+      this.joinGroupFormDialogVisible = true
+    },
+    getUserInfo() {
+      this.unionid = 'oJuR605rOV6HZP6C3XKD_3_VVxAg'//this.$store.getters.getUnionid
+      if (this.unionid != null) {
+        this.unionid = this.unionid.replace("\"", "").replace("\"", "")
+      }
+      console.log("getData unionid:" + this.unionid)
+      axios({
+        method: "GET",
+        url: this.serverUrl + "getById?id=" + this.unionid,
+        data: null,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        console.log("getById: res:" + res.data)
+        if (res.data != null && res.data !== '') {
+          console.log("getById res:" + res)
+          console.log("getById res.data:" + res.data)
+          this.name = res.data.name
+          this.headimgurl = res.data.headimgurl
+          this.gender = res.data.gender + ''
+          this.wechatgroup = res.data.wechatgroup
+          this.telephone = res.data.telephone
+          this.info = res.data.info
+          this.stepInfo = res.data.stepInfo
+          this.createDate = res.data.createDate
+          this.birthday = res.data.birthday
+          this.open = res.data.open
+          this.daixie = res.data.daixie
+          this.chujie = res.data.chujie
+          this.wechatid = res.data.wechatid
+          this.province = res.data.province
+        }
+      });
+    },
+    getData() {
+      axios({
+        method: "GET",
+        url: this.serverUrl + "findGroupByOwner?unionId=" + this.unionid,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        console.log("mygroup:::" + res.data)
+        this.myGroup = res.data
+        this.myGroupQueryDone = true
+        if (this.myGroupsQueryDone) {
+          this.emptyShow = this.myGroup.length === 0 && this.myJoinGroup.length === 0
+        }
+        console.log("myGroup:" + this.myGroup + " " + (this.myGroup.length))
+      })
+      axios({
+        method: "GET",
+        url: this.serverUrl + "findAllJoinGroups?unionId=" + this.unionid,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        this.myJoinGroup = res.data
+        this.myGroupsQueryDone = true
+        if (this.myGroupQueryDone) {
+          this.emptyShow = this.myGroup.length === 0 && this.myJoinGroup.length === 0
+        }
+        console.log("myJoinGroup:" + this.myJoinGroup + " " + (this.myJoinGroup.length))
+      })
+    },
+  },
+}
+</script>
+
+<style>
+.customDialogWidth{
+  width:74%;
+}
+img {
+  pointer-events: none;
+}
+
+/deep/ .el-radio {
+  white-space: normal;
+}
+
+* {
+  -webkit-touch-callout: none; /*系统默认菜单被禁用*/
+  -webkit-user-select: none; /*webkit浏览器*/
+  -khtml-user-select: none; /*早期浏览器*/
+  -moz-user-select: none; /*火狐*/
+  -ms-user-select: none; /*IE10*/
+  user-select: none;
+}
+
+input, textarea {
+  -webkit-user-select: auto; /*webkit浏览器*/
+  outline: none;
+}
+</style>

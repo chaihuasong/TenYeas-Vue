@@ -22,6 +22,8 @@ import AdminHome from "@/components/admin/AdminHome";
 import DailyReportTab from "@/components/admin/DailyReportTab";
 import Notification from "@/components/settings/Notification";
 import Statistics from "@/components/Statistics";
+import Group from "@/components/Group";
+import GroupTab from "@/components/admin/GroupTab";
 
 Vue.use(Router)
 
@@ -96,6 +98,15 @@ export default new Router({
       component: DailyReport,
       meta: {
         title: '每日打卡',
+        footShow: false,
+      }
+    },
+    {
+      path: '/group',
+      name: 'group',
+      component: Group,
+      meta: {
+        title: '我的团队',
         footShow: false,
       }
     },
@@ -175,6 +186,15 @@ export default new Router({
           path: 'monthInfoList',
           name: 'monthInfoList',
           component: MonthInfoList,
+          meta: {
+            title: '管理后台',
+            footShow: false,
+          },
+        },
+        {
+          path: 'groupList',
+          name: 'groupList',
+          component: GroupTab,
           meta: {
             title: '管理后台',
             footShow: false,
