@@ -47,9 +47,25 @@
         <el-tab-pane label="我的分组" name="myGroup">
           <div v-if="myGroup.length > 0" style="color: #fa02c4;float: left;text-align: left;margin-bottom: 5px;margin-left: 10px">我创建的</div>
           <el-collapse style="float: left; width: 100%" accordion v-model="myGroupSelectedName">
-            <div v-for="item in myGroup" v-bind:key="item !== null ? item.groupId : null">
+            <div v-for="(item, index) in myGroup" v-bind:key="item !== null ? item.groupId : null">
               <el-collapse-item :title="item != null ? item.groupName : null" style="min-height: 50px" :name="item.groupId">
-                <div style="text-align: left;margin-left: 15px">组ID: {{item.groupId}}</div>
+                <div style="text-align: left;margin-left: 30px;font-size: 12px;font-weight: bold">组ID: {{item.groupId}}</div>
+                <div style="text-align: left;margin-left: 30px;font-size: 15px;color: gray" v-for="member in myGroupMember[index]" v-bind:key="member !== null ? member.groupId : null">
+                  <el-row>
+                    <el-col :span="12">
+                      <span>{{member.nickname}}</span>
+                    </el-col>
+                    <el-col :span="6">
+                      <el-button size="mini" style="color: #0d32e8" v-if="member.state === 0" @click="agreeJoinGroup(member.owner, member.groupId, member.unionId)">同意入组</el-button>
+                      <span style="margin-left: 40%;color: #f50c8d;font-size: 12px" v-if="member.state === 2">已拒绝</span>
+                    </el-col>
+                    <el-col :span="6">
+                      <el-button size="mini" style="color: #f50c8d" v-if="member.state === 0" @click="rejectJoinGroup(member.owner, member.groupId, member.unionId)">拒绝入组</el-button>
+                      <span style="margin-left: 40%;color: #2b9a0b;font-size: 12px" v-if="member.state === 1">已加入</span>
+                      <el-button size="mini" style="color: #f50c8d" v-if="member.state === 2" @click="deleteJoinGroup(member.id)">删除</el-button>
+                    </el-col>
+                  </el-row>
+                </div>
                 <div style="float: right;margin-top: 10px">
                   <el-button @click="modifyGroup(item.groupId, item.groupName, item.note)">修改</el-button>
                   <el-popconfirm title="确定删除吗？" @confirm="deleteGroup(item.id)">
@@ -180,6 +196,7 @@ export default {
       joinGroupFormDialogVisible: false,
       myGroup: [],
       myJoinGroup: [],
+      myGroupMember: [],
       emptyShow: false,
       activeName: 'myGroup',
       myGroupSelectedName: '',
@@ -195,6 +212,45 @@ export default {
     this.getData()
   },
   methods: {
+    deleteJoinGroup(id) {
+      axios({
+        method: "POST",
+        url: this.serverUrl + "deleteGroups?id=" + id,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        console.log("createGroup res:" + res.data)
+        this.$message.success("已删除！")
+        this.getData()
+      })
+    },
+    agreeJoinGroup(owner, groupId, unionId) {
+      axios({
+        method: "POST",
+        url: this.serverUrl + "agreeGroup?owner=" + owner + "&groupId=" + groupId + "&unionId=" + unionId,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        console.log("createGroup res:" + res.data)
+        this.$message.success("已同意入组！")
+        this.getData()
+      })
+    },
+    rejectJoinGroup(owner, groupId, unionId) {
+      axios({
+        method: "POST",
+        url: this.serverUrl + "rejectGroup?owner=" + owner + "&groupId=" + groupId + "&unionId=" + unionId,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        console.log("createGroup res:" + res.data)
+        this.$message.warning("已拒绝入组！")
+        this.getData()
+      })
+    },
     deleteGroup(id) {
       axios({
         method: "POST",
@@ -357,6 +413,21 @@ export default {
           this.emptyShow = this.myGroup.length === 0 && this.myJoinGroup.length === 0
         }
         console.log("myGroup:" + this.myGroup + " " + (this.myGroup.length))
+        if (this.myGroup.length > 0) {
+          axios({
+            method: "GET",
+            url: this.serverUrl + "findJoinGroups?unionId=" + this.unionid,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          }).then((res) => {
+            this.myGroupMember = res.data
+            console.log("myGroupMember:" + this.myGroupMember + " " + (this.myGroupMember.length))
+            console.log("myGroupMember:" + this.myGroupMember[0])
+            console.log("myGroupMember:" + this.myGroupMember[1])
+            console.log("myGroupMember:" + this.myGroupMember[2])
+          })
+        }
       })
       axios({
         method: "GET",

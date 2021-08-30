@@ -1,15 +1,29 @@
 <template>
   <div>
     <el-table :data="tableData.slice((currentPage-1)*pageSize,currentPage*pageSize)">
-      <el-table-column prop="id" label="id" width="80">
+      <el-table-column prop="id" label="id" width="50">
       </el-table-column>
       <el-table-column prop="groupId" label="组ID" width="120">
       </el-table-column>
-      <el-table-column prop="unionId" label="组员" width="120">
+      <el-table-column prop="groupName" label="组ID" width="120">
       </el-table-column>
-      <el-table-column prop="state" label="状态" width="250">
+      <el-table-column prop="owner" label="创建者ID" width="150">
       </el-table-column>
-      <el-table-column prop="time" label="时间" width="250">
+      <el-table-column prop="ownerName" label="创建者姓名" width="100">
+      </el-table-column>
+      <el-table-column prop="ownerNickName" label="创建者昵称" width="100">
+      </el-table-column>
+      <el-table-column prop="unionId" label="组员ID" width="150">
+      </el-table-column>
+      <el-table-column prop="name" label="组员姓名" width="100">
+      </el-table-column>
+      <el-table-column prop="nickname" label="组员昵称" width="100">
+      </el-table-column>
+      <el-table-column prop="state" label="组员状态" width="80">
+      </el-table-column>
+      <el-table-column prop="note" label="备注" width="150">
+      </el-table-column>
+      <el-table-column prop="time" label="时间" width="130">
       </el-table-column>
       <el-table-column label="操作">
         <template slot-scope="scope">
@@ -127,7 +141,7 @@ export default {
     getData() {
       axios({
         method: "GET",
-        url: this.serverUrl + "findAllGroups",
+        url: this.serverUrl + "findAllJoinedGroups",
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -181,7 +195,7 @@ export default {
             })
             axios({
               method: "POST",
-              url: this.serverUrl + "deleteGroup",
+              url: this.serverUrl + "deleteGroups",
               data: data,
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
