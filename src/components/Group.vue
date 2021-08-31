@@ -50,7 +50,7 @@
             <div v-for="(item, index) in myGroup" v-bind:key="item !== null ? item.groupId : null">
               <el-collapse-item :title="item != null ? item.groupName : null" style="min-height: 50px" :name="item.groupId">
                 <div style="text-align: left;margin-left: 30px;font-size: 12px;font-weight: bold">组ID: {{item.groupId}}</div>
-                <div style="text-align: left;margin-left: 30px;font-size: 15px;color: gray" v-for="member in myGroupMember[index]" v-bind:key="member !== null ? member.groupId : null">
+                <div style="text-align: left;margin-left: 30px;font-size: 16px;color: gray" v-for="member in myGroupMember[index]" v-bind:key="member !== null ? member.groupId : null">
                   <el-row>
                     <el-col :span="12">
                       <span>{{member.nickname}}</span>
@@ -76,10 +76,13 @@
             </div>
           </el-collapse>
           <div v-if="myJoinGroup.length > 0" style="color: #fa02c4;float: left;text-align: left;margin-bottom: 5px;margin-left: 10px">我加入的</div>
-          <el-collapse style="float: left; width: 100%" accordion >
-            <div v-for="item in myJoinGroup" v-bind:key="item !== null ? item.groupId : null">
-              <el-collapse-item :title="item != null ? item.groupName : null" style="min-height: 50px">
-                <div style="text-align: left">组ID: {{item.groupId}}</div>
+          <el-collapse style="float: left; width: 100%" accordion v-if="myJoinGroup.length > 0">
+            <div v-for="(item, index) in myJoinGroup" v-bind:key="item !== null && item[0] !== null ? item[0].groupId : null">
+              <el-collapse-item :title="item != null && item[0] != null ? item[0].groupName : null" style="min-height: 50px">
+                <div style="text-align: left;margin-left: 30px;font-size: 12px;font-weight: bold">组ID: {{item[0].groupId}}</div>
+                <div style="text-align: left;margin-left: 30px;font-size: 16px;color: gray" v-for="member in myJoinGroup[index]" v-bind:key="member !== null ? member.groupId : null">
+                  <span>{{member.nickname}}</span>
+                </div>
               </el-collapse-item>
             </div>
           </el-collapse>
@@ -103,7 +106,23 @@
             </div>
           </div>
         </el-tab-pane>
-        <el-tab-pane label="打卡日志" name="dailyReport">打卡日志</el-tab-pane>
+        <el-tab-pane label="打卡日志" name="dailyReport">
+
+          <el-card style="float: left;width: 100%;margin-top: 5px">
+            <div v-for="(data) in allMemberReports" :key='data.day'>
+              <div style="float: left;width: 100%">
+                <div style="float: left;width: 15%;">
+                  <el-image style="width: 50px; height: 50px"
+                            :src="data.headimgurl"></el-image>
+                </div>
+                <div style="float: left;margin-left:10px;width:80%;text-align: left;">{{data.nickname}}</div>
+                <div style="float: left;margin-left: 50px;margin-top:0px;margin-bottom: 20px">
+                  {{data}}
+                </div>
+              </div>
+            </div>
+          </el-card>
+        </el-tab-pane>
       </el-tabs>
     </div>
 
@@ -203,6 +222,7 @@ export default {
 
       myGroupQueryDone: false,
       myGroupsQueryDone: false,
+      allMemberReports: [],
     };
   },
   mounted: function () {
@@ -210,8 +230,25 @@ export default {
     console.log("group getInfo")
     this.getUserInfo()
     this.getData()
+    this.getGroupReports()
   },
   methods: {
+    getGroupReports() {
+      axios({
+        method: "GET",
+        url: this.serverUrl + "findAllMemberReportByUser?unionId=" + this.unionid,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        this.allMemberReports = res.data
+        console.log("allMemberReports:" + this.allMemberReports.length)
+        console.log("allMemberReports:" + this.allMemberReports)
+        for (let i = 0; i < this.allMemberReports.length; i++) {
+          console.log(this.allMemberReports[i])
+        }
+      })
+    },
     deleteJoinGroup(id) {
       axios({
         method: "POST",
@@ -423,9 +460,9 @@ export default {
           }).then((res) => {
             this.myGroupMember = res.data
             console.log("myGroupMember:" + this.myGroupMember + " " + (this.myGroupMember.length))
-            console.log("myGroupMember:" + this.myGroupMember[0])
-            console.log("myGroupMember:" + this.myGroupMember[1])
-            console.log("myGroupMember:" + this.myGroupMember[2])
+            for (let i = 0; i < this.myGroupMember.length; i++) {
+              console.log("myGroupMember:" + this.myGroupMember[i])
+            }
           })
         }
       })
@@ -442,6 +479,9 @@ export default {
           this.emptyShow = this.myGroup.length === 0 && this.myJoinGroup.length === 0
         }
         console.log("myJoinGroup:" + this.myJoinGroup + " " + (this.myJoinGroup.length))
+        for (let i = 0; i < this.myJoinGroup.length; i++) {
+          console.log("myJoinGroup:" + this.myJoinGroup[i])
+        }
       })
     },
   },
