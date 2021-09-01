@@ -476,10 +476,10 @@ export default {
             }
           }).then((res) => {
             this.myGroupMember = res.data
-            console.log("myGroupMember:" + this.myGroupMember + " " + (this.myGroupMember.length))
-            for (let i = 0; i < this.myGroupMember.length; i++) {
-              console.log("myGroupMember:" + this.myGroupMember[i])
-            }
+            // console.log("myGroupMember:" + this.myGroupMember + " " + (this.myGroupMember.length))
+            // for (let i = 0; i < this.myGroupMember.length; i++) {
+            //   console.log("myGroupMember:" + this.myGroupMember[i])
+            // }
           })
         }
       })
@@ -495,10 +495,10 @@ export default {
         if (this.myGroupQueryDone) {
           this.emptyShow = this.myGroup.length === 0 && this.myJoinGroup.length === 0
         }
-        console.log("myJoinGroup:" + this.myJoinGroup + " " + (this.myJoinGroup.length))
-        for (let i = 0; i < this.myJoinGroup.length; i++) {
-          console.log("myJoinGroup:" + this.myJoinGroup[i])
-        }
+        // console.log("myJoinGroup:" + this.myJoinGroup + " " + (this.myJoinGroup.length))
+        // for (let i = 0; i < this.myJoinGroup.length; i++) {
+        //   console.log("myJoinGroup:" + this.myJoinGroup[i])
+        // }
       })
     },
   },
