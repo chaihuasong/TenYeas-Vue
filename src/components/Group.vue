@@ -2,8 +2,7 @@
   <div>
     <div style="float: left">
       <el-image style="width: 100%; height: 150px; float: left; z-index: 0"
-                :src="require('../assets/img/group_header.png')"/>
-      <!--      <div style="position: absolute;color: white;font-weight: bold;font-size:20px; margin-top: 15px;margin-left: 85%;"><i class="el-icon-plus" @click="add"></i></div>-->
+                :src="'http://htzchina.org/imgs/group_header.png'"/>
       <div style="position: absolute;margin-top: 5px;margin-left: 82%; z-index: 1">
         <el-popover
             placement="top"
@@ -13,7 +12,7 @@
           <div style="text-align: center;margin-top: 5px;height: 30px;font-size: 16px" @click="showNewGroupDialog">创建组+</div>
           <div style="width: 100%;height: 1px;background-color: #d8d9d9"/>
           <div style="text-align:center;margin-top:5px;height: 30px;font-size: 16px" @click="showJoinGroupDialog">申请入组</div>
-          <el-button class="el-icon-plus" style="background-color: unset;border-width: 0;color: white;" slot="reference"
+          <el-button class="el-icon-plus" style="background-color: unset;border-width: 0;color: white; font-weight: bold;font-size: 15px" slot="reference"
                      v-popover:popover_add></el-button>
         </el-popover>
       </div>
