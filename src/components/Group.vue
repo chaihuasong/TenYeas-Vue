@@ -43,7 +43,7 @@
     </el-dialog>
 
     <div style="float: left;width: 100%">
-      <el-tabs v-model="activeName" @tab-click="handleClick" type="card">
+      <el-tabs v-model="activeName" type="card">
         <el-tab-pane label="我的分组" name="myGroup">
           <div v-if="myGroup.length > 0" style="color: #fa02c4;float: left;text-align: left;margin-bottom: 5px;margin-left: 10px">我创建的</div>
           <el-collapse style="float: left; width: 100%" accordion v-model="myGroupSelectedName">
@@ -115,11 +115,31 @@
                   <el-image style="width: 50px; height: 50px"
                             :src="data.headimgurl"></el-image>
                 </div>
-                <div style="float: left;margin-left:10px;width:80%;text-align: left;">{{data.nickname}}</div>
-                <div style="float: left;margin-left: 50px;margin-top:0px;margin-bottom: 20px">
-                  {{data}}
+                <div style="float: left;margin-left:15px;width:80%;text-align: left;color: #2b69c9;font-weight: bold">{{data.nickname}}</div>
+                <div style="float: left;margin-left: 20px;margin-top:5px;margin-bottom: 20px;text-align: left">
+                  <div style="color: #797a7b">{{data.date.substring(5)}} 打卡：</div>
+                  <div v-if="data.value1 != null && data.value1 !== '0'" style="color: #797a7b;margin-top: 5px">{{data.template2 != null ? data.template1.replace("_", data.value1) : ""}}</div>
+                  <div v-if="data.value2 != null && data.value2 !== '0'" style="color: #797a7b">{{data.template2 != null ? data.template2.replace("_", data.value2) : ""}}</div>
+                  <div v-if="data.value3 != null && data.value3 !== '0'" style="color: #797a7b">{{data.template3 != null ? data.template3.replace("_", data.value3) : ""}}</div>
+                  <div v-if="data.value4 != null && data.value4 !== '0'" style="color: #797a7b">{{data.template4 != null ? data.template4.replace("_", data.value4) : ""}}</div>
+                  <div v-if="data.value5 != null && data.value5 !== '0'" style="color: #797a7b">{{data.template5 != null ? data.template5.replace("_", data.value5) : ""}}</div>
+                  <div v-if="data.value6 != null && data.value6 !== '0'" style="color: #797a7b">{{data.template6 != null ? data.template6.replace("_", data.value6) : ""}}</div>
+                  <div v-if="data.value7 != null && data.value7 !== '0'" style="color: #797a7b">{{data.template7 != null ? data.template7.replace("_", data.value7) : ""}}</div>
+                  <div v-if="data.value8 != null && data.value8 !== '0'" style="color: #797a7b">{{data.template8 != null ? data.template8.replace("_", data.value8) : ""}}</div>
+                  <div v-if="data.value9 != null && data.value9 !== '0'" style="color: #797a7b">{{data.template9 != null ? data.template9.replace("_", data.value9) : ""}}</div>
+                  <div v-if="data.value10 != null && data.value10 !== '0'" style="color: #797a7b">{{data.template10 != null ? data.template10.replace("_", data.value10) : ""}}</div>
+                  <div v-if="data.value11 != null && data.value11 !== '0'" style="color: #797a7b">{{data.template11 != null ? data.template11.replace("_", data.value11) : ""}}</div>
+                  <div v-if="data.value12 != null && data.value12 !== '0'" style="color: #797a7b">{{data.template12 != null ? data.template12.replace("_", data.value12) : ""}}</div>
+                  <div v-if="data.value13 != null && data.value13 !== '0'" style="color: #797a7b">{{data.template13 != null ? data.template13.replace("_", data.value13) : ""}}</div>
+                  <div v-if="data.value14 != null && data.value14 !== '0'" style="color: #797a7b">{{data.template14 != null ? data.template14.replace("_", data.value14) : ""}}</div>
+                  <div v-if="data.value15 != null && data.value15 !== '0'" style="color: #797a7b">{{data.template15 != null ? data.template15.replace("_", data.value15) : ""}}</div>
                 </div>
               </div>
+            </div>
+            <div v-if="allMemberReports === null || allMemberReports.length == 0">
+              <el-image style="width: 150px; height: 150px; float: left; margin-left: 30%"
+                        :src="require('../assets/img/empty.png')"/>
+              <div style="float: left; width: 80%; margin-left: 10%;margin-bottom: 20%; color: gray">未查到任何打卡信息</div>
             </div>
           </el-card>
         </el-tab-pane>
@@ -242,11 +262,11 @@ export default {
         }
       }).then((res) => {
         this.allMemberReports = res.data
-        console.log("allMemberReports:" + this.allMemberReports.length)
-        console.log("allMemberReports:" + this.allMemberReports)
-        for (let i = 0; i < this.allMemberReports.length; i++) {
-          console.log(this.allMemberReports[i])
-        }
+        // console.log("allMemberReports:" + this.allMemberReports.length)
+        // console.log("allMemberReports:" + this.allMemberReports)
+        // for (let i = 0; i < this.allMemberReports.length; i++) {
+        //   console.log(this.allMemberReports[i])
+        // }
       })
     },
     deleteJoinGroup(id) {
@@ -321,9 +341,6 @@ export default {
       this.newGroupInfo.groupId = groupId
       this.newGroupInfo.groupName = groupName
       this.newGroupInfo.note = note
-    },
-    handleClick(tab, event) {
-      console.log(tab, event);
     },
     joinGroup() {
       if (this.joinGroupId === null || this.joinGroupId === '') {
@@ -401,7 +418,7 @@ export default {
       this.joinGroupFormDialogVisible = true
     },
     getUserInfo() {
-      this.unionid = 'oJuR605rOV6HZP6C3XKD_3_VVxAg'//this.$store.getters.getUnionid
+      this.unionid = this.$store.getters.getUnionid
       if (this.unionid != null) {
         this.unionid = this.unionid.replace("\"", "").replace("\"", "")
       }
