@@ -1,13 +1,14 @@
 <template>
   <div>
     <div style="float: left">
-      <el-image style="width: 100%; height: 150px; float: left; z-index: 0"
-                :src="'http://htzchina.org/imgs/group_header.png'"/>
+      <div style="width: 96%; height: 150px;position: absolute">
+        <el-image :src="'http://htzchina.org/imgs/group_header.png'"
+                  fit="cover"/>
+      </div>
       <div style="position: absolute;margin-top: 5px;margin-left: 82%; z-index: 1">
         <el-popover
             placement="top"
             v-model="addListDialogVisible"
-            style="z-index: 2"
             ref="popover_add">
           <div style="text-align: center;margin-top: 5px;height: 30px;font-size: 16px" @click="showNewGroupDialog">创建组+</div>
           <div style="width: 100%;height: 1px;background-color: #d8d9d9"/>
@@ -41,7 +42,7 @@
       </div>
     </el-dialog>
 
-    <div style="float: left;width: 100%">
+    <div style="float: left;width: 100%;margin-top: 180px">
       <el-tabs v-model="activeName" type="card">
         <el-tab-pane label="我的分组" name="myGroup">
           <div v-if="myGroup.length > 0" style="color: #fa02c4;float: left;text-align: left;margin-bottom: 5px;margin-left: 10px">我创建的</div>
@@ -89,7 +90,7 @@
             <el-image style="width: 150px; height: 150px; float: left; margin-left: 30%"
                       :src="require('../assets/img/empty.png')"/>
             <div style="float: left; width: 80%; margin-left: 10%; color: gray">您还未加入任何组，请点击图片右上角的 “<span
-                style="font-size: 20px">+</span>” 图标创建或点击如下按钮申请入组。
+                style="font-size: 20px;color: gray">+</span>” 图标创建或点击如下按钮申请入组。
             </div>
             <div style="float: left;margin-top: 20px;margin-left: 38%">
               <el-popover
