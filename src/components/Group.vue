@@ -49,29 +49,70 @@
           <el-collapse style="float: left; width: 100%" accordion v-model="myGroupSelectedName">
             <div v-for="(item, index) in myGroup" v-bind:key="item !== null ? item.groupId : null">
               <el-collapse-item :title="item != null ? item.groupName : null" style="min-height: 50px" :name="item.groupId">
-                <div style="text-align: left;margin-left: 30px;font-size: 12px;font-weight: bold">组ID: {{item.groupId}}</div>
-                <div style="text-align: left;margin-left: 30px;font-size: 16px;color: gray" v-for="member in myGroupMember[index]" v-bind:key="member !== null ? member.groupId : null">
-                  <el-row>
-                    <el-col :span="12">
-                      <span>{{member.nickname}}</span>
-                    </el-col>
-                    <el-col :span="6">
-                      <el-button size="mini" style="color: #0d32e8" v-if="member.state === 0" @click="agreeJoinGroup(member.owner, member.groupId, member.unionId)">同意入组</el-button>
-                      <span style="margin-left: 40%;color: #f50c8d;font-size: 12px" v-if="member.state === 2">已拒绝</span>
-                    </el-col>
-                    <el-col :span="6">
-                      <el-button size="mini" style="color: #f50c8d" v-if="member.state === 0" @click="rejectJoinGroup(member.owner, member.groupId, member.unionId)">拒绝入组</el-button>
-                      <span style="margin-left: 40%;color: #2b9a0b;font-size: 12px" v-if="member.state === 1">已加入</span>
-                      <el-button size="mini" style="color: #f50c8d" v-if="member.state === 2" @click="deleteJoinGroup(member.id)">删除</el-button>
-                    </el-col>
-                  </el-row>
-                </div>
-                <div style="float: right;margin-top: 10px">
-                  <el-button @click="modifyGroup(item.groupId, item.groupName, item.note)">修改</el-button>
-                  <el-popconfirm title="确定删除吗？" @confirm="deleteGroup(item.id)">
-                    <el-button slot="reference">删除</el-button>
-                  </el-popconfirm>
-                </div>
+
+                <el-collapse>
+
+                  <el-collapse-item :title="memberInfo">
+                    <el-row>
+                    <div style="float:left; text-align: left;margin-left: 30px;font-size: 13px;font-weight: bold; margin-top: 3px">组ID: {{item.groupId}}</div>
+                    <div style="float: right; margin-right: 20px">
+                      <el-button size="mini" @click="modifyGroup(item.groupId, item.groupName, item.note)">修改</el-button>
+                      <el-popconfirm title="确定删除吗？" @confirm="deleteGroup(item.id)">
+                        <el-button size="mini" slot="reference">删除</el-button>
+                      </el-popconfirm>
+                    </div>
+                    </el-row>
+                    <div style="text-align: left;margin-left: 30px; margin-top: 5px; font-size: 16px;color: gray" v-for="member in myGroupMember[index]" v-bind:key="member !== null ? member.groupId : null">
+                      <el-row>
+                        <el-col :span="12">
+                          <span>{{member.nickname}}</span>
+                        </el-col>
+                        <el-col :span="6">
+                          <el-button size="mini" style="color: #0d32e8" v-if="member.state === 0" @click="agreeJoinGroup(member.owner, member.groupId, member.unionId)">同意入组</el-button>
+                          <span style="margin-left: 40%;color: #f50c8d;font-size: 12px" v-if="member.state === 2">已拒绝</span>
+                        </el-col>
+                        <el-col :span="6">
+                          <el-button size="mini" style="color: #f50c8d" v-if="member.state === 0" @click="rejectJoinGroup(member.owner, member.groupId, member.unionId)">拒绝入组</el-button>
+                          <span style="margin-left: 40%;color: #2b9a0b;font-size: 12px" v-if="member.state === 1">已加入</span>
+                          <el-button size="mini" style="color: #f50c8d" v-if="member.state === 2" @click="deleteJoinGroup(member.id)">删除</el-button>
+                        </el-col>
+                      </el-row>
+                    </div>
+                  </el-collapse-item>
+                  <el-collapse-item :title="reportInfo">
+
+                    <div v-for="(data) in myGroupMemberReports[item.groupId]" :key='data.day'>
+                      <div style="float: left;width: 100%;margin-left: 30px">
+                        <div style="float: left;width: 15%;">
+                          <el-image style="width: 50px; height: 50px"
+                                    :src="data.headimgurl"></el-image>
+                        </div>
+                        <div style="float: left;margin-left:15px;width:80%;text-align: left;color: #2b69c9;font-weight: bold">{{data.nickname}}</div>
+                        <div style="float: left;margin-left: 20px;margin-top:5px;margin-bottom: 20px;text-align: left">
+                          <div style="color: #797a7b">{{data.date.substring(5)}} 打卡：</div>
+                          <div v-if="data.value1 != null && data.value1 !== '0'" style="color: #797a7b;margin-top: 5px">{{data.template2 != null ? data.template1.replace("_", data.value1) : ""}}</div>
+                          <div v-if="data.value2 != null && data.value2 !== '0'" style="color: #797a7b">{{data.template2 != null ? data.template2.replace("_", data.value2) : ""}}</div>
+                          <div v-if="data.value3 != null && data.value3 !== '0'" style="color: #797a7b">{{data.template3 != null ? data.template3.replace("_", data.value3) : ""}}</div>
+                          <div v-if="data.value4 != null && data.value4 !== '0'" style="color: #797a7b">{{data.template4 != null ? data.template4.replace("_", data.value4) : ""}}</div>
+                          <div v-if="data.value5 != null && data.value5 !== '0'" style="color: #797a7b">{{data.template5 != null ? data.template5.replace("_", data.value5) : ""}}</div>
+                          <div v-if="data.value6 != null && data.value6 !== '0'" style="color: #797a7b">{{data.template6 != null ? data.template6.replace("_", data.value6) : ""}}</div>
+                          <div v-if="data.value7 != null && data.value7 !== '0'" style="color: #797a7b">{{data.template7 != null ? data.template7.replace("_", data.value7) : ""}}</div>
+                          <div v-if="data.value8 != null && data.value8 !== '0'" style="color: #797a7b">{{data.template8 != null ? data.template8.replace("_", data.value8) : ""}}</div>
+                          <div v-if="data.value9 != null && data.value9 !== '0'" style="color: #797a7b">{{data.template9 != null ? data.template9.replace("_", data.value9) : ""}}</div>
+                          <div v-if="data.value10 != null && data.value10 !== '0'" style="color: #797a7b">{{data.template10 != null ? data.template10.replace("_", data.value10) : ""}}</div>
+                          <div v-if="data.value11 != null && data.value11 !== '0'" style="color: #797a7b">{{data.template11 != null ? data.template11.replace("_", data.value11) : ""}}</div>
+                          <div v-if="data.value12 != null && data.value12 !== '0'" style="color: #797a7b">{{data.template12 != null ? data.template12.replace("_", data.value12) : ""}}</div>
+                          <div v-if="data.value13 != null && data.value13 !== '0'" style="color: #797a7b">{{data.template13 != null ? data.template13.replace("_", data.value13) : ""}}</div>
+                          <div v-if="data.value14 != null && data.value14 !== '0'" style="color: #797a7b">{{data.template14 != null ? data.template14.replace("_", data.value14) : ""}}</div>
+                          <div v-if="data.value15 != null && data.value15 !== '0'" style="color: #797a7b">{{data.template15 != null ? data.template15.replace("_", data.value15) : ""}}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </el-collapse-item>
+
+                </el-collapse>
+
               </el-collapse-item>
             </div>
           </el-collapse>
@@ -79,10 +120,50 @@
           <el-collapse style="float: left; width: 100%" accordion v-if="myJoinGroup.length > 0">
             <div v-for="(item, index) in myJoinGroup" v-bind:key="item !== null && item[0] !== null ? item[0].groupId : null">
               <el-collapse-item :title="item != null && item[0] != null ? item[0].groupName : null" style="min-height: 50px">
-                <div style="text-align: left;margin-left: 30px;font-size: 12px;font-weight: bold">组ID: {{item[0].groupId}}</div>
-                <div style="text-align: left;margin-left: 30px;font-size: 16px;color: gray" v-for="member in myJoinGroup[index]" v-bind:key="member !== null ? member.groupId : null">
-                  <span>{{member.nickname}}</span>
-                </div>
+
+                <el-collapse>
+
+                  <el-collapse-item :title="memberInfo">
+                    <el-row>
+                      <el-col :span="12"><div style="text-align: left;margin-left: 30px;font-size: 13px;font-weight: bold; margin-top: 3px">组ID: {{item[0].groupId}}</div></el-col>
+                      <el-col :span="12"><div style="text-align: left;margin-left: 30px;font-size: 13px;font-weight: bold; margin-top: 3px">组长: {{item[0].ownerName}}</div></el-col>
+                    </el-row>
+                    <div style="text-align: left;margin-left: 30px; margin-top: 5px; font-size: 16px;color: gray" v-for="member in myJoinGroup[index]" v-bind:key="member !== null ? member.groupId : null">
+                      <span>{{member.nickname}}</span>
+                    </div>
+                  </el-collapse-item>
+                  <el-collapse-item :title="reportInfo">
+
+                    <div v-for="(data) in myJoinGroupMemberReports[item[0].groupId]" :key='data.day'>
+                      <div style="float: left;width: 100%;margin-left: 30px">
+                        <div style="float: left;width: 15%;">
+                          <el-image style="width: 50px; height: 50px"
+                                    :src="data.headimgurl"></el-image>
+                        </div>
+                        <div style="float: left;margin-left:15px;width:80%;text-align: left;color: #2b69c9;font-weight: bold">{{data.nickname}}</div>
+                        <div style="float: left;margin-left: 20px;margin-top:5px;margin-bottom: 20px;text-align: left">
+                          <div style="color: #797a7b">{{data.date.substring(5)}} 打卡：</div>
+                          <div v-if="data.value1 != null && data.value1 !== '0'" style="color: #797a7b;margin-top: 5px">{{data.template2 != null ? data.template1.replace("_", data.value1) : ""}}</div>
+                          <div v-if="data.value2 != null && data.value2 !== '0'" style="color: #797a7b">{{data.template2 != null ? data.template2.replace("_", data.value2) : ""}}</div>
+                          <div v-if="data.value3 != null && data.value3 !== '0'" style="color: #797a7b">{{data.template3 != null ? data.template3.replace("_", data.value3) : ""}}</div>
+                          <div v-if="data.value4 != null && data.value4 !== '0'" style="color: #797a7b">{{data.template4 != null ? data.template4.replace("_", data.value4) : ""}}</div>
+                          <div v-if="data.value5 != null && data.value5 !== '0'" style="color: #797a7b">{{data.template5 != null ? data.template5.replace("_", data.value5) : ""}}</div>
+                          <div v-if="data.value6 != null && data.value6 !== '0'" style="color: #797a7b">{{data.template6 != null ? data.template6.replace("_", data.value6) : ""}}</div>
+                          <div v-if="data.value7 != null && data.value7 !== '0'" style="color: #797a7b">{{data.template7 != null ? data.template7.replace("_", data.value7) : ""}}</div>
+                          <div v-if="data.value8 != null && data.value8 !== '0'" style="color: #797a7b">{{data.template8 != null ? data.template8.replace("_", data.value8) : ""}}</div>
+                          <div v-if="data.value9 != null && data.value9 !== '0'" style="color: #797a7b">{{data.template9 != null ? data.template9.replace("_", data.value9) : ""}}</div>
+                          <div v-if="data.value10 != null && data.value10 !== '0'" style="color: #797a7b">{{data.template10 != null ? data.template10.replace("_", data.value10) : ""}}</div>
+                          <div v-if="data.value11 != null && data.value11 !== '0'" style="color: #797a7b">{{data.template11 != null ? data.template11.replace("_", data.value11) : ""}}</div>
+                          <div v-if="data.value12 != null && data.value12 !== '0'" style="color: #797a7b">{{data.template12 != null ? data.template12.replace("_", data.value12) : ""}}</div>
+                          <div v-if="data.value13 != null && data.value13 !== '0'" style="color: #797a7b">{{data.template13 != null ? data.template13.replace("_", data.value13) : ""}}</div>
+                          <div v-if="data.value14 != null && data.value14 !== '0'" style="color: #797a7b">{{data.template14 != null ? data.template14.replace("_", data.value14) : ""}}</div>
+                          <div v-if="data.value15 != null && data.value15 !== '0'" style="color: #797a7b">{{data.template15 != null ? data.template15.replace("_", data.value15) : ""}}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </el-collapse-item>
+                </el-collapse>
               </el-collapse-item>
             </div>
           </el-collapse>
@@ -106,10 +187,10 @@
             </div>
           </div>
         </el-tab-pane>
-        <el-tab-pane label="打卡日志" name="dailyReport">
+        <el-tab-pane label="我的打卡" name="dailyReport">
 
           <el-card style="float: left;width: 100%;margin-top: 5px">
-            <div v-for="(data) in allMemberReports" :key='data.day'>
+            <div v-for="(data) in myReports" :key='data.day'>
               <div style="float: left;width: 100%">
                 <div style="float: left;width: 15%;">
                   <el-image style="width: 50px; height: 50px"
@@ -136,7 +217,7 @@
                 </div>
               </div>
             </div>
-            <div v-if="allMemberReports === null || allMemberReports.length == 0">
+            <div v-if="myReports === null || myReports.length == 0">
               <el-image style="width: 150px; height: 150px; float: left; margin-left: 30%"
                         :src="require('../assets/img/empty.png')"/>
               <div style="float: left; width: 80%; margin-left: 10%;margin-bottom: 20%; color: gray">未查到任何打卡信息</div>
@@ -180,6 +261,8 @@ export default {
   data() {
     return {
       serverUrl: global.httpUrl,
+      memberInfo: '组信息',
+      reportInfo: '打卡信息',
       name: '',
       gender: '1',
       telephone: '',
@@ -236,6 +319,8 @@ export default {
       myGroup: [],
       myJoinGroup: [],
       myGroupMember: [],
+      myGroupMemberReports: {},
+      myJoinGroupMemberReports: {},
       emptyShow: false,
       activeName: 'myGroup',
       myGroupSelectedName: '',
@@ -243,6 +328,7 @@ export default {
       myGroupQueryDone: false,
       myGroupsQueryDone: false,
       allMemberReports: [],
+      myReports: [],
     };
   },
   mounted: function () {
@@ -250,9 +336,25 @@ export default {
     console.log("group getInfo")
     this.getUserInfo()
     this.getData()
-    this.getGroupReports()
+    this.getMyReports()
   },
   methods: {
+    getMyReports() {
+      axios({
+        method: "GET",
+        url: this.serverUrl + "findReportByUser?unionId=" + this.unionid,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        this.myReports = res.data
+        console.log("myReports:" + this.myReports.length)
+        console.log("myReports:" + this.myReports)
+        for (let i = 0; i < this.myReports.length; i++) {
+          console.log(this.myReports[i])
+        }
+      })
+    },
     getGroupReports() {
       axios({
         method: "GET",
@@ -453,6 +555,7 @@ export default {
       });
     },
     getData() {
+      //获取我创建的组
       axios({
         method: "GET",
         url: this.serverUrl + "findGroupByOwner?unionId=" + this.unionid,
@@ -466,8 +569,9 @@ export default {
         if (this.myGroupsQueryDone) {
           this.emptyShow = this.myGroup.length === 0 && this.myJoinGroup.length === 0
         }
-        console.log("myGroup:" + this.myGroup + " " + (this.myGroup.length))
+        //console.log("myGroup:" + this.myGroup + " " + (this.myGroup.length))
         if (this.myGroup.length > 0) {
+          //查找我的组员
           axios({
             method: "GET",
             url: this.serverUrl + "findJoinGroups?unionId=" + this.unionid,
@@ -481,8 +585,21 @@ export default {
             //   console.log("myGroupMember:" + this.myGroupMember[i])
             // }
           })
+          //查找我创建的组的组员打卡情况
+          axios({
+            method: "GET",
+            url: this.serverUrl + "findReportsInGroupByOwner?unionId=" + this.unionid,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          }).then((res) => {
+            this.myGroupMemberReports = res.data
+            // console.log("myGroupMemberReports:" + this.myGroupMemberReports["HTZ-C7LiVO4"])
+            // console.log("myGroupMemberReports:" + this.myGroupMemberReports["HTZ-heQ6Ij6"])
+          })
         }
       })
+      //查找所有我加入的组
       axios({
         method: "GET",
         url: this.serverUrl + "findAllJoinGroups?unionId=" + this.unionid,
@@ -499,6 +616,18 @@ export default {
         // for (let i = 0; i < this.myJoinGroup.length; i++) {
         //   console.log("myJoinGroup:" + this.myJoinGroup[i])
         // }
+      })
+      //查找我加入的组的组员打卡情况
+      axios({
+        method: "GET",
+        url: this.serverUrl + "findReportsJoinGroupByOwner?unionId=" + this.unionid,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        this.myJoinGroupMemberReports = res.data
+        // console.log("myJoinGroupMemberReports:" + this.myJoinGroupMemberReports["HTZ-C7LiVO4"])
+        // console.log("myJoinGroupMemberReports:" + this.myJoinGroupMemberReports["HTZ-heQ6Ij6"])
       })
     },
   },
