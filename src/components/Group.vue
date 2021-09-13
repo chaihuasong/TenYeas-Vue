@@ -57,7 +57,7 @@
                     <div style="float:left; text-align: left;margin-left: 30px;font-size: 13px;font-weight: bold; margin-top: 3px">组ID: {{item.groupId}}</div>
                     <div style="float: right; margin-right: 20px">
                       <el-button size="mini" @click="modifyGroup(item.groupId, item.groupName, item.note)">修改</el-button>
-                      <el-popconfirm title="确定删除吗？" @confirm="deleteGroup(item.id)">
+                      <el-popconfirm title="注意，删除后不可恢复，确定删除该组吗？" @confirm="deleteGroup(item.id)">
                         <el-button size="mini" slot="reference">删除</el-button>
                       </el-popconfirm>
                     </div>
@@ -125,8 +125,13 @@
 
                   <el-collapse-item :title="memberInfo">
                     <el-row>
-                      <el-col :span="12"><div style="text-align: left;margin-left: 30px;font-size: 13px;font-weight: bold; margin-top: 3px">组ID: {{item[0].groupId}}</div></el-col>
-                      <el-col :span="12"><div style="text-align: left;margin-left: 30px;font-size: 13px;font-weight: bold; margin-top: 3px">组长: {{item[0].ownerName}}</div></el-col>
+                      <el-col :span="10"><div style="text-align: left;margin-left: 30px;font-size: 13px;font-weight: bold; margin-top: 3px">组ID: {{item[0].groupId}}</div></el-col>
+                      <el-col :span="8"><div style="text-align: left;margin-left: 30px;font-size: 13px;font-weight: bold; margin-top: 3px">组长: {{item[0].ownerName}}</div></el-col>
+                      <el-col :span="6">
+                        <el-popconfirm title="确定退出该组吗？" @confirm="deleteGroups(item.id)">
+                        <el-button size="mini" slot="reference">退出</el-button>
+                        </el-popconfirm>
+                      </el-col>
                     </el-row>
                     <div style="text-align: left;margin-left: 30px; margin-top: 5px; font-size: 16px;color: gray" v-for="member in myJoinGroup[index]" v-bind:key="member !== null ? member.groupId : null">
                       <span>{{member.nickname}}</span>
@@ -414,6 +419,19 @@ export default {
       axios({
         method: "POST",
         url: this.serverUrl + "deleteGroup?id=" + id,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        console.log("createGroup res:" + res.data)
+        this.$message.success("已删除！")
+        this.getData()
+      })
+    },
+    deleteGroups(id) {
+      axios({
+        method: "POST",
+        url: this.serverUrl + "deleteGroups?id=" + id,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
