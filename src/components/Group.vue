@@ -2,7 +2,7 @@
   <div>
     <div style="float: left">
       <div style="width: 96%; height: 150px;position: absolute">
-        <el-image :src="'http://htzchina.org/imgs/group_header.png'"
+        <el-image :src="'https://htzchina.org/imgs/group_header.png'"
                   fit="cover"/>
       </div>
       <div style="position: absolute;margin-top: 5px;margin-left: 82%; z-index: 1">

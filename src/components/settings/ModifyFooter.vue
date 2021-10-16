@@ -21,7 +21,7 @@ export default {
   mounted: function () {
     axios({
       method: "GET",
-      url: "http://htzchina.org:8080/getFooter",
+      url: "https://htzchina.org:8080/getFooter",
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       }
@@ -40,7 +40,7 @@ export default {
       })
       axios({
         method: "POST",
-        url: "http://htzchina.org:8080/saveFooter",
+        url: "https://htzchina.org:8080/saveFooter",
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },

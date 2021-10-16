@@ -17,13 +17,13 @@
     let code = getCode()
     if (code !== "" && code != null && code.length > 0) {
         const ajax = new XMLHttpRequest();
-        ajax.open("get", "http://htzchina.org:8080/getOpenId?code=" + code, true)
+        ajax.open("get", "https://htzchina.org:444/getOpenId?code=" + code, true)
         ajax.send()
         ajax.onreadystatechange = function () {
             if (ajax.readyState === 4 && ajax.status === 200) {
                 const res = ajax.responseText
                 if (res != null) {
-                    window.location.href = "http://htzchina.org/tenyears/#/index?openid=" + res
+                    window.location.href = "https://htzchina.org/tenyears/#/index?openid=" + res
                 }
             }
         }

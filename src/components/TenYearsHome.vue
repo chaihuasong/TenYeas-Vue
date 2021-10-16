@@ -39,9 +39,9 @@
             </el-col>
             <el-col v-if="this.path !== ''" :span="4">
               <el-image style="width: 40px; height: 80px;margin-top: 5px"
-                        :src="'http://htzchina.org/imgs/tenyears/' + this.path"
+                        :src="'https://htzchina.org/imgs/tenyears/' + this.path"
 
-                        :preview-src-list="['http://htzchina.org/imgs/tenyears/' + this.path]">
+                        :preview-src-list="['https://htzchina.org/imgs/tenyears/' + this.path]">
                 <div slot="error">
                   <el-image style="width: 40px; height: 50px;margin-top: 5px"
                             :src="require('../assets/img/not_found.jpg')" />
@@ -1455,7 +1455,7 @@ export default {
       }, 1000)
     },
     getData() {
-      let uid = this.$store.getters.getUnionid
+      let uid = 'oJuR600s16Yi1oLIiJ5_hbGeH1CI'//this.$store.getters.getUnionid
       console.log(uid)
       if (uid !== null && uid !== "") {
         uid = uid.replace("\"","").replace("\"","")
@@ -1508,7 +1508,7 @@ export default {
           }
         });
       } else {
-        window.location.href = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx83aec75c3ca58f0e&redirect_uri=http://htzchina.org/wc_redirect4&response_type=code&scope=snsapi_base&state=123#wechat_redirect"
+        window.location.href = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx83aec75c3ca58f0e&redirect_uri=https://htzchina.org/wc_redirect4&response_type=code&scope=snsapi_base&state=123#wechat_redirect"
       }
     },
     getUserInfoByUnionId() {
@@ -1597,14 +1597,14 @@ export default {
         wx.onMenuShareAppMessage({
           title: '黄庭书院"十年持志"', // 分享标题
           desc: '让我们一起 抱团成长~', // 分享描述
-          link: "http://htzchina.org/tenyears/#/tenyearsHome", // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
-          imgUrl: 'http://htzchina.org/imgs/huangtingshuyuan.png', // 分享图标
+          link: "https://htzchina.org/tenyears/#/tenyearsHome", // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
+          imgUrl: 'https://htzchina.org/imgs/huangtingshuyuan.png', // 分享图标
         })
         wx.onMenuShareTimeline({
           title: '黄庭书院"十年持志"', // 分享标题
           desc: '让我们一起 抱团成长~', // 分享描述
-          link: "http://htzchina.org/tenyears/#/tenyearsHome", // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
-          imgUrl: 'http://htzchina.org/imgs/huangtingshuyuan.png', // 分享图标
+          link: "https://htzchina.org/tenyears/#/tenyearsHome", // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
+          imgUrl: 'https://htzchina.org/imgs/huangtingshuyuan.png', // 分享图标
         })
       });
     },

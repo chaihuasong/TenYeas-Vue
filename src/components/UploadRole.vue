@@ -42,8 +42,8 @@
               <template slot-scope="scope">
                 <el-image
                     style="width: 60px; height: 120px"
-                    :src="'http://htzchina.org/imgs/tenyears/' + scope.row.path"
-                    :preview-src-list="['http://htzchina.org/imgs/tenyears/' + scope.row.path]"
+                    :src="'https://htzchina.org/imgs/tenyears/' + scope.row.path"
+                    :preview-src-list="['https://htzchina.org/imgs/tenyears/' + scope.row.path]"
                     :fit="none" />
               </template>
             </el-table-column>
@@ -51,7 +51,7 @@
 
               <template slot-scope="scope">
                 <el-upload
-                    action="http://htzchina.org:8080/uploadFile/"
+                    action="https://htzchina.org:444/uploadFile/"
                     accept="image/jpeg,image/gif,image/png"
                     :on-remove="handleRemove"
                     :before-remove="beforeRemove"
@@ -127,7 +127,7 @@ export default {
       }
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getByName?name=" + this.search,
+        url: "https://htzchina.org:444/getByName?name=" + this.search,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
