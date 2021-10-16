@@ -3,7 +3,7 @@
 
     <div>
       <el-image style="width: 100%; height: 180px"
-                :src="'http://wechatapppro-1252524126.picsh.myqcloud.com/appw8Gkxo2j3844/image/kk0m31b50iadsj42fbb9.png?imageView2/q/70'"
+                :src="'https://wechatapppro-1252524126.file.myqcloud.com/appw8Gkxo2j3844/image/c0c2babbc244b2143a84d4eca6afe420.jpg'"
                 fit="cover"/>
     </div>
 
@@ -1455,7 +1455,7 @@ export default {
       }, 1000)
     },
     getData() {
-      let uid = 'oJuR600s16Yi1oLIiJ5_hbGeH1CI'//this.$store.getters.getUnionid
+      let uid = this.$store.getters.getUnionid
       console.log(uid)
       if (uid !== null && uid !== "") {
         uid = uid.replace("\"","").replace("\"","")
@@ -1508,7 +1508,7 @@ export default {
           }
         });
       } else {
-        window.location.href = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx83aec75c3ca58f0e&redirect_uri=https://htzchina.org/wc_redirect4&response_type=code&scope=snsapi_base&state=123#wechat_redirect"
+        window.location.href = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx83aec75c3ca58f0e&redirect_uri=http://htzchina.org/wc_redirect4&response_type=code&scope=snsapi_base&state=123#wechat_redirect"
       }
     },
     getUserInfoByUnionId() {
