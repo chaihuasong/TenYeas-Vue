@@ -1,7 +1,7 @@
 <script type="text/javascript">
 // 定义一些公共的属性和方法
-const httpUrl = 'https://htzchina.org:444/'
-// const httpUrl = 'https://localhost:444/'
+const httpUrl = 'http://htzchina.org:8080/'
+// const httpUrl = 'http://localhost:8080/'
 
 function getDateFormat(date) {
   let year = date.getFullYear()

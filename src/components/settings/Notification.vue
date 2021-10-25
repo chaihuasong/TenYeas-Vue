@@ -72,7 +72,7 @@ export default {
         keyword2Color: '#888888',
         remark: '自律从打卡开始~',
         remarkColor: '#888888',
-        url: 'https://htzchina.org/tenyears/#/tenyearsHome',
+        url: 'http://htzchina.org/tenyears/#/tenyearsHome',
       },
     }
   },

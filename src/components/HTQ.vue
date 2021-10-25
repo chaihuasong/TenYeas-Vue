@@ -22,8 +22,8 @@
           <div style="float: left;margin-left:10px;width:80%;text-align: left;">{{data.nickname}}</div>
           <div style="float: left;margin-left: 50px;margin-top:30px">
             <el-image style="width: 75px; height: 150px"
-                      :src="'https://htzchina.org/imgs/tenyears/' + data.path"
-                      :preview-src-list="['https://htzchina.org/imgs/tenyears/' + data.path]"/>
+                      :src="'http://htzchina.org/imgs/tenyears/' + data.path"
+                      :preview-src-list="['http://htzchina.org/imgs/tenyears/' + data.path]"/>
           </div>
         </div>
       </div>
@@ -85,7 +85,7 @@ export default {
       console.log("getData unionid:" + this.unionid)
       axios({
         method: "GET",
-        url: "https://htzchina.org:444/getById?id=" + this.unionid,
+        url: "http://htzchina.org:8080/getById?id=" + this.unionid,
         data: null,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -115,7 +115,7 @@ export default {
     getData() {
       axios({
         method: "GET",
-        url: "https://htzchina.org:444/getAll",
+        url: "http://htzchina.org:8080/getAll",
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
