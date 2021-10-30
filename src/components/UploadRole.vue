@@ -51,7 +51,7 @@
 
               <template slot-scope="scope">
                 <el-upload
-                    action="http://htzchina.org:8080/uploadFile/"
+                    action="http://htzchina.org:8081/uploadFile/"
                     accept="image/jpeg,image/gif,image/png"
                     :on-remove="handleRemove"
                     :before-remove="beforeRemove"
@@ -127,7 +127,7 @@ export default {
       }
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getByName?name=" + this.search,
+        url: "http://htzchina.org:8081/getByName?name=" + this.search,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }

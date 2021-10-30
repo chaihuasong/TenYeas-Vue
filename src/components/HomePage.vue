@@ -189,7 +189,7 @@ export default {
         console.log("begin axios...")
         axios({
           method: "GET",
-          url: "http://htzchina.org:8080/getUserInfo?openid=" + openid,
+          url: "http://htzchina.org:8081/getUserInfo?openid=" + openid,
           data: null,
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -225,7 +225,7 @@ export default {
     getUserInfoByUnionId() {
       axios({
         method: "GET",
-        url: "http://htzchina.org:8080/getById?id=" + this.unionid,
+        url: "http://htzchina.org:8081/getById?id=" + this.unionid,
         data: null,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'

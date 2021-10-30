@@ -36,7 +36,7 @@ export default {
       if (code !== "" && code != null && code.length > 0) {
         axios({
           method: "GET",
-          url: "http://htzchina.org:8080/getOpenId?code=" + code,
+          url: "http://htzchina.org:8081/getOpenId?code=" + code,
           data: null,
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
