@@ -251,7 +251,7 @@ export default {
     getTotalReportCount() {
       axios({
         method: "GET",
-        url: this.serverUrl + "getAllReportInfo",
+        url: this.serverUrl + "getAllReportInfoCount?withUser=false",
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }

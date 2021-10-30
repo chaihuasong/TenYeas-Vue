@@ -77,7 +77,7 @@
       </el-table-column>
     </el-table>
 
-    <el-table :data="tableData.slice((currentPage-1)*pageSize,currentPage*pageSize)">
+    <el-table :data="tableData">
       <el-table-column prop="id" label="id" width="80">
       </el-table-column>
       <el-table-column prop="date" label="日期" width="80">
@@ -94,8 +94,8 @@
         <template slot-scope="scope">
           <el-image
               style="width: 60px; height: 60px"
-              :src="tableData[(currentPage - 1) * pageSize + scope.$index].headimgurl"
-              :preview-src-list="[tableData[(currentPage - 1) * pageSize + scope.$index].headimgurl != null ? tableData[(currentPage - 1) * pageSize + scope.$index].headimgurl.substring(0, tableData[(currentPage - 1) * pageSize + scope.$index].headimgurl.lastIndexOf('/')) + '/0' : null]" />
+              :src="tableData[scope.$index].headimgurl"
+              :preview-src-list="[tableData[scope.$index].headimgurl != null ? tableData[scope.$index].headimgurl.substring(0, tableData[scope.$index].headimgurl.lastIndexOf('/')) + '/0' : null]" />
         </template>
       </el-table-column>
       <el-table-column prop="gender" label="性别" width="100" :formatter="genderFormatter">
@@ -157,14 +157,16 @@
         </template>
       </el-table-column>
     </el-table>
-    <el-pagination
+    <div v-if="this.totalCount===0" style="color: #8c939d;font-size: 20px;margin-top: 20px;margin-bottom: 20px">正在加载... <i class="el-icon-loading"></i></div>
+
+    <el-pagination v-if="this.totalCount>0"
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
         :current-page="currentPage"
-        :page-sizes="[10, 20, 30, 50, 100]"
+        :page-sizes="[50, 100, 200, 500, 1000]"
         :page-size="pageSize"
         layout="total, sizes, prev, pager, next, jumper"
-        :total="tableData.length">
+        :total="totalCount">
     </el-pagination>
 
     <!-- 编辑 -->
@@ -292,11 +294,12 @@ export default {
       serverUrl: global.httpUrl,
       tableData: [],
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 100,
       search: '',
       delDialogVisible: false,
       editDialogVisible: false,
       filterDate: '',
+      totalCount: 0,
       valueInfo: {
         id : '',
         userId: '',
@@ -362,7 +365,7 @@ export default {
   mounted: function () {
     console.log("login?" + this.checkLogin())
     if (this.checkLogin()) {
-      this.getData()
+      this.getTotalReportCount()
     } else {
       let loginUser = this.$store.getters.getUser
       if (loginUser === 'admin') {
@@ -374,6 +377,19 @@ export default {
     document.title = this.$route.meta.title
   },
   methods: {
+    getTotalReportCount() {
+      axios({
+        method: "GET",
+        url: this.serverUrl + "getAllReportInfoCount?withUser=true",
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        this.totalCount = res.data
+        this.currentPage = parseInt(this.totalCount / this.pageSize)
+        this.getData()
+      })
+    },
     value1Formatter(row) {
       if(row.value1 == null || row.template1 == null) return null;
       return row.template1.replace("_", row.value1);
@@ -470,7 +486,7 @@ export default {
     getData() {
       axios({
         method: "GET",
-        url: this.serverUrl + "getAllReportInfoWithUserInfo",
+        url: this.serverUrl + "getAllReportInfoWithUserInfoByPage?page=" + this.currentPage + "&size=" + this.pageSize,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -537,7 +553,7 @@ export default {
       })
     },
     delUser(index) {
-      let id = (this.currentPage - 1) * this.pageSize + index
+      let id = index
       this.$confirm('确认删除 id 为 ' + this.tableData[id].id + ' 的记录吗？')
           .then(() => {
             console.log("delete:" + this.tableData[id].id)
@@ -576,9 +592,11 @@ export default {
     },
     handleSizeChange(val) {
       this.pageSize = val
+      this.getData()
     },
     handleCurrentChange(val) {
       this.currentPage = val
+      this.getData()
     },
     searchByDate() {
       if (this.filterDate ==='') {
@@ -636,7 +654,7 @@ export default {
       let day = time.getDate() < 10 ? '0' + time.getDate() : time.getDate()
       let hours = time.getHours() < 10 ? '0' + time.getHours() : time.getHours()
       let minutes = time.getMinutes() < 10 ? '0' + time.getMinutes() : time.getMinutes()
-      let fileStr = time.getFullYear() + '' + month + '' + day + '' + hours + '' + minutes
+      let fileStr = time.getFullYear() + '' + month + '' + day + '' + hours + '' + minutes + '_' + this.currentPage
       try {
         FileSaver.saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'DailyReport_Info_' + fileStr + '.xlsx')
       } catch (e) { if (typeof console !== 'undefined') console.log(e, wbout) }
