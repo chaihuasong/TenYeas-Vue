@@ -256,7 +256,7 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        this.totalReportCount = res.data.length
+        this.totalReportCount = res.data
       })
     },
     getUserCount() {
