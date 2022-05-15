@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-input v-model="search" placeholder="请输入姓名或昵称" style="width: 200px;float: left"  v-on:input ="searchData"></el-input>
+    <el-input v-model="search" placeholder="请输入姓名或昵称" style="width: 200px;float: left"></el-input>
     <el-button type="primary" icon="el-icon-search" style="margin-left: 20px; float: left" @click="searchData">搜索</el-button>
     <el-date-picker
         v-model="filterDate"
@@ -8,7 +8,6 @@
         format="yyyy-MM-dd"
         placeholder="选择日期"
         icon="el-icon-search"
-        @change="searchByDate"
         style="margin-left: 20px; float: left" />
     <el-button type="primary" icon="el-icon-download" @click="outTab" style="float: right;margin-right: 20px; text-align: center">导出</el-button>
 
@@ -592,15 +591,15 @@ export default {
     },
     handleSizeChange(val) {
       this.pageSize = val
-      this.getData()
+      // this.getData()
     },
     handleCurrentChange(val) {
       this.currentPage = val
-      this.getData()
+      // this.getData()
     },
     searchByDate() {
       if (this.filterDate ==='') {
-        this.getData()
+        // this.getData()
         return
       }
       axios({
