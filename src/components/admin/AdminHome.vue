@@ -2,7 +2,7 @@
   <div>
     <el-row style="margin-bottom: 20px;">
       <el-col :span="6">
-        <el-card style="width:250px; height: 140px;">
+        <el-card style="width:200px; height: 140px;">
           <div class="el-card-list">
             <p><span class="el-card-big-font">{{ yesterdayReportCount }}</span></p>
             <p style="font-size: 14px;padding-top: 10px;">
@@ -12,7 +12,7 @@
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card style="width:250px; height: 140px;">
+        <el-card style="width:200px; height: 140px;">
           <div class="el-card-list">
             <p><span class="el-card-big-font">{{ dailyReportCount }}</span></p>
             <p style="font-size: 14px;padding-top: 10px;">
@@ -22,13 +22,13 @@
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card style="width:250px; height: 140px;">
+        <el-card style="width:200px; height: 140px;">
           <p><span class="el-card-big-font">{{ totalReportCount }}</span></p>
           <p style="font-size: 14px;padding-top: 10px;">总打卡数</p>
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card style="width:250px; height: 140px;">
+        <el-card style="width:200px; height: 140px;">
           <p><span class="el-card-big-font"> {{ userCount }} </span></p>
           <p style="font-size: 14px;padding-top: 10px;">立志卡填写数<span class="el-card-:span-el-color"></span>
           </p>
@@ -38,7 +38,7 @@
 
     <el-row style="margin-bottom: 20px;">
       <el-col :span="6">
-        <el-card style="width:250px; height: 140px;">
+        <el-card style="width:200px; height: 140px;">
           <div class="el-card-list">
             <p><span class="el-card-big-font">{{ yesterdayVisitCount }}</span></p>
             <p style="font-size: 14px;padding-top: 10px;">
@@ -48,7 +48,7 @@
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card style="width:250px; height: 140px;">
+        <el-card style="width:200px; height: 140px;">
           <div class="el-card-list">
             <p><span class="el-card-big-font">{{ dailyVisitCount }}</span></p>
             <p style="font-size: 14px;padding-top: 10px;">
@@ -58,7 +58,7 @@
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card style="width:250px; height: 140px;">
+        <el-card style="width:200px; height: 140px;">
           <p><span class="el-card-big-font">{{ totalVisitCount }}</span></p>
           <p style="font-size: 14px;padding-top: 10px;">总访问量</p>
         </el-card>
@@ -67,7 +67,7 @@
 
     <el-row style="margin-bottom: 20px;">
       <el-col :span="6">
-        <el-card style="width:250px; height: 140px;">
+        <el-card style="width:200px; height: 140px;">
           <div class="el-card-list">
             <p><span class="el-card-big-font">{{ yesterdayVisitedUser }}</span></p>
             <p style="font-size: 14px;padding-top: 10px;">
@@ -77,7 +77,7 @@
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card style="width:250px; height: 140px;">
+        <el-card style="width:200px; height: 140px;">
           <div class="el-card-list">
             <p><span class="el-card-big-font">{{ dailyVisitedUser }}</span></p>
             <p style="font-size: 14px;padding-top: 10px;">
@@ -87,7 +87,7 @@
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card style="width:250px; height: 140px;">
+        <el-card style="width:200px; height: 140px;">
           <p><span class="el-card-big-font">{{ totalVisitedUser }}</span></p>
           <p style="font-size: 14px;padding-top: 10px;">总访客量</p>
         </el-card>
@@ -95,27 +95,24 @@
     </el-row>
 
     <el-row>
-      <el-col :span="12">
-        <el-card style="width:1066px; height: 350px;">
-          <div id="daily_report" :style="{width:'500px',height: '300px'}" style="float: left;"></div>
-          <div id="echarts" :style="{width:'500px', height: '300px'}" style="float: left;"></div>
-        </el-card>
-      </el-col>
-      <el-col :span="12">
-        <el-card style="width:1200px; height: 350px;">
-          <div id="daily_report_count" :style="{width:'500px',height: '300px'}" style="float: left;"></div>
-          <div id="echarts_daily_report_count" :style="{width:'500px', height: '300px'}" style="float: left;"></div>
-        </el-card>
-      </el-col>
+      <el-card style="width:960px; height: 330px;float: left;">
+        <div id="daily_report" :style="{width:'500px',height: '300px'}" style="float: left;"></div>
+        <div id="echarts" :style="{width:'500px', height: '300px'}" style="float: left;"></div>
+      </el-card>
     </el-row>
 
     <el-row>
-      <el-col :span="12">
-        <el-card style="width:1066px; height: 350px;">
-          <div id="china" :style="{width:'500px',height: '300px'}" style="float: left;"></div>
-          <div id="china_echarts" :style="{width:'500px', height: '300px'}" style="float: left;"></div>
-        </el-card>
-      </el-col>
+      <el-card style="width:960px; height: 330px;float: left;">
+        <div id="daily_report_count" :style="{width:'500px',height: '300px'}" style="float: left;"></div>
+        <div id="echarts_daily_report_count" :style="{width:'500px', height: '300px'}" style="float: left;"></div>
+      </el-card>
+    </el-row>
+
+    <el-row>
+      <el-card style="width:960px; height: 330px;float: left;">
+        <div id="china" :style="{width:'500px',height: '300px'}" style="float: left;"></div>
+        <div id="china_echarts" :style="{width:'500px', height: '300px'}" style="float: left;"></div>
+      </el-card>
     </el-row>
   </div>
 </template>
@@ -192,7 +189,7 @@ export default {
       }));
     },
     getDailyReportDateList() {
-      for(let i = 14; i >= 0; i--) {
+      for(let i = 14; i > 0; i--) {
         this.dailyReportDateList.push(this.getDateFormat(new Date(Date.now() - i * 24 * 3600 * 1000)))
       }
     },
