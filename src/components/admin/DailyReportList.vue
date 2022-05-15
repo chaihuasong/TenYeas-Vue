@@ -619,7 +619,7 @@ export default {
       })
     },
     searchData() {
-      if (this.search ==='') {
+      if (this.search ==='' && this.filterDate === '') {
         this.getData()
         return
       }
