@@ -374,7 +374,7 @@ export default {
           }
           console.log('this.notification:' + res.data.notification)
         } else {
-          alert("信息获取失败，请先填写立志信息！")
+          alert("信息获取失败，请先填写立志信息！" + this.unionid)
           //this.$router.push("/index");
         }
       });
