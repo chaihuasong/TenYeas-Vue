@@ -37,12 +37,12 @@
           </li>
         </ul>
       </form>
-      <div style="position: relative;top: 5%;">
-        <el-button v-if="editMode" icon="el-icon-plus" circle @click="addEl"
+      <div v-show="editMode" style="position: relative;top: 5%;">
+        <el-button icon="el-icon-plus" circle @click="addEl"
                    style="background: lightcyan;margin-top: 10px"></el-button>
       </div>
       <div style="margin-top: 30px">
-        <el-button v-if="!editMode" type="primary" @click="submit" :loading="loading">打卡</el-button>
+        <el-button v-show="!editMode" type="primary" @click="submit" :loading="submitting" :disabled="loading">打卡</el-button>
       </div>
     </el-card>
     <el-card>
@@ -96,6 +96,7 @@ export default {
       serverUrl: global.httpUrl,
       loading: false,
       saving: false,
+      submitting: false,
       sex: '',
       unionid: '',
       nickname: '',
@@ -118,7 +119,8 @@ export default {
         {title: "善本", unit: '条', value: ''},
         {title: "宽两秒", unit: '次', value: ''}
       ],
-      pickerOptions: {
+      // 使用 Object.freeze 冻结静态配置，避免 Vue 添加响应式，提升性能
+      pickerOptions: Object.freeze({
         disabledDate(time) {
           return time.getTime() > Date.now();
         },
@@ -142,7 +144,7 @@ export default {
             picker.$emit('pick', date);
           }
         }]
-      },
+      }),
     };
   },
   mounted: function () {
@@ -206,6 +208,11 @@ export default {
       }
     },
     submit() {
+      // 防止重复提交
+      if (this.submitting) {
+        return
+      }
+
       // 验证是否填写了打卡数值
       for (let i = 0; i < this.lists.length; i++) {
         if (this.lists[i].value.trim() === '') {
@@ -214,12 +221,18 @@ export default {
         }
       }
 
+      this.submitting = true
       let data = {}
       for (let i = 0; i < this.lists.length; i++) {
         data['template' + i] = this.lists[i].title.trim() + this.lists[i].value.trim() + this.lists[i].unit.trim()
       }
 
       this.$message.success(qs.stringify(data))
+
+      // 防抖：500ms 后允许再次提交
+      setTimeout(() => {
+        this.submitting = false
+      }, 500)
     },
     changeMode() {
       if (this.editMode) {
