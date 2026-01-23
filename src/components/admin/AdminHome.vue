@@ -221,6 +221,8 @@ export default {
       }).then((res) => {
         this.dailyReportCountList = res.data
         this.drawDailyCount('daily_report_count')
+      }).catch((err) => {
+        console.error('获取打卡统计失败:', err)
       })
     },
     getDailyReportCount() {
@@ -232,6 +234,8 @@ export default {
         }
       }).then((res) => {
         this.dailyReportCount = res.data.length
+      }).catch((err) => {
+        console.error('获取今日打卡数失败:', err)
       })
     },
     getYesterdayReportCount() {
@@ -243,6 +247,8 @@ export default {
         }
       }).then((res) => {
         this.yesterdayReportCount = res.data.length
+      }).catch((err) => {
+        console.error('获取昨日打卡数失败:', err)
       })
     },
     getTotalReportCount() {
@@ -254,6 +260,8 @@ export default {
         }
       }).then((res) => {
         this.totalReportCount = res.data
+      }).catch((err) => {
+        console.error('获取总打卡数失败:', err)
       })
     },
     getUserCount() {
@@ -265,6 +273,8 @@ export default {
         }
       }).then((res) => {
         this.userCount = res.data.length
+      }).catch((err) => {
+        console.error('获取用户数失败:', err)
       })
     },
     getDailyVisitCount() {
@@ -276,6 +286,8 @@ export default {
         }
       }).then((res) => {
         this.dailyVisitCount = res.data.count === undefined ? 0 : res.data.count
+      }).catch((err) => {
+        console.error('获取今日访问量失败:', err)
       })
     },
     getYesterdayVisitCount() {
@@ -287,6 +299,8 @@ export default {
         }
       }).then((res) => {
         this.yesterdayVisitCount = res.data.count === undefined ? 0 : res.data.count
+      }).catch((err) => {
+        console.error('获取昨日访问量失败:', err)
       })
     },
     getTotalVisitCount() {
@@ -300,6 +314,8 @@ export default {
         for (let i = 0; i < res.data.length; i++) {
           this.totalVisitCount += res.data[i].count
         }
+      }).catch((err) => {
+        console.error('获取总访问量失败:', err)
       })
     },
 
@@ -312,6 +328,8 @@ export default {
         }
       }).then((res) => {
         this.dailyVisitedUser = res.data.length
+      }).catch((err) => {
+        console.error('获取今日访客量失败:', err)
       })
     },
     getYesterdayVisitedUser() {
@@ -323,6 +341,8 @@ export default {
         }
       }).then((res) => {
         this.yesterdayVisitedUser = res.data.length
+      }).catch((err) => {
+        console.error('获取昨日访客量失败:', err)
       })
     },
     getTotalVisitedUser() {
@@ -334,6 +354,8 @@ export default {
         }
       }).then((res) => {
         this.totalVisitedUser = res.data.length
+      }).catch((err) => {
+        console.error('获取总访客量失败:', err)
       })
     },
 

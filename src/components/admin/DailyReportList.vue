@@ -76,7 +76,7 @@
       </el-table-column>
     </el-table>
 
-    <el-table :data="tableData">
+    <el-table :data="tableData" v-loading="loading">
       <el-table-column prop="id" label="id" width="80">
       </el-table-column>
       <el-table-column prop="date" label="日期" width="80">
@@ -165,7 +165,8 @@
         :page-sizes="[50, 100, 200, 500, 1000, 10000]"
         :page-size="pageSize"
         layout="total, sizes, prev, pager, next, jumper"
-        :total="totalCount">
+        :total="totalCount"
+        :disabled="loading">
     </el-pagination>
 
     <!-- 编辑 -->
@@ -299,6 +300,7 @@ export default {
       editDialogVisible: false,
       filterDate: '',
       totalCount: 0,
+      loading: false,
       valueInfo: {
         id : '',
         userId: '',
@@ -377,6 +379,7 @@ export default {
   },
   methods: {
     getTotalReportCount() {
+      this.loading = true
       axios({
         method: "GET",
         url: this.serverUrl + "getAllReportInfoCount?withUser=true",
@@ -385,8 +388,12 @@ export default {
         }
       }).then((res) => {
         this.totalCount = res.data
-        this.currentPage = parseInt(this.totalCount / this.pageSize)
+        this.currentPage = Math.max(1, Math.ceil(this.totalCount / this.pageSize))
         this.getData()
+      }).catch((err) => {
+        console.error('获取打卡总数失败:', err)
+        this.$message.error('获取数据失败，请重试')
+        this.loading = false
       })
     },
     value1Formatter(row) {
@@ -483,6 +490,7 @@ export default {
       }
     },
     getData() {
+      this.loading = true
       axios({
         method: "GET",
         url: this.serverUrl + "getAllReportInfoWithUserInfoByPage?page=" + this.currentPage + "&size=" + this.pageSize,
@@ -491,6 +499,11 @@ export default {
         }
       }).then((res) => {
         this.tableData = res.data
+      }).catch((err) => {
+        console.error('获取打卡列表失败:', err)
+        this.$message.error('获取数据失败，请重试')
+      }).finally(() => {
+        this.loading = false
       })
     },
     checkLogin() {
@@ -591,11 +604,11 @@ export default {
     },
     handleSizeChange(val) {
       this.pageSize = val
-      // this.getData()
+      this.getData()
     },
     handleCurrentChange(val) {
       this.currentPage = val
-      // this.getData()
+      this.getData()
     },
     searchByDate() {
       if (this.filterDate ==='') {
@@ -620,13 +633,14 @@ export default {
     },
     searchData() {
       if (this.search ==='' && this.filterDate === '') {
-        this.getData()
+        this.getTotalReportCount()
         return
       }
       let formatDate = null;
       if (this.filterDate !== null && this.filterDate !== '' ) {
         formatDate = this.getDateFormat(this.filterDate)
       }
+      this.loading = true
       axios({
         method: "GET",
         url: this.serverUrl + "getReportInfoByNameOrNickNameLike?name=" + this.search + "&date=" + formatDate,
@@ -634,12 +648,18 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        if (res.data !== null && res.data !== '') {
+        if (res.data !== null && res.data !== '' && res.data.length > 0) {
           this.currentPage = 1
           this.tableData = res.data
+          this.totalCount = res.data.length
         } else {
           this.$message.warning("无数据")
         }
+      }).catch((err) => {
+        console.error('搜索失败:', err)
+        this.$message.error('搜索失败，请重试')
+      }).finally(() => {
+        this.loading = false
       })
     },
     outTab () {

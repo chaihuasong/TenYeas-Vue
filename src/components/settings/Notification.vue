@@ -123,6 +123,9 @@ export default {
         } else {
           this.$message.warning("保存失败！")
         }
+      }).catch((err) => {
+        console.error('保存通知配置失败:', err)
+        this.$message.error('保存失败，请重试')
       })
     },
     getNotification() {
@@ -133,7 +136,11 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        this.notificationInfo = res.data
+        if (res.data) {
+          this.notificationInfo = res.data
+        }
+      }).catch((err) => {
+        console.error('获取通知配置失败:', err)
       })
     },
     onNotify() {
@@ -164,6 +171,9 @@ export default {
         } else {
           this.$message.warning("操作失败！")
         }
+      }).catch((err) => {
+        console.error('发送通知失败:', err)
+        this.$message.error('发送失败，请重试')
       })
     },
     checkLogin() {
@@ -191,6 +201,9 @@ export default {
             openid: user.openid,
           });
         });
+      }).catch((err) => {
+        console.error('获取用户列表失败:', err)
+        this.$message.error('获取用户列表失败，请刷新重试')
       })
     },
   }

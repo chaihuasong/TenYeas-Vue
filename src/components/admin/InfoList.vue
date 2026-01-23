@@ -45,7 +45,7 @@
       <el-table-column prop="createDate" label="创建时间" width="200">
       </el-table-column>
     </el-table>
-    <el-table :data="tableData.slice((currentPage-1)*pageSize,currentPage*pageSize)">
+    <el-table :data="tableData.slice((currentPage-1)*pageSize,currentPage*pageSize)" v-loading="loading">
       <el-table-column prop="id" label="id" width="80">
       </el-table-column>
       <el-table-column prop="number" label="NO." width="60">
@@ -120,7 +120,8 @@
         :page-sizes="[10, 20, 30, 50, 100]"
         :page-size="pageSize"
         layout="total, sizes, prev, pager, next, jumper"
-        :total="tableData.length">
+        :total="tableData.length"
+        :disabled="loading">
     </el-pagination>
 
     <!-- 编辑 -->
@@ -231,6 +232,7 @@ export default {
       search: '',
       delDialogVisible: false,
       editDialogVisible: false,
+      loading: false,
       userInfo: {
         id : '',
         number: '',
@@ -332,6 +334,7 @@ export default {
       }
     },
     getData() {
+      this.loading = true
       axios({
         method: "GET",
         url: this.serverUrl + "getAll",
@@ -340,6 +343,11 @@ export default {
         }
       }).then((res) => {
         this.tableData = res.data
+      }).catch((err) => {
+        console.error('获取用户列表失败:', err)
+        this.$message.error('获取数据失败，请重试')
+      }).finally(() => {
+        this.loading = false
       })
     },
     checkLogin() {
@@ -356,6 +364,7 @@ export default {
         this.getData()
         return
       }
+      this.loading = true
       axios({
         method: "GET",
         url: this.serverUrl + "getByNameLike?name=" + this.search,
@@ -364,10 +373,12 @@ export default {
         }
       }).then((res) => {
         console.log(res.data)
-        if (res.data !== null && res.data !== '') {
+        if (res.data !== null && res.data !== '' && res.data.length > 0) {
           this.currentPage = 1
           this.tableData = res.data
+          this.loading = false
         } else {
+          // 名字搜索无结果，尝试昵称搜索
           axios({
             method: "GET",
             url: this.serverUrl + "getByNicknameLike?name=" + this.search,
@@ -376,12 +387,23 @@ export default {
             }
           }).then((res) => {
             console.log(res.data)
-            if (res.data !== null && res.data !== '') {
+            if (res.data !== null && res.data !== '' && res.data.length > 0) {
               this.currentPage = 1
               this.tableData = res.data
+            } else {
+              this.$message.warning('未找到匹配的用户')
             }
+          }).catch((err) => {
+            console.error('搜索昵称失败:', err)
+            this.$message.error('搜索失败，请重试')
+          }).finally(() => {
+            this.loading = false
           })
         }
+      }).catch((err) => {
+        console.error('搜索姓名失败:', err)
+        this.$message.error('搜索失败，请重试')
+        this.loading = false
       })
     },
     outTab () {
@@ -430,7 +452,7 @@ export default {
     },
     saveUser() {
       this.editDialogVisible = false;
-      this.$set(this.tableData, this.userIndex, this.newUserInfo);
+      this.loading = true
       axios({
         method: "POST",
         url: this.serverUrl + "update",
@@ -439,7 +461,13 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then(() => {
+        this.$set(this.tableData, this.userIndex, this.newUserInfo);
         this.$message.success("已更新")
+      }).catch((err) => {
+        console.error('更新用户失败:', err)
+        this.$message.error('更新失败，请重试')
+      }).finally(() => {
+        this.loading = false
       })
     },
     delUser(index) {

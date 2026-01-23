@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-table :data="tableData.slice((currentPage-1)*pageSize,currentPage*pageSize)">
+    <el-table :data="tableData.slice((currentPage-1)*pageSize,currentPage*pageSize)" v-loading="loading">
       <el-table-column prop="id" label="id" width="80">
       </el-table-column>
       <el-table-column prop="template1" label="项目1" width="100">
@@ -59,7 +59,8 @@
         :page-sizes="[10, 20, 30, 50, 100]"
         :page-size="pageSize"
         layout="total, sizes, prev, pager, next, jumper"
-        :total="tableData.length">
+        :total="tableData.length"
+        :disabled="loading">
     </el-pagination>
 
     <!-- 编辑 -->
@@ -171,6 +172,7 @@ export default {
       search: '',
       delDialogVisible: false,
       editDialogVisible: false,
+      loading: false,
       templateInfo: {
         id : '',
         template1: '',
@@ -237,6 +239,7 @@ export default {
   },
   methods: {
     getData() {
+      this.loading = true
       axios({
         method: "GET",
         url: this.serverUrl + "getAllReportTemplate",
@@ -245,6 +248,11 @@ export default {
         }
       }).then((res) => {
         this.tableData = res.data
+      }).catch((err) => {
+        console.error('获取模板列表失败:', err)
+        this.$message.error('获取数据失败，请重试')
+      }).finally(() => {
+        this.loading = false
       })
     },
     checkLogin() {
@@ -286,7 +294,7 @@ export default {
     },
     saveUser() {
       this.editDialogVisible = false;
-      this.$set(this.tableData, this.templateIndex, this.newTemplateInfo);
+      this.loading = true
       axios({
         method: "POST",
         url: this.serverUrl + "updateReportTemplate",
@@ -295,8 +303,13 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then(() => {
+        this.$set(this.tableData, this.templateIndex, this.newTemplateInfo);
         this.$message.success("已更新")
         this.getData()
+      }).catch((err) => {
+        console.error('更新模板失败:', err)
+        this.$message.error('更新失败，请重试')
+        this.loading = false
       })
     },
     delUser(index) {
@@ -304,6 +317,7 @@ export default {
       this.$confirm('确认删除 id 为 ' + this.tableData[id].id + ' 的记录吗？')
           .then(() => {
             console.log("delete:" + this.tableData[id].id)
+            this.loading = true
             let data = qs.stringify({
               id: this.tableData[id].id,
             })
@@ -314,25 +328,14 @@ export default {
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
               }
-            }).then((res) => {
-              axios({
-                method: "GET",
-                url: this.serverUrl + "getReportTemplateById?id=" + this.id,
-                data: null,
-                headers: {
-                  'Content-Type': 'application/x-www-form-urlencoded'
-                }
-              }).then((res) => {
-                console.log(res)
-                console.log(res.data)
-                if (res.data != null && res.data !== '') {
-                  this.$message.warning('删除失败！')
-                } else {
-                  this.$message.success('已删除！')
-                  this.tableData.splice(id, 1)
-                }
-              })
-              console.log(res)
+            }).then(() => {
+              this.$message.success('已删除！')
+              this.tableData.splice(id, 1)
+            }).catch((err) => {
+              console.error('删除模板失败:', err)
+              this.$message.error('删除失败，请重试')
+            }).finally(() => {
+              this.loading = false
             })
           })
           .catch(() => { })

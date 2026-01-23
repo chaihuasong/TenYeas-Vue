@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-table :data="tableData.slice((currentPage-1)*pageSize,currentPage*pageSize)">
+    <el-table :data="tableData.slice((currentPage-1)*pageSize,currentPage*pageSize)" v-loading="loading">
       <el-table-column prop="id" label="id" width="80">
       </el-table-column>
       <el-table-column prop="groupId" label="组ID" width="120">
@@ -29,7 +29,8 @@
         :page-sizes="[10, 20, 30, 50, 100]"
         :page-size="pageSize"
         layout="total, sizes, prev, pager, next, jumper"
-        :total="tableData.length">
+        :total="tableData.length"
+        :disabled="loading">
     </el-pagination>
 
     <!-- 编辑 -->
@@ -96,6 +97,7 @@ export default {
       search: '',
       delDialogVisible: false,
       editDialogVisible: false,
+      loading: false,
       groupInfo: {
         id: '',
         groupId: '',
@@ -132,6 +134,7 @@ export default {
   },
   methods: {
     getData() {
+      this.loading = true
       axios({
         method: "GET",
         url: this.serverUrl + "findAllGroup",
@@ -140,6 +143,11 @@ export default {
         }
       }).then((res) => {
         this.tableData = res.data
+      }).catch((err) => {
+        console.error('获取组列表失败:', err)
+        this.$message.error('获取数据失败，请重试')
+      }).finally(() => {
+        this.loading = false
       })
     },
     checkLogin() {
@@ -166,7 +174,7 @@ export default {
     },
     saveItem() {
       this.editDialogVisible = false;
-      this.$set(this.tableData, this.groupInfoIndex, this.newGroupInfo);
+      this.loading = true
       axios({
         method: "POST",
         url: this.serverUrl + "modifyGroup",
@@ -175,8 +183,13 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then(() => {
+        this.$set(this.tableData, this.groupInfoIndex, this.newGroupInfo);
         this.$message.success("已更新")
         this.getData()
+      }).catch((err) => {
+        console.error('更新组信息失败:', err)
+        this.$message.error('更新失败，请重试')
+        this.loading = false
       })
     },
     delItem(index) {
@@ -184,6 +197,7 @@ export default {
       this.$confirm('确认删除 id 为 ' + this.tableData[id].id + ' 的记录吗？')
           .then(() => {
             console.log("delete:" + this.tableData[id].id)
+            this.loading = true
             let data = qs.stringify({
               id: this.tableData[id].id,
             })
@@ -196,8 +210,13 @@ export default {
               }
             }).then((res) => {
               this.$message.success('已删除！')
-              this.tableData.splice(index, 1)
+              this.tableData.splice(id, 1)
               console.log(res)
+            }).catch((err) => {
+              console.error('删除组失败:', err)
+              this.$message.error('删除失败，请重试')
+            }).finally(() => {
+              this.loading = false
             })
           })
           .catch(() => { })
