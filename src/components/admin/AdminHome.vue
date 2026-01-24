@@ -311,9 +311,8 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        for (let i = 0; i < res.data.length; i++) {
-          this.totalVisitCount += res.data[i].count
-        }
+        // 新API返回格式: {"totalPV": 215259}
+        this.totalVisitCount = res.data.totalPV || 0
       }).catch((err) => {
         console.error('获取总访问量失败:', err)
       })
@@ -353,7 +352,8 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        this.totalVisitedUser = res.data.length
+        // 新API返回格式: {"totalUV": 122958}
+        this.totalVisitedUser = res.data.totalUV || 0
       }).catch((err) => {
         console.error('获取总访客量失败:', err)
       })

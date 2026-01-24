@@ -94,7 +94,11 @@
           <el-image
               style="width: 60px; height: 60px"
               :src="tableData[scope.$index].headimgurl"
-              :preview-src-list="[tableData[scope.$index].headimgurl != null ? tableData[scope.$index].headimgurl.substring(0, tableData[scope.$index].headimgurl.lastIndexOf('/')) + '/0' : null]" />
+              :preview-src-list="[tableData[scope.$index].headimgurl != null ? tableData[scope.$index].headimgurl.substring(0, tableData[scope.$index].headimgurl.lastIndexOf('/')) + '/0' : null]">
+            <div slot="error" class="image-slot">
+              <i class="el-icon-user" style="font-size: 30px; color: #909399;"></i>
+            </div>
+          </el-image>
         </template>
       </el-table-column>
       <el-table-column prop="gender" label="性别" width="100" :formatter="genderFormatter">
@@ -382,7 +386,7 @@ export default {
       this.loading = true
       axios({
         method: "GET",
-        url: this.serverUrl + "getAllReportInfoCount?withUser=true",
+        url: this.serverUrl + "getAllReportInfoCount?withUser=false",
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }

@@ -64,7 +64,11 @@
               style="width: 60px; height: 60px"
               :src="tableData[(currentPage - 1) * pageSize + scope.$index].headimgurl"
               :preview-src-list="[tableData[(currentPage - 1) * pageSize + scope.$index].headimgurl != null ? tableData[(currentPage - 1) * pageSize + scope.$index].headimgurl.substring(0, tableData[(currentPage - 1) * pageSize + scope.$index].headimgurl.lastIndexOf('/')) + '/0' : null]"
-              :fit="none" />
+              :fit="none">
+            <div slot="error" class="image-slot">
+              <i class="el-icon-user" style="font-size: 30px; color: #909399;"></i>
+            </div>
+          </el-image>
         </template>
       </el-table-column>
       <el-table-column prop="wechatgroup" label="微信群" width="80">
