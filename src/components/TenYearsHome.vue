@@ -829,8 +829,10 @@ export default {
           this.zaoShuiTime = res.data.zaoShuiTime
           this.zaoShuiTimeVisible = res.data.zaoShuiTimeVisible === '1'
           this.zaoQiTimeVisible = res.data.zaoQiTimeVisible === '1'
-          if (res.data.kuanLiangMiao !== null && res.data.kuanLiangMiao != '') {
+          if (res.data.kuanLiangMiao) {
             this.kuanLiangMiao = res.data.kuanLiangMiao
+          } else {
+            this.kuanLiangMiao = '宽两秒'
           }
           this.kuanLiangMiaoCount = res.data.kuanLiangMiaoCount
           console.log(res.data)
