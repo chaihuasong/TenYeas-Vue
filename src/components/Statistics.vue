@@ -1,52 +1,120 @@
 <template>
-  <div>
-    <div style="font-size: 18px;font-weight: bold;float: left;margin-left: 10px;margin-bottom: 5px">总览</div>
-    <el-card style="width: 100%;margin-top: 10px;margin-bottom: 20px">
-      <span style="font-weight: bold">您已累计坚持打卡</span>
-      <span style="font-weight:bold;font-size: 22px;color: #66b1ff;margin-left: 5px">{{ this.totalReportCount }}</span> 天
-      <br/>
-      <span style="font-weight: bold">本月已打卡</span>
-      <span style="font-weight:bold;font-size: 22px;color: #66b1ff;margin-left: 5px">{{ this.currentMonthReportCount }}</span> 天
-      <br/>
-    </el-card>
-
-    <div id="statistics_charts" :style="{width:'100%',height: '280px'}"></div>
-
-    <div style="font-size: 18px;font-weight: bold;float: left;margin-left: 10px;margin-bottom: 5px">最近7日汇总</div>
-    <el-card style="width: 100%;margin-top: 10px;margin-bottom: 10px">
-            <div v-for="(item, index) in last7DaysTotalList" v-bind:key='index'
-                 style="float: left;font-size: 18px;margin-left: 15%;margin-right: 15%;margin-bottom: 5px">
-              <span v-if="last7DaysTotalList[index] > 0">
-                {{last7DaysReportTemplateList[index]}}
-                <span v-if="last7DaysTotalList[index] < 100" style="font-size: 22px;color: #c4d363">{{last7DaysTotalList[index]}}</span>
-                <span v-if="last7DaysTotalList[index] >= 100 && last7DaysTotalList[index] < 200" style="font-size: 22px;color: #42832d">{{last7DaysTotalList[index]}}</span>
-                <span v-if="last7DaysTotalList[index] >= 200 && last7DaysTotalList[index] < 300" style="font-size: 22px;color: #f37b7b">{{last7DaysTotalList[index]}}</span>
-                <span v-if="last7DaysTotalList[index] >= 300 && last7DaysTotalList[index] < 500" style="font-size: 22px;color: #f30b95">{{last7DaysTotalList[index]}}</span>
-                <span v-if="last7DaysTotalList[index] > 500" style="font-size: 22px;color: #3d0627">{{last7DaysTotalList[index]}}</span>
-                {{ last7DaysReportUnitList[index]}}
-              </span>
-            </div>
-    </el-card>
-
-    <div style="font-size: 18px;font-weight: bold;float: left;margin-left: 10px;margin-bottom: 5px">历史汇总</div>
-    <el-card style="width: 100%;margin-top: 10px;margin-bottom: 10px">
-<!--      <span style="color:lightgray">敬请期待..</span>-->
-      <div v-for="(item, index) in mergedResultList" v-bind:key='index'
-           style="float: left;font-size: 18px;margin-left: 10%;margin-right: 10%;margin-bottom: 5px">
-        <span v-if="item.split('_')[0] !== '七分饱' && mergedResultValueList[index] > 0">
-          {{item.split('_')[0]}}
-          <span v-if="mergedResultValueList[index] < 100" style="font-size: 22px;color: #c4d363">{{mergedResultValueList[index]}}</span>
-          <span v-if="mergedResultValueList[index] >= 100 && mergedResultValueList[index] < 500" style="font-size: 22px;color: #42832d">{{mergedResultValueList[index]}}</span>
-          <span v-if="mergedResultValueList[index] >= 500 && mergedResultValueList[index] < 1000" style="font-size: 22px;color: #f37b7b">{{mergedResultValueList[index]}}</span>
-          <span v-if="mergedResultValueList[index] >= 1000 && mergedResultValueList[index] < 5000" style="font-size: 22px;color: #b76666">{{mergedResultValueList[index]}}</span>
-          <span v-if="mergedResultValueList[index] >= 5000 && mergedResultValueList[index] < 10000" style="font-size: 22px;color: #f30b95">{{mergedResultValueList[index]}}</span>
-          <span v-if="mergedResultValueList[index] >= 10000" style="font-size: 22px;color: #3d0627">{{mergedResultValueList[index]}}</span>
-          {{ item.split('_')[0] === '早睡' || item.split('_')[0] === '早起' ? '天' : item.split('_')[1] }}
-        </span>
+  <div class="statistics-container" v-loading="loading">
+    <!-- 顶部总览卡片 -->
+    <div class="summary-section">
+      <div class="section-title">数据总览</div>
+      <div class="summary-cards">
+        <div class="summary-card">
+          <div class="card-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <i class="el-icon-calendar"></i>
+          </div>
+          <div class="card-content">
+            <div class="card-value">{{ totalReportCount }}</div>
+            <div class="card-label">累计打卡(天)</div>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="card-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <i class="el-icon-date"></i>
+          </div>
+          <div class="card-content">
+            <div class="card-value">{{ currentMonthReportCount }}</div>
+            <div class="card-label">本月打卡(天)</div>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="card-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <i class="el-icon-trophy"></i>
+          </div>
+          <div class="card-content">
+            <div class="card-value">{{ currentStreak }}</div>
+            <div class="card-label">连续打卡(天)</div>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="card-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+            <i class="el-icon-star-on"></i>
+          </div>
+          <div class="card-content">
+            <div class="card-value">{{ maxStreak }}</div>
+            <div class="card-label">最长连续(天)</div>
+          </div>
+        </div>
       </div>
-    </el-card>
+    </div>
 
-    <div style="margin-bottom: 100px"/>
+    <!-- 本周打卡情况 -->
+    <div class="week-section">
+      <div class="section-title">本周打卡</div>
+      <div class="week-calendar">
+        <div v-for="(day, index) in weekDays" :key="index" class="week-day">
+          <div class="day-name">{{ day.name }}</div>
+          <div :class="['day-circle', { 'checked': day.checked, 'today': day.isToday }]">
+            <i v-if="day.checked" class="el-icon-check"></i>
+            <span v-else>{{ day.date }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 最近7日趋势图 -->
+    <div class="chart-section">
+      <div class="section-title">最近7日趋势</div>
+      <div id="statistics_charts" class="chart-container"></div>
+    </div>
+
+    <!-- 最近7日汇总 -->
+    <div class="summary-list-section" v-if="last7DaysSummary.length > 0">
+      <div class="section-title">最近7日汇总</div>
+      <div class="summary-list">
+        <div v-for="(item, index) in last7DaysSummary" :key="index" class="summary-item">
+          <div class="item-name">{{ item.name }}</div>
+          <div class="item-value" :style="{ color: getValueColor(item.value) }">
+            {{ item.value }}
+          </div>
+          <div class="item-unit">{{ item.unit }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 历史总汇总 -->
+    <div class="history-section" v-if="historySummary.length > 0">
+      <div class="section-title">历史总汇总</div>
+      <div class="history-grid">
+        <div v-for="(item, index) in historySummary" :key="index" class="history-item">
+          <div class="history-value" :style="{ color: getHistoryColor(item.value) }">
+            {{ formatNumber(item.value) }}
+          </div>
+          <div class="history-label">{{ item.name }}</div>
+          <div class="history-unit">{{ item.unit }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 月度对比 -->
+    <div class="monthly-section" v-if="monthlyComparison.current > 0 || monthlyComparison.previous > 0">
+      <div class="section-title">月度对比</div>
+      <div class="monthly-comparison">
+        <div class="month-item">
+          <div class="month-label">上月</div>
+          <div class="month-value">{{ monthlyComparison.previous }} 天</div>
+          <el-progress :percentage="getMonthPercentage(monthlyComparison.previous)" :show-text="false" color="#909399"></el-progress>
+        </div>
+        <div class="month-item current">
+          <div class="month-label">本月</div>
+          <div class="month-value">{{ monthlyComparison.current }} 天</div>
+          <el-progress :percentage="getMonthPercentage(monthlyComparison.current)" :show-text="false" color="#67c23a"></el-progress>
+        </div>
+        <div class="month-trend" v-if="monthlyComparison.previous > 0">
+          <span :class="['trend-icon', monthlyComparison.trend > 0 ? 'up' : 'down']">
+            <i :class="monthlyComparison.trend > 0 ? 'el-icon-top' : 'el-icon-bottom'"></i>
+            {{ Math.abs(monthlyComparison.trend) }}%
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div style="height: 80px;"></div>
   </div>
 </template>
 
@@ -56,346 +124,642 @@ import global from "@/components/Common";
 import * as echarts from "echarts";
 
 export default {
-  name: 'TenYears',
-  props: {
-    msg: String
-  },
+  name: 'Statistics',
   data() {
     return {
       serverUrl: global.httpUrl,
-      currentMonthReportCount: 0,
+      loading: true,
       totalReportCount: 0,
-      totalReportList: [],
-      templateIdList: [],
-      mergedResultList: [],
-      mergedResultValueList: [],
-      last7DaysDate: [],
-      last7DaysReportedDate: [],
-      last7DaysReportList: [],
-      last7DaysReportTemplateList: [],
-      last7DaysReportUnitList: [],
-      last7DaysReportValue: [],
-      last7DaysTotalList: [],//过去7日汇总
+      currentMonthReportCount: 0,
+      currentStreak: 0,
+      maxStreak: 0,
+      weekDays: [],
+      last7DaysSummary: [],
+      historySummary: [],
+      monthlyComparison: {
+        current: 0,
+        previous: 0,
+        trend: 0
+      },
+      // 图表数据
+      chartData: {
+        dates: [],
+        series: []
+      },
+      // 原始数据
+      allReports: [],
+      templateCache: {}
     };
   },
-  mounted: function () {
+  mounted() {
     document.title = this.$route.meta.title
-    console.log("myHome getData")
-    this.initData()
-    this.getData()
+    this.initWeekDays()
+    this.loadData()
   },
   methods: {
-    drawPie(id) {
-      this.charts = echarts.init(document.getElementById(id))
-      let xAxis = []
-      for (let i= 0; i < this.last7DaysDate.length; i++) {
-        let date = this.last7DaysDate[i]
-        xAxis.push(date.substring(date.indexOf('-') + 1).replace('-', '/'))
+    // 初始化本周日期
+    initWeekDays() {
+      const today = new Date()
+      const dayOfWeek = today.getDay() || 7 // 周日为0，转为7
+      const weekNames = ['一', '二', '三', '四', '五', '六', '日']
+
+      this.weekDays = []
+      for (let i = 1; i <= 7; i++) {
+        const date = new Date(today)
+        date.setDate(today.getDate() - dayOfWeek + i)
+        this.weekDays.push({
+          name: '周' + weekNames[i - 1],
+          date: date.getDate(),
+          fullDate: this.formatDate(date),
+          checked: false,
+          isToday: this.formatDate(date) === this.formatDate(today)
+        })
       }
-      let series = []
-      for (let i = 0; i < this.last7DaysReportValue.length; i++) {
-        let value = {}
-        let name = this.last7DaysReportTemplateList[i]
-        if (name === '七分饱') continue
-        value['name'] = name
-        value['type'] = 'line'
-        value['data'] = this.last7DaysReportValue[i]
-        series.push(value)
+    },
+
+    formatDate(date) {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    },
+
+    formatNumber(num) {
+      if (num >= 10000) {
+        return (num / 10000).toFixed(1) + '万'
       }
-      this.charts.setOption({
-        title: {
-          text: '最近7日统计'
-        },
-        xAxis: {
-          type: 'category',
-          data: xAxis,
-          axisLabel: {
-            interval:0,
-            rotate:40
-          },
-        },
+      return num
+    },
+
+    getValueColor(value) {
+      if (value < 50) return '#67c23a'
+      if (value < 100) return '#409eff'
+      if (value < 200) return '#e6a23c'
+      return '#f56c6c'
+    },
+
+    getHistoryColor(value) {
+      if (value < 100) return '#67c23a'
+      if (value < 500) return '#409eff'
+      if (value < 1000) return '#e6a23c'
+      if (value < 5000) return '#f56c6c'
+      return '#722ed1'
+    },
+
+    getMonthPercentage(days) {
+      const maxDays = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()
+      return Math.min(100, Math.round((days / maxDays) * 100))
+    },
+
+    async loadData() {
+      this.loading = true
+      const unionid = this.$store.getters.getUnionid?.replace(/"/g, '')
+
+      if (!unionid) {
+        this.$message.warning("请先登录")
+        this.loading = false
+        return
+      }
+
+      try {
+        // 获取所有打卡记录
+        const res = await axios.get(`${this.serverUrl}getReportInfoListById?userId=${unionid}`)
+
+        if (!res.data || res.data.length === 0) {
+          this.$message.warning("暂无打卡数据")
+          this.loading = false
+          return
+        }
+
+        this.allReports = res.data
+        this.totalReportCount = this.allReports.length
+
+        // 计算各项统计
+        this.calculateStreaks()
+        this.calculateMonthlyStats()
+        this.updateWeekChecks()
+        await this.calculateSummaries()
+        this.drawChart()
+
+      } catch (error) {
+        console.error('加载数据失败:', error)
+        this.$message.error('加载数据失败')
+      } finally {
+        this.loading = false
+      }
+    },
+
+    // 计算连续打卡天数
+    calculateStreaks() {
+      if (this.allReports.length === 0) return
+
+      // 按日期排序
+      const sortedDates = this.allReports
+        .map(r => r.date)
+        .sort((a, b) => new Date(b) - new Date(a))
+
+      const uniqueDates = [...new Set(sortedDates)]
+      const today = this.formatDate(new Date())
+      const yesterday = this.formatDate(new Date(Date.now() - 86400000))
+
+      // 计算当前连续天数
+      let currentStreak = 0
+      let checkDate = uniqueDates[0] === today || uniqueDates[0] === yesterday ? uniqueDates[0] : null
+
+      if (checkDate) {
+        for (let i = 0; i < uniqueDates.length; i++) {
+          const expectedDate = this.formatDate(new Date(new Date(checkDate).getTime() - i * 86400000))
+          if (uniqueDates[i] === expectedDate) {
+            currentStreak++
+          } else {
+            break
+          }
+        }
+      }
+      this.currentStreak = currentStreak
+
+      // 计算最长连续天数
+      let maxStreak = 1
+      let tempStreak = 1
+      for (let i = 1; i < uniqueDates.length; i++) {
+        const prevDate = new Date(uniqueDates[i - 1])
+        const currDate = new Date(uniqueDates[i])
+        const diffDays = (prevDate - currDate) / 86400000
+
+        if (diffDays === 1) {
+          tempStreak++
+          maxStreak = Math.max(maxStreak, tempStreak)
+        } else {
+          tempStreak = 1
+        }
+      }
+      this.maxStreak = maxStreak
+    },
+
+    // 计算月度统计
+    calculateMonthlyStats() {
+      const now = new Date()
+      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+      const prevMonth = now.getMonth() === 0
+        ? `${now.getFullYear() - 1}-12`
+        : `${now.getFullYear()}-${String(now.getMonth()).padStart(2, '0')}`
+
+      this.currentMonthReportCount = this.allReports.filter(r => r.date.startsWith(currentMonth)).length
+      const prevMonthCount = this.allReports.filter(r => r.date.startsWith(prevMonth)).length
+
+      this.monthlyComparison = {
+        current: this.currentMonthReportCount,
+        previous: prevMonthCount,
+        trend: prevMonthCount > 0
+          ? Math.round((this.currentMonthReportCount - prevMonthCount) / prevMonthCount * 100)
+          : 0
+      }
+    },
+
+    // 更新本周打卡状态
+    updateWeekChecks() {
+      const checkedDates = new Set(this.allReports.map(r => r.date))
+      this.weekDays.forEach(day => {
+        day.checked = checkedDates.has(day.fullDate)
+      })
+    },
+
+    // 计算汇总数据
+    async calculateSummaries() {
+      const last7Days = []
+      const today = new Date()
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today.getTime() - i * 86400000)
+        last7Days.push(this.formatDate(date))
+      }
+
+      // 获取最近7天的报告
+      const last7DaysReports = this.allReports.filter(r => last7Days.includes(r.date))
+
+      // 收集需要的模板ID
+      const templateIds = [...new Set(this.allReports.map(r => r.templateId).filter(id => id))]
+
+      // 批量获取模板
+      await this.loadTemplates(templateIds)
+
+      // 计算最近7天汇总
+      this.calculateLast7DaysSummary(last7DaysReports, last7Days)
+
+      // 计算历史总汇总
+      this.calculateHistorySummary()
+    },
+
+    async loadTemplates(templateIds) {
+      const uncachedIds = templateIds.filter(id => !this.templateCache[id])
+
+      if (uncachedIds.length > 0) {
+        const promises = uncachedIds.map(id =>
+          axios.get(`${this.serverUrl}getReportTemplateById?id=${id}`)
+            .then(res => ({ id, data: res.data }))
+            .catch(() => ({ id, data: null }))
+        )
+
+        const results = await Promise.all(promises)
+        results.forEach(({ id, data }) => {
+          if (data) this.templateCache[id] = data
+        })
+      }
+    },
+
+    calculateLast7DaysSummary(reports, dates) {
+      const summary = {}
+      const chartSeries = {}
+
+      reports.forEach(report => {
+        const template = this.templateCache[report.templateId]
+        if (!template) return
+
+        template.forEach((tpl, idx) => {
+          if (!tpl || tpl === '七分饱_') return
+
+          const [name, unit] = tpl.split('_')
+          const value = this.parseValue(report[`value${idx + 1}`])
+
+          if (value > 0) {
+            if (!summary[name]) {
+              summary[name] = { name, unit: unit || '次', value: 0 }
+              chartSeries[name] = { name, data: new Array(7).fill(0) }
+            }
+            summary[name].value += value
+
+            const dateIndex = dates.indexOf(report.date)
+            if (dateIndex >= 0) {
+              chartSeries[name].data[dateIndex] += value
+            }
+          }
+        })
+      })
+
+      this.last7DaysSummary = Object.values(summary).filter(s => s.value > 0)
+
+      // 准备图表数据
+      this.chartData = {
+        dates: dates.map(d => d.substring(5).replace('-', '/')),
+        series: Object.values(chartSeries).filter(s => s.data.some(v => v > 0))
+      }
+    },
+
+    calculateHistorySummary() {
+      const summary = {}
+
+      this.allReports.forEach(report => {
+        const template = this.templateCache[report.templateId]
+        if (!template) return
+
+        template.forEach((tpl, idx) => {
+          if (!tpl || tpl === '七分饱_') return
+
+          const [name, unit] = tpl.split('_')
+          const value = this.parseValue(report[`value${idx + 1}`])
+
+          if (value > 0) {
+            if (!summary[name]) {
+              summary[name] = {
+                name,
+                unit: (name === '早睡' || name === '早起') ? '天' : (unit || '次'),
+                value: 0
+              }
+            }
+            summary[name].value += value
+          }
+        })
+      })
+
+      this.historySummary = Object.values(summary)
+        .filter(s => s.value > 0)
+        .sort((a, b) => b.value - a.value)
+    },
+
+    parseValue(val) {
+      if (!val) return 0
+      const str = String(val)
+      if (str.includes('+')) {
+        return str.split('+').reduce((sum, v) => sum + (parseInt(v) || 0), 0)
+      }
+      return parseInt(str) || 0
+    },
+
+    drawChart() {
+      if (this.chartData.series.length === 0) return
+
+      const chartDom = document.getElementById('statistics_charts')
+      if (!chartDom) return
+
+      const chart = echarts.init(chartDom)
+
+      const series = this.chartData.series.map(s => ({
+        name: s.name,
+        type: 'line',
+        smooth: true,
+        data: s.data,
+        symbolSize: 6
+      }))
+
+      chart.setOption({
         tooltip: {
           trigger: 'axis'
+        },
+        legend: {
+          data: this.chartData.series.map(s => s.name),
+          top: 0,
+          type: 'scroll'
         },
         grid: {
           left: '3%',
           right: '4%',
           bottom: '3%',
-          top: '36%',
+          top: '15%',
           containLabel: true
         },
-        yAxis: {
-          type: 'value',
-          axisLabel: {
-            formatter: '{value}'
-          }
+        xAxis: {
+          type: 'category',
+          boundaryGap: false,
+          data: this.chartData.dates
         },
-        series: series,
-        legend:{
-          show: true,
-          top: "12%",
-          orient: 'horizontal',
-        }
+        yAxis: {
+          type: 'value'
+        },
+        series: series
       })
-    },
-    initData() {
-      for (let i = 7; i > 0; i--) {
-        let date = this.getDateFormat(new Date(Date.now() - i * 24 * 60 * 60 * 1000))
-        this.last7DaysDate.push(date)
-      }
-    },
-    getDateFormat(date) {
-      let year = date.getFullYear()
-      let month = date.getMonth() + 1
-      if (month < 10) month = '0' + month
-      let day = date.getDate()
-      if (day < 10) day = '0' + day
-      return year + "-" + month + "-" + day
-    },
-    getData() {
-      this.unionid = this.$store.getters.getUnionid
-      if (this.unionid != null) {
-        this.unionid = this.unionid.replace("\"", "").replace("\"", "")
-      }
-      let _this = this
-      console.log("getData unionid:" + this.unionid)
-      axios({
-        method: "GET",
-        url: this.serverUrl + "getReportInfoListById?userId=" + this.unionid,
-        data: null,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      }).then((res) => {
-        //console.log("getById: res:" + res.data)
-        //首先从服务器端获取所有当前用户的ReportInfo列表
-        if (res.data != null && res.data !== '') {
-          console.log("getById res.data:" + res.data.length)
-          //需要下载的模板列表
-          let downloadTemplateList = []
-          let totalValueList = []
-          let templateList = []
-          let last7DaysTemplateIndexList = []
-
-          let currentDate = this.getDateFormat(new Date())
-          let monthDate = currentDate.substr(0, currentDate.lastIndexOf('-') + 1)
-          this.totalReportList = res.data
-          this.totalReportCount = this.totalReportList.length
-          //循环遍历当前用户所有的打卡信息
-          for (let i = 0; i < this.totalReportCount; i++) {
-            let tempId = this.totalReportList[i].templateId
-            this.templateIdList.push(tempId)
-            let reportItem = this.totalReportList[i]
-            let index = downloadTemplateList.indexOf(tempId)
-
-            if (reportItem.date.startsWith(monthDate)) {
-              //统计当月打卡数据
-              this.currentMonthReportCount++
-            }
-            if (index < 0) {
-              //需要从服务器下载的模板，模板变更都走这里
-              downloadTemplateList.push(tempId)
-              totalValueList.push(reportItem)
-              console.log("reportItem:" + reportItem.date)
-            } else {
-              //累加操作
-              let tempItem = totalValueList[index]
-              let totalItem = {}
-              for (let i = 1; i <= 20; i++) {
-                //可能包含'+'号
-                let tmp = tempItem['value' + i]
-                if (tmp !== null && tmp.toString().indexOf('+') > 0) {
-                  tmp = parseInt(tmp.split('+')[0]) + parseInt(tmp.split('+')[1])
-                  tempItem['value' + i] = tmp
-                }
-                if (reportItem['value' + i] === null || reportItem['value' + i] === '' || reportItem['value' + i] === undefined) {
-                  totalItem['value' + i] = tempItem['value' + i]
-                  continue
-                }
-                //可能包含'+'号
-                let tmpReportItem = reportItem['value' + i]
-                if (tmpReportItem !== null && tmpReportItem.toString().indexOf('+') > 0) {
-                  tmpReportItem = parseInt(tmpReportItem.split('+')[0]) + parseInt(tmpReportItem.split('+')[1])
-                  reportItem['value' + i] = tmpReportItem
-                }
-                totalItem['value' + i] = (tempItem['value' + i] === null || tempItem['value' + i] === '' || tempItem['value' + i] === undefined) ? 0 : parseInt(tempItem['value' + i]) + parseInt(reportItem['value' + i])
-
-                // console.log("totalItem[value" + i + "]:" + totalItem['value' + i])
-              }
-              totalValueList[index] = totalItem
-            }
-
-            //获取过去7天数据
-            for (let j = 0; j < this.last7DaysDate.length; j++) {
-              if (reportItem.date === this.last7DaysDate[j]) {
-                this.last7DaysReportList.push(reportItem)
-                this.last7DaysReportedDate.push(reportItem.date)
-                // console.log("----" + this.last7DaysReportList.length + "-----" + this.last7DaysReportedDate.length + "------------" + reportItem.templateId + "-------" + reportItem.value1)
-                last7DaysTemplateIndexList.push(downloadTemplateList.indexOf(reportItem.templateId))
-                // console.log(reportItem.templateId + " " + reportItem.date + " downloadTemplateList.indexOf(reportItem.templateId):" + downloadTemplateList.indexOf(reportItem.templateId) + " templateID:" + downloadTemplateList[downloadTemplateList.indexOf(reportItem.templateId)])
-              }
-            }
-          }
-          let urlArray = []
-          for (let i = 0; i < downloadTemplateList.length; i++) {
-            if (downloadTemplateList[i] !== null && downloadTemplateList[i] !== '' && downloadTemplateList[i] !== undefined) {
-              urlArray.push(this.serverUrl + "getReportTemplateById?id=" + downloadTemplateList[i])
-            }
-          }
-          let promiseArray = urlArray.map(url => axios.get(url));
-          console.log("urlArray:" + urlArray)
-          console.log("promiseArray:" + promiseArray)
-          console.log("downloadTemplateList:" + downloadTemplateList)
-          console.log("last7DaysTemplateIndexList:" + last7DaysTemplateIndexList)
-          axios.all(promiseArray)
-              .then(function (results) {
-                let resArray = results.map(r => r.data)
-                console.log(resArray)
-                for (let i = 0; i < resArray.length; i++) {
-                  templateList = resArray[i]
-                  let valueItem = totalValueList[i]
-                  console.log("templateList:" + templateList + " templateList.length:" + templateList.length)
-                  for (let j = 0; j < templateList.length; j++) {
-                    let value = valueItem['value' + (j + 1)]
-                    // console.log("valueItem[value" + (j + 1) + "]:" + value)
-                    if (value === null || value === '' || value === undefined) continue
-                    if (templateList[j] === null || templateList[j] === '' || templateList[j] === undefined) continue
-                    if (templateList[j] === '禅坐_分钟') templateList[j] = '静坐_分钟'
-
-                    // 可能包含'+'号
-                    let tmp = valueItem['value' + (j + 1)]
-                    if (tmp !== null && tmp.toString().indexOf('+') > 0) {
-                      tmp = parseInt(tmp.split('+')[0]) + parseInt(tmp.split('+')[1])
-                      valueItem['value' + (j + 1)] = tmp
-                    }
-                    if (_this.mergedResultList.length === 0 || _this.mergedResultList.indexOf(templateList[j]) < 0) {
-                      _this.mergedResultList.push(templateList[j])
-                      // console.log("!!!" + _this.mergedResultValueList.length)
-                      _this.mergedResultValueList.push(valueItem['value' + (j + 1)])
-                      // console.log("!!!" + _this.mergedResultValueList.length)
-                      // console.log("!!!" + _this.mergedResultValueList[_this.mergedResultValueList.length - 1])
-                    } else {
-                      //合并操作
-                      let index = _this.mergedResultList.indexOf(templateList[j])
-                      _this.mergedResultValueList[index] = parseInt(_this.mergedResultValueList[index]) + parseInt(valueItem['value' + (j + 1)])
-                      //console.log("---" + _this.mergedResultValueList[index])
-                    }
-                  }
-                }
-                // console.log("_this.last7DaysReportList:" + _this.last7DaysReportList.length)
-                // console.log(last7DaysTemplateIndexList)
-                let last7DaysTemplateMergedList = []
-                let last7DaysTemplateList = []
-                for (let i = 0; i < last7DaysTemplateIndexList.length; i++) {
-                  let template = resArray[last7DaysTemplateIndexList[i]]
-                  //这里出现过未-1数组越界导致近7天数据不显示的情况 -->这里的逻辑可能需要再梳理一下
-                  if (template === undefined) {
-                    template = resArray[last7DaysTemplateIndexList[i] - 1]
-                  }
-                  // console.log("template:" + template)
-                  for (let j = 0; template !== undefined && j < template.length; j++) {
-                    if (last7DaysTemplateMergedList.indexOf(template[j]) < 0) {
-                      last7DaysTemplateMergedList.push(template[j])
-                    }
-                  }
-                  last7DaysTemplateList[i] = template
-                }
-                // console.log("last7DaysTemplateMergedList:" + last7DaysTemplateMergedList)
-                // console.log("last7DaysTemplateList:" + last7DaysTemplateList.length)
-                // console.log("last7DaysTemplateList:" + last7DaysTemplateList)
-                // console.log(_this.last7DaysReportValue)
-                for (let i = 0; i < last7DaysTemplateMergedList.length; i++) {
-                  //初始化
-                  let value = []
-                  for (let j = 0; j < _this.last7DaysDate.length; j++) {
-                    value[j] = '0'
-                  }
-                  _this.last7DaysReportValue[i] = value
-                }
-
-                for (let i = 0; i < last7DaysTemplateMergedList.length; i++) {
-                  let value = _this.last7DaysReportValue[i]
-                  for (let j = 0; j < _this.last7DaysDate.length; j++) {
-                    let reportIndex = _this.last7DaysReportedDate.indexOf(_this.last7DaysDate[j])
-                    //说明有功课汇报
-                    if (reportIndex >= 0) {
-                      // console.log(_this.last7DaysDate[j] + ' reportIndex ' + reportIndex)
-                      let reportInfo = _this.last7DaysReportList[reportIndex]
-                      let dayIndex = _this.last7DaysDate.indexOf(_this.last7DaysDate[j])
-                      if (last7DaysTemplateList[reportIndex] === undefined) continue
-                      let templateIndex = last7DaysTemplateList[reportIndex].indexOf(last7DaysTemplateMergedList[i])
-                      // console.log(last7DaysTemplateMergedList[i] + ' templateIndex ' + templateIndex)
-                      if (templateIndex >= 0) {
-                        let val = reportInfo['value' + (templateIndex + 1)]
-                        if (val === null || val === '' || val ===undefined) {
-                          val = '0'
-                        }
-                        value[dayIndex] = val
-                      }
-                       // console.log(dayIndex + " reportIndex:" + reportIndex + " value[dayIndex]:" + value[dayIndex])
-                    }
-                  }
-                  _this.last7DaysReportValue[i] = value
-                }
-                console.log("last7DaysTemplateMergedList:" + last7DaysTemplateMergedList)
-
-                for (let i = 0; i < last7DaysTemplateMergedList.length; i++) {
-                  _this.last7DaysReportTemplateList[i] = last7DaysTemplateMergedList[i].split('_')[0]
-                  _this.last7DaysReportUnitList[i] = last7DaysTemplateMergedList[i].split('_')[1]
-                }
-                console.log("......end.....")
-                console.log(_this.last7DaysReportTemplateList)
-                console.log(_this.last7DaysReportUnitList)
-                console.log(_this.last7DaysReportValue)
-                console.log(_this.last7DaysDate)
-                console.log(_this.last7DaysReportedDate)
-
-                //新增7日汇总功能
-                for (let i = 0; i < _this.last7DaysReportValue.length; i++) {
-                  let val = 0;
-                  for (let j = 0; j < _this.last7DaysReportValue[i].length; j++) {
-                    if (_this.last7DaysReportValue[i][j] !== null && _this.last7DaysReportValue[i][j] !== undefined) {
-                      val += parseInt(_this.last7DaysReportValue[i][j]);
-                    }
-                  }
-                  _this.last7DaysTotalList.push(val)
-                }
-                console.log("last7DaysTotalList:" + _this.last7DaysTotalList)
-
-                _this.drawPie('statistics_charts')
-              })
-        } else {
-          this.$message.warning("未查到任何数据！")
-        }
-      });
-    },
-  },
+    }
+  }
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-
-img {
-  pointer-events: none;
+.statistics-container {
+  padding: 15px;
+  background: #f5f7fa;
+  min-height: 100vh;
 }
 
-* {
-  -webkit-touch-callout: none; /*系统默认菜单被禁用*/
-  -webkit-user-select: none; /*webkit浏览器*/
-  -khtml-user-select: none; /*早期浏览器*/
-  -moz-user-select: none; /*火狐*/
-  -ms-user-select: none; /*IE10*/
-  user-select: none;
+.section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #303133;
+  margin-bottom: 12px;
+  padding-left: 8px;
+  border-left: 3px solid #409eff;
 }
 
-input, textarea {
-  -webkit-user-select: auto; /*webkit浏览器*/
-  outline: none;
+/* 总览卡片 */
+.summary-section {
+  margin-bottom: 20px;
 }
 
-a {
-  color: #42b983;
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 
+.summary-card {
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.card-icon {
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+.card-icon i {
+  font-size: 22px;
+  color: white;
+}
+
+.card-content {
+  flex: 1;
+}
+
+.card-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #303133;
+  line-height: 1.2;
+}
+
+.card-label {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+}
+
+/* 本周打卡 */
+.week-section {
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.week-calendar {
+  display: flex;
+  justify-content: space-between;
+}
+
+.week-day {
+  text-align: center;
+  flex: 1;
+}
+
+.day-name {
+  font-size: 12px;
+  color: #909399;
+  margin-bottom: 8px;
+}
+
+.day-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  font-size: 14px;
+  color: #606266;
+  background: #f5f7fa;
+  transition: all 0.3s;
+}
+
+.day-circle.checked {
+  background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
+  color: white;
+}
+
+.day-circle.today {
+  border: 2px solid #409eff;
+}
+
+.day-circle.checked i {
+  font-size: 16px;
+}
+
+/* 图表区域 */
+.chart-section {
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.chart-container {
+  width: 100%;
+  height: 250px;
+}
+
+/* 汇总列表 */
+.summary-list-section {
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.summary-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.summary-item {
+  background: #f5f7fa;
+  border-radius: 8px;
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.item-name {
+  font-size: 14px;
+  color: #606266;
+}
+
+.item-value {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.item-unit {
+  font-size: 12px;
+  color: #909399;
+}
+
+/* 历史汇总 */
+.history-section {
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.history-item {
+  text-align: center;
+  padding: 12px 8px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #fff 100%);
+  border-radius: 8px;
+}
+
+.history-value {
+  font-size: 22px;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+.history-label {
+  font-size: 13px;
+  color: #606266;
+  margin-top: 4px;
+}
+
+.history-unit {
+  font-size: 11px;
+  color: #909399;
+}
+
+/* 月度对比 */
+.monthly-section {
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.monthly-comparison {
+  position: relative;
+}
+
+.month-item {
+  margin-bottom: 15px;
+}
+
+.month-item .month-label {
+  font-size: 13px;
+  color: #909399;
+  margin-bottom: 5px;
+}
+
+.month-item .month-value {
+  font-size: 16px;
+  font-weight: bold;
+  color: #606266;
+  margin-bottom: 8px;
+}
+
+.month-item.current .month-value {
+  color: #67c23a;
+}
+
+.month-trend {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.trend-icon {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.trend-icon.up {
+  color: #67c23a;
+}
+
+.trend-icon.down {
+  color: #f56c6c;
+}
+
+.trend-icon i {
+  margin-right: 4px;
+}
 </style>
