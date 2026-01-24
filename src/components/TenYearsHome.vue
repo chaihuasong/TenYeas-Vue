@@ -108,9 +108,9 @@
     <el-card style="float: left; width: 100%;margin-top: 10px">
       <div style="float: left; margin-bottom: 10px;font-weight: bold;text-align: left">每日反省总结，今天精气神是长养的还是消耗的，心量是开阔了还是狭迫了，表述内容不超过日历框。</div>
       <el-radio-group v-model="state" style="margin-bottom: 10px;text-align: left">
-        <el-radio label="1" style="width: 90%;float: left">精气神得到长养，朝着目标<span style="margin-left: 10px;margin-right: 5px;font-size: 20px;font-weight: bold">+</span></el-radio>
+        <el-radio label="1" style="width: 90%;float: left">精气神得到长养，朝着目标<span style="margin-left: 10px;margin-right: 5px;font-size: 18px;font-weight: bold;color: #67c23a">+</span></el-radio>
         <br/>
-        <el-radio label="0" style="width: 90%;float: left;margin-top: 10px;margin-bottom: 5px">精气神没有长养，偏离目标<span style="margin-left: 10px;margin-right: 5px;font-size: 20px;font-weight: bold">-</span></el-radio>
+        <el-radio label="0" style="width: 90%;float: left;margin-top: 10px;margin-bottom: 5px">精气神没有长养，偏离目标<span style="margin-left: 10px;margin-right: 5px;font-size: 20px;font-weight: bold;color: #f56c6c">-</span></el-radio>
       </el-radio-group>
       <el-input
           type="textarea"
@@ -1870,7 +1870,7 @@ a {
   border: none;
   background: transparent;
   padding-left: 0;
-  padding-right: 18px;
+  padding-right: 25px;
   text-align: right;
   height: 28px;
   line-height: 28px;
