@@ -43,6 +43,52 @@
       </div>
     </div>
 
+    <!-- 打卡率统计 -->
+    <div class="rate-section">
+      <div class="section-title">打卡率</div>
+      <div class="rate-cards">
+        <div class="rate-card">
+          <div class="rate-info">
+            <div class="rate-label">本周打卡率</div>
+            <div class="rate-value">{{ weekRate }}%</div>
+          </div>
+          <el-progress
+            type="circle"
+            :percentage="weekRate"
+            :width="60"
+            :stroke-width="6"
+            :color="getRateColor(weekRate)">
+          </el-progress>
+        </div>
+        <div class="rate-card">
+          <div class="rate-info">
+            <div class="rate-label">本月打卡率</div>
+            <div class="rate-value">{{ monthRate }}%</div>
+          </div>
+          <el-progress
+            type="circle"
+            :percentage="monthRate"
+            :width="60"
+            :stroke-width="6"
+            :color="getRateColor(monthRate)">
+          </el-progress>
+        </div>
+        <div class="rate-card">
+          <div class="rate-info">
+            <div class="rate-label">本年打卡率</div>
+            <div class="rate-value">{{ yearRate }}%</div>
+          </div>
+          <el-progress
+            type="circle"
+            :percentage="yearRate"
+            :width="60"
+            :stroke-width="6"
+            :color="getRateColor(yearRate)">
+          </el-progress>
+        </div>
+      </div>
+    </div>
+
     <!-- 本周打卡情况 -->
     <div class="week-section">
       <div class="section-title">本周打卡</div>
@@ -57,10 +103,72 @@
       </div>
     </div>
 
+    <!-- 年度趋势图 -->
+    <div class="chart-section">
+      <div class="section-title">
+        <span>年度趋势</span>
+        <el-select v-model="selectedYear" size="mini" class="year-select" @change="onYearChange">
+          <el-option
+            v-for="year in yearOptions"
+            :key="year"
+            :label="year + '年'"
+            :value="year">
+          </el-option>
+        </el-select>
+      </div>
+      <div id="year_chart" class="chart-container"></div>
+    </div>
+
     <!-- 最近7日趋势图 -->
     <div class="chart-section">
       <div class="section-title">最近7日趋势</div>
       <div id="statistics_charts" class="chart-container"></div>
+    </div>
+
+    <!-- 月度对比 -->
+    <div class="monthly-section" v-if="monthlyComparison.current > 0 || monthlyComparison.previous > 0">
+      <div class="section-title">月度对比</div>
+      <div class="monthly-comparison">
+        <div class="month-item">
+          <div class="month-label">上月</div>
+          <div class="month-value">{{ monthlyComparison.previous }} 天</div>
+          <el-progress :percentage="getMonthPercentage(monthlyComparison.previous)" :show-text="false" color="#909399"></el-progress>
+        </div>
+        <div class="month-item current">
+          <div class="month-label">本月</div>
+          <div class="month-value">{{ monthlyComparison.current }} 天</div>
+          <el-progress :percentage="getMonthPercentage(monthlyComparison.current)" :show-text="false" color="#67c23a"></el-progress>
+        </div>
+        <div class="month-trend" v-if="monthlyComparison.previous > 0">
+          <span :class="['trend-icon', monthlyComparison.trend > 0 ? 'up' : 'down']">
+            <i :class="monthlyComparison.trend > 0 ? 'el-icon-top' : 'el-icon-bottom'"></i>
+            {{ Math.abs(monthlyComparison.trend) }}%
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 年度统计卡片 -->
+    <div class="year-stats-section">
+      <div class="section-title">年度统计 ({{ selectedYear }}年)</div>
+      <div class="year-stats-grid">
+        <div class="year-stat-item">
+          <div class="year-stat-value">{{ yearReportCount }}</div>
+          <div class="year-stat-label">今年打卡天数</div>
+        </div>
+        <div class="year-stat-item">
+          <div class="year-stat-value">{{ avgMonthDays }}</div>
+          <div class="year-stat-label">月均打卡天数</div>
+        </div>
+        <div class="year-stat-item">
+          <div class="year-stat-value">{{ bestMonth }}</div>
+          <div class="year-stat-label">最佳月份</div>
+        </div>
+        <div class="year-stat-item">
+          <div class="year-stat-value">{{ daysFromStart }}</div>
+          <div class="year-stat-label">坚持天数</div>
+        </div>
+      </div>
     </div>
 
     <!-- 最近7日汇总 -->
@@ -91,29 +199,6 @@
       </div>
     </div>
 
-    <!-- 月度对比 -->
-    <div class="monthly-section" v-if="monthlyComparison.current > 0 || monthlyComparison.previous > 0">
-      <div class="section-title">月度对比</div>
-      <div class="monthly-comparison">
-        <div class="month-item">
-          <div class="month-label">上月</div>
-          <div class="month-value">{{ monthlyComparison.previous }} 天</div>
-          <el-progress :percentage="getMonthPercentage(monthlyComparison.previous)" :show-text="false" color="#909399"></el-progress>
-        </div>
-        <div class="month-item current">
-          <div class="month-label">本月</div>
-          <div class="month-value">{{ monthlyComparison.current }} 天</div>
-          <el-progress :percentage="getMonthPercentage(monthlyComparison.current)" :show-text="false" color="#67c23a"></el-progress>
-        </div>
-        <div class="month-trend" v-if="monthlyComparison.previous > 0">
-          <span :class="['trend-icon', monthlyComparison.trend > 0 ? 'up' : 'down']">
-            <i :class="monthlyComparison.trend > 0 ? 'el-icon-top' : 'el-icon-bottom'"></i>
-            {{ Math.abs(monthlyComparison.trend) }}%
-          </span>
-        </div>
-      </div>
-    </div>
-
     <div style="height: 80px;"></div>
   </div>
 </template>
@@ -126,6 +211,12 @@ import * as echarts from "echarts";
 export default {
   name: 'Statistics',
   data() {
+    const currentYear = new Date().getFullYear()
+    // 生成年份选项：从2020年到当前年份
+    const yearOptions = []
+    for (let y = currentYear; y >= 2020; y--) {
+      yearOptions.push(y)
+    }
     return {
       serverUrl: global.httpUrl,
       loading: true,
@@ -141,6 +232,19 @@ export default {
         previous: 0,
         trend: 0
       },
+      // 打卡率
+      weekRate: 0,
+      monthRate: 0,
+      yearRate: 0,
+      // 年度统计
+      currentYear: currentYear,
+      selectedYear: currentYear,
+      yearOptions: yearOptions,
+      yearReportCount: 0,
+      avgMonthDays: 0,
+      bestMonth: '-',
+      daysFromStart: 0,
+      monthlyData: [], // 每月打卡天数
       // 图表数据
       chartData: {
         dates: [],
@@ -206,6 +310,13 @@ export default {
       return '#722ed1'
     },
 
+    getRateColor(rate) {
+      if (rate >= 80) return '#67c23a'
+      if (rate >= 60) return '#409eff'
+      if (rate >= 40) return '#e6a23c'
+      return '#f56c6c'
+    },
+
     getMonthPercentage(days) {
       const maxDays = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()
       return Math.min(100, Math.round((days / maxDays) * 100))
@@ -237,9 +348,16 @@ export default {
         // 计算各项统计
         this.calculateStreaks()
         this.calculateMonthlyStats()
+        this.calculateRates()
+        this.calculateYearStats()
         this.updateWeekChecks()
         await this.calculateSummaries()
-        this.drawChart()
+
+        // 绘制图表
+        this.$nextTick(() => {
+          this.drawChart()
+          this.drawYearChart()
+        })
 
       } catch (error) {
         console.error('加载数据失败:', error)
@@ -247,6 +365,89 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+
+    // 计算打卡率
+    calculateRates() {
+      const today = new Date()
+      const todayStr = this.formatDate(today)
+
+      // 本周打卡率
+      const weekTotal = this.weekDays.filter(d => d.fullDate <= todayStr).length
+      const weekCheckedCount = this.weekDays.filter(d => d.checked && d.fullDate <= todayStr).length
+      this.weekRate = weekTotal > 0 ? Math.round((weekCheckedCount / weekTotal) * 100) : 0
+
+      // 本月打卡率
+      const dayOfMonth = today.getDate()
+      this.monthRate = dayOfMonth > 0 ? Math.round((this.currentMonthReportCount / dayOfMonth) * 100) : 0
+
+      // 本年打卡率
+      const startOfYear = new Date(today.getFullYear(), 0, 1)
+      const dayOfYear = Math.ceil((today - startOfYear) / 86400000) + 1
+      this.yearRate = dayOfYear > 0 ? Math.round((this.yearReportCount / dayOfYear) * 100) : 0
+    },
+
+    // 计算年度统计
+    calculateYearStats() {
+      const yearStr = this.selectedYear.toString()
+      const yearReports = this.allReports.filter(r => r.date.startsWith(yearStr))
+      this.yearReportCount = yearReports.length
+
+      // 计算每月打卡数据
+      const monthlyCount = {}
+      for (let i = 1; i <= 12; i++) {
+        const monthStr = `${yearStr}-${String(i).padStart(2, '0')}`
+        monthlyCount[monthStr] = 0
+      }
+
+      yearReports.forEach(r => {
+        const month = r.date.substring(0, 7)
+        if (monthlyCount[month] !== undefined) {
+          monthlyCount[month]++
+        }
+      })
+
+      // 当前年份只显示到当前月，历史年份显示全年
+      const isCurrentYear = this.selectedYear === this.currentYear
+      const displayMonths = isCurrentYear ? new Date().getMonth() + 1 : 12
+
+      this.monthlyData = Object.entries(monthlyCount)
+        .slice(0, displayMonths)
+        .map(([month, count]) => ({
+          month: month.substring(5) + '月',
+          count
+        }))
+
+      // 计算月均打卡天数
+      const monthsToCount = isCurrentYear ? new Date().getMonth() + 1 : 12
+      this.avgMonthDays = monthsToCount > 0
+        ? Math.round(this.yearReportCount / monthsToCount)
+        : 0
+
+      // 找出最佳月份
+      let maxCount = 0
+      let bestMonthStr = '-'
+      Object.entries(monthlyCount).forEach(([month, count]) => {
+        if (count > maxCount) {
+          maxCount = count
+          bestMonthStr = month.substring(5) + '月'
+        }
+      })
+      this.bestMonth = maxCount > 0 ? `${bestMonthStr}(${maxCount}天)` : '-'
+
+      // 计算从第一次打卡到现在的天数
+      if (this.allReports.length > 0) {
+        const sortedDates = this.allReports.map(r => r.date).sort()
+        const firstDate = new Date(sortedDates[0])
+        const today = new Date()
+        this.daysFromStart = Math.ceil((today - firstDate) / 86400000) + 1
+      }
+
+      // 更新年打卡率
+      const today = new Date()
+      const startOfYear = new Date(today.getFullYear(), 0, 1)
+      const dayOfYear = Math.ceil((today - startOfYear) / 86400000) + 1
+      this.yearRate = dayOfYear > 0 ? Math.round((this.yearReportCount / dayOfYear) * 100) : 0
     },
 
     // 计算连续打卡天数
@@ -444,6 +645,76 @@ export default {
       return parseInt(str) || 0
     },
 
+    // 年份切换
+    onYearChange() {
+      this.calculateYearStats()
+      this.$nextTick(() => {
+        this.drawYearChart()
+      })
+    },
+
+    // 绘制年度趋势图
+    drawYearChart() {
+      if (this.monthlyData.length === 0) return
+
+      const chartDom = document.getElementById('year_chart')
+      if (!chartDom) return
+
+      // 销毁旧图表实例
+      const existingChart = echarts.getInstanceByDom(chartDom)
+      if (existingChart) {
+        existingChart.dispose()
+      }
+
+      const chart = echarts.init(chartDom)
+      const isCurrentYear = this.selectedYear === this.currentYear
+      const currentMonth = new Date().getMonth()
+
+      chart.setOption({
+        tooltip: {
+          trigger: 'axis',
+          formatter: '{b}: {c}天'
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '3%',
+          top: '10%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          data: this.monthlyData.map(d => d.month),
+          axisLabel: {
+            fontSize: 11
+          }
+        },
+        yAxis: {
+          type: 'value',
+          name: '天数'
+        },
+        series: [{
+          name: '打卡天数',
+          type: 'bar',
+          data: this.monthlyData.map((d, index) => ({
+            value: d.count,
+            itemStyle: {
+              // 当前年份根据月份显示颜色，历史年份全部显示有效颜色
+              color: (!isCurrentYear || index <= currentMonth)
+                ? (d.count >= 20 ? '#67c23a' : d.count >= 10 ? '#409eff' : '#e6a23c')
+                : '#dcdfe6'
+            }
+          })),
+          barWidth: '60%',
+          label: {
+            show: true,
+            position: 'top',
+            formatter: (params) => params.value > 0 ? params.value : ''
+          }
+        }]
+      })
+    },
+
     drawChart() {
       if (this.chartData.series.length === 0) return
 
@@ -505,6 +776,19 @@ export default {
   margin-bottom: 12px;
   padding-left: 8px;
   border-left: 3px solid #409eff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.year-select {
+  width: 90px;
+}
+
+.year-select /deep/ .el-input__inner {
+  border-radius: 15px;
+  height: 28px;
+  line-height: 28px;
 }
 
 /* 总览卡片 */
@@ -557,6 +841,41 @@ export default {
   font-size: 12px;
   color: #909399;
   margin-top: 4px;
+}
+
+/* 打卡率 */
+.rate-section {
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.rate-cards {
+  display: flex;
+  justify-content: space-between;
+}
+
+.rate-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rate-info {
+  text-align: right;
+}
+
+.rate-label {
+  font-size: 12px;
+  color: #909399;
+}
+
+.rate-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: #303133;
 }
 
 /* 本周打卡 */
@@ -623,6 +942,41 @@ export default {
 .chart-container {
   width: 100%;
   height: 250px;
+}
+
+/* 年度统计 */
+.year-stats-section {
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.year-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.year-stat-item {
+  text-align: center;
+  padding: 15px 10px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #fff 100%);
+  border-radius: 10px;
+}
+
+.year-stat-value {
+  font-size: 20px;
+  font-weight: bold;
+  color: #409eff;
+  line-height: 1.2;
+}
+
+.year-stat-label {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 6px;
 }
 
 /* 汇总列表 */

@@ -1,168 +1,345 @@
 <template>
-  <div>
-    <div style="background: #303133;height: 200px">
-      <el-image
-          style="width: 60px; height: 60px;border-radius:50%;float: left;margin-left: 10%;margin-top: 60px"
-          :src="this.headimgurl"
-          :preview-src-list="[this.headimgurl.substr(0, this.headimgurl.lastIndexOf('/')) + '/0']"
-          fit="cover" />
-      <div style="float: left;color: white;font-weight: bold;margin-top: 100px">{{this.nickname}}</div>
-      <div style="float: right;color: white;font-weight: bold;margin-top: 20px;margin-right: 20px"><i class="el-icon-camera-solid" @click="camera"></i></div>
+  <div class="htq-container">
+    <!-- 顶部头图区域 -->
+    <div class="header-section">
+      <div class="header-bg"></div>
+      <div class="header-content">
+        <el-avatar :size="56" :src="headimgurl" class="user-avatar">
+          <i class="el-icon-user-solid"></i>
+        </el-avatar>
+        <div class="header-info">
+          <div class="header-title">立志圈</div>
+          <div class="header-subtitle">{{ nickname || '匿名用户' }}</div>
+        </div>
+      </div>
     </div>
 
-    <br/>
-    <br/>
-    <el-card style="float: left;width: 100%;margin-top: 5px">
-      <div v-for="(data) in datas" :key='data'>
-        <div v-if="data.open === '1' && data.path !== null && data.path !== ''" style="float: left;width: 100%">
-          <div style="float: left;width: 15%;height: 220px;">
-            <el-image style="width: 50px; height: 50px"
-            :src="data.headimgurl"></el-image>
+    <!-- 内容列表 -->
+    <div class="content-section">
+      <div v-if="loading" class="loading-state">
+        <i class="el-icon-loading"></i>
+        <span>加载中...</span>
+      </div>
+
+      <div v-else-if="filteredData.length > 0" class="post-list">
+        <div v-for="item in filteredData" :key="item.unionid" class="post-card">
+          <div class="post-header">
+            <el-avatar :size="44" :src="item.headimgurl" class="post-avatar">
+              <i class="el-icon-user-solid"></i>
+            </el-avatar>
+            <div class="post-user-info">
+              <div class="post-nickname">{{ item.nickname || '匿名用户' }}</div>
+              <div class="post-meta">
+                <span v-if="item.province"><i class="el-icon-location-outline"></i> {{ item.province }}</span>
+              </div>
+            </div>
           </div>
-          <div style="float: left;margin-left:10px;width:80%;text-align: left;">{{data.nickname}}</div>
-          <div style="float: left;margin-left: 50px;margin-top:30px">
-            <el-image style="width: 75px; height: 150px"
-                      :src="'http://htzchina.org/imgs/tenyears/' + data.path"
-                      :preview-src-list="['http://htzchina.org/imgs/tenyears/' + data.path]"/>
+
+          <div class="post-image-wrapper">
+            <el-image
+              class="post-image"
+              :src="getImageUrl(item.path)"
+              :preview-src-list="[getImageUrl(item.path)]"
+              fit="contain"
+              lazy>
+              <div slot="placeholder" class="image-loading">
+                <i class="el-icon-loading"></i>
+              </div>
+              <div slot="error" class="image-error">
+                <i class="el-icon-picture-outline"></i>
+                <span>图片加载失败</span>
+              </div>
+            </el-image>
+          </div>
+
+          <div v-if="item.info" class="post-content">
+            <div class="post-text">{{ item.info }}</div>
           </div>
         </div>
       </div>
-    </el-card>
+
+      <div v-else class="empty-state">
+        <el-image :src="require('../assets/img/empty.png')" class="empty-img"/>
+        <div class="empty-text">暂无公开的立志内容</div>
+        <div class="empty-hint">快去填写你的立志信息并设为公开吧</div>
+        <el-button type="primary" round @click="$router.push('/myHome')">
+          <i class="el-icon-edit"></i> 去设置
+        </el-button>
+      </div>
+    </div>
+
+    <!-- 底部间距 -->
+    <div style="height: 80px;"></div>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
+import global from '@/components/Common'
 
 export default {
-  name: 'TenYears',
-  props: {
-    msg: String
-  },
+  name: 'HTQ',
   data() {
     return {
-      name: '',
-      gender: '1',
-      telephone: '',
-      wechatgroup: '',
-      info: '',
-      stepInfo: '',
-      createDate: '',
-      birthday: '1988',
-      open: '',
-      daixie: '',
-      chujie: '',
-      wechatid: '',
-
+      serverUrl: global.httpUrl,
       unionid: '',
       nickname: '',
-      openid: '',
       headimgurl: '',
-      country: '',
-      province: '',
-      city: '',
-      language: '',
-      groupId: '',
-      imgUrl: '',
       datas: [],
-    };
+      loading: true
+    }
   },
-  mounted: function () {
+  computed: {
+    filteredData() {
+      return this.datas.filter(item =>
+        item.open === '1' && item.path && item.path !== ''
+      )
+    }
+  },
+  mounted() {
     document.title = this.$route.meta.title
-    console.log("pyq getInfo")
     this.getUserInfo()
     this.getData()
   },
   methods: {
-    camera() {
-      this.$message.warning("暂不支持！")
+    getImageUrl(path) {
+      if (!path) return ''
+      return `http://htzchina.org/imgs/tenyears/${path}`
     },
-    getUserInfo() {
+
+    async getUserInfo() {
       this.unionid = this.$store.getters.getUnionid
-      if (this.unionid != null) {
-        this.unionid = this.unionid.replace("\"", "").replace("\"", "")
+      if (this.unionid) {
+        this.unionid = this.unionid.replace(/"/g, '')
       }
-      console.log("getData unionid:" + this.unionid)
-      axios({
-        method: "GET",
-        url: "http://htzchina.org:8081/getById?id=" + this.unionid,
-        data: null,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+
+      try {
+        const res = await axios.get(`${this.serverUrl}getById?id=${this.unionid}`)
+        if (res.data) {
+          this.nickname = res.data.nickname || ''
+          this.headimgurl = res.data.headimgurl || ''
         }
-      }).then((res) => {
-        console.log("getById: res:" + res.data)
-        if (res.data != null && res.data !== '') {
-          console.log("getById res:" + res)
-          console.log("getById res.data:" + res.data)
-          this.name = res.data.name
-          this.headimgurl = res.data.headimgurl
-          this.gender = res.data.gender + ''
-          this.wechatgroup = res.data.wechatgroup
-          this.telephone = res.data.telephone
-          this.info = res.data.info
-          this.stepInfo = res.data.stepInfo
-          this.createDate = res.data.createDate
-          this.birthday = res.data.birthday
-          this.open = res.data.open
-          this.daixie = res.data.daixie
-          this.chujie = res.data.chujie
-          this.wechatid = res.data.wechatid
-          this.province = res.data.province
-        }
-      });
+      } catch (err) {
+        console.error('获取用户信息失败', err)
+      }
     },
-    getData() {
-      axios({
-        method: "GET",
-        url: "http://htzchina.org:8081/getAll",
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      }).then((res) => {
-        this.datas = res.data
-        console.log(this.datas)
-      })
-    },
-  },
+
+    async getData() {
+      this.loading = true
+      try {
+        const res = await axios.get(`${this.serverUrl}getAll`)
+        this.datas = res.data || []
+      } catch (err) {
+        console.error('获取数据失败', err)
+        this.$message.error('加载失败，请重试')
+      } finally {
+        this.loading = false
+      }
+    }
+  }
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.htq-container {
+  min-height: 100vh;
+  background: #f5f7fa;
+}
 
+/* 顶部头图 */
+.header-section {
+  position: relative;
+  height: 160px;
+}
+
+.header-bg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.header-content {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-avatar {
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.header-info {
+  color: white;
+}
+
+.header-title {
+  font-size: 22px;
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-subtitle {
+  font-size: 14px;
+  opacity: 0.9;
+  margin-top: 3px;
+}
+
+/* 内容区域 */
+.content-section {
+  padding: 15px;
+}
+
+/* 加载状态 */
+.loading-state {
+  text-align: center;
+  padding: 60px 0;
+  color: #909399;
+}
+
+.loading-state i {
+  font-size: 24px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+/* 帖子列表 */
+.post-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* 帖子卡片 */
+.post-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  gap: 12px;
+}
+
+.post-avatar {
+  flex-shrink: 0;
+}
+
+.post-user-info {
+  flex: 1;
+}
+
+.post-nickname {
+  font-size: 15px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.post-meta {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 3px;
+}
+
+.post-meta i {
+  margin-right: 3px;
+}
+
+/* 帖子图片 */
+.post-image-wrapper {
+  width: 100%;
+  background: #f8f9fa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.post-image {
+  width: 100%;
+  max-height: 400px;
+}
+
+.image-loading,
+.image-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #c0c4cc;
+}
+
+.image-loading i,
+.image-error i {
+  font-size: 36px;
+  margin-bottom: 10px;
+}
+
+.image-error span {
+  font-size: 14px;
+}
+
+/* 帖子内容 */
+.post-content {
+  padding: 12px 15px 15px;
+}
+
+.post-text {
+  font-size: 14px;
+  color: #606266;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-img {
+  width: 150px;
+  height: 150px;
+  margin-bottom: 20px;
+}
+
+.empty-text {
+  font-size: 16px;
+  color: #606266;
+  margin-bottom: 8px;
+}
+
+.empty-hint {
+  font-size: 14px;
+  color: #909399;
+  margin-bottom: 20px;
+}
+
+/* 通用 */
 img {
-  pointer-events:none;
+  pointer-events: none;
 }
 
-/deep/ .el-radio {
-  white-space: normal;
+* {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
-*{
-  -webkit-touch-callout:none;  /*系统默认菜单被禁用*/
-  -webkit-user-select:none; /*webkit浏览器*/
-  -khtml-user-select:none; /*早期浏览器*/
-  -moz-user-select:none;/*火狐*/
-  -ms-user-select:none; /*IE10*/
-  user-select:none;
-}
-input,textarea {
-  -webkit-user-select:auto; /*webkit浏览器*/
+input, textarea {
+  -webkit-user-select: auto;
   outline: none;
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-
-a {
-  color: #42b983;
 }
 </style>

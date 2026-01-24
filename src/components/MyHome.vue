@@ -1,158 +1,197 @@
 <template>
-  <div>
-    <div style="background: #303133;height: 150px">
-      <el-image
-          style="width: 60px; height: 60px;border-radius:50%;float: left;margin-left: 10%;margin-top: 40px"
-          :src="this.headimgurl"
-          :preview-src-list="[this.headimgurl.substr(0, this.headimgurl.lastIndexOf('/')) + '/0']"
-          fit="cover">
-        <div slot="error">
-          <el-image style="width: 60px; height: 60px"
-                    :src="require('../assets/img/not_found.jpg')" />
+  <div class="my-home-container">
+    <!-- 顶部个人信息卡片 -->
+    <div class="profile-header">
+      <div class="profile-bg"></div>
+      <div class="profile-content">
+        <div class="avatar-wrapper">
+          <el-image
+            class="avatar"
+            :src="headimgurl"
+            :preview-src-list="headimgurl ? [headimgurl.replace('/132', '/0')] : []"
+            fit="cover">
+            <div slot="error" class="avatar-error">
+              <i class="el-icon-user"></i>
+            </div>
+          </el-image>
         </div>
-      </el-image>
-      <div style="float: left;color: white;font-weight: bold;margin-top: 60px;margin-left: 20px">{{ this.nickname }}
+        <div class="profile-info">
+          <div class="nickname">{{ nickname || '未设置昵称' }}</div>
+          <div class="user-meta">
+            <span v-if="province"><i class="el-icon-location-outline"></i> {{ province }}</span>
+            <span v-if="gender"><i class="el-icon-user"></i> {{ gender === '1' ? '男' : '女' }}</span>
+          </div>
+        </div>
       </div>
     </div>
 
-    <br/>
-    <!--    <el-card style="float: left;width: 100%;margin-top: 5px" @click.native="PYQ">-->
-    <!--      <div style="float: left; margin-bottom: 20px;width: 15%">-->
-    <!--        立志圈-->
-    <!--      </div>-->
-    <!--      <div style="float: right; margin-bottom: 20px;width: 60%;text-align: left;margin-right: 10%">-->
-    <!--        <el-image v-if="this.lastImgUrl != ''" :src="lastImgUrl" style="width: 30px; height: 30px;"></el-image>-->
-    <!--      </div>-->
-    <!--    </el-card>-->
-    <el-collapse style="float: left; width: 100%;margin-top: 20px;">
-      <el-collapse-item title="基本信息" name="1">
-        <el-row style="text-align: left; margin-left: 30px;margin-top: 15px">
-          <el-col :span="8" style="font-weight: bold;font-size: 16px">
-            性别：
-          </el-col>
-          <el-col :span="16">
-            <el-dropdown trigger="click" @command="handleCommand">
-            <span class="el-dropdown-link" style="font-size: 16px">
-            {{ this.gender === '1' ? "男" : "女" }}<i class="el-icon-arrow-down el-icon--right"></i>
-            </span>
-              <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item command="0">女</el-dropdown-item>
-                <br/>
-                <el-dropdown-item command="1">男</el-dropdown-item>
-              </el-dropdown-menu>
-            </el-dropdown>
-          </el-col>
-        </el-row>
-        <el-row style="text-align: left; margin-left: 30px;margin-top: 15px">
-          <el-col :span="8" style="font-weight: bold;font-size: 16px">
-            昵称：
-          </el-col>
-          <el-col :span="16">
-            <input class="inputStyle" v-model="nickname" @change="onInputChange"/>
-          </el-col>
-        </el-row>
-        <el-row style="text-align: left; margin-left: 30px;margin-top: 15px">
-          <el-col :span="8" style="font-weight: bold;font-size: 16px">
-            城市：
-          </el-col>
-          <el-col :span="16">
-            <input class="inputStyle" v-model="province" @change="onInputChange"/>
-          </el-col>
-        </el-row>
-        <el-row style="text-align: left; margin-left: 30px;margin-top: 15px">
-          <el-col :span="8" style="font-weight: bold;font-size: 16px;padding-top: 5px">
-            生日：
-          </el-col>
-          <el-col :span="16">
+    <!-- 功能入口 -->
+    <div class="quick-actions">
+      <div class="action-item" @click="gotoGroup">
+        <div class="action-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <i class="el-icon-user"></i>
+        </div>
+        <span>我的团队</span>
+      </div>
+      <div class="action-item" @click="$router.push('/statistics')">
+        <div class="action-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+          <i class="el-icon-data-line"></i>
+        </div>
+        <span>数据统计</span>
+      </div>
+      <div class="action-item" @click="$router.push('/tenyearsHome')">
+        <div class="action-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+          <i class="el-icon-edit-outline"></i>
+        </div>
+        <span>去打卡</span>
+      </div>
+      <div class="action-item" @click="$router.push('/checkinCircle')">
+        <div class="action-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+          <i class="el-icon-chat-dot-round"></i>
+        </div>
+        <span>打卡圈</span>
+      </div>
+    </div>
+
+    <!-- 基本信息卡片 -->
+    <div class="section-card">
+      <div class="card-header">
+        <i class="el-icon-user"></i>
+        <span>基本信息</span>
+      </div>
+      <div class="card-body">
+        <div class="info-item">
+          <span class="info-label">昵称</span>
+          <div class="info-value">
+            <input class="info-input" v-model="nickname" @blur="onInfoChange" placeholder="请输入昵称"/>
+          </div>
+        </div>
+        <div class="info-item">
+          <span class="info-label">性别</span>
+          <div class="info-value">
+            <el-radio-group v-model="gender" @change="onGenderChange" size="small">
+              <el-radio-button label="1">男</el-radio-button>
+              <el-radio-button label="0">女</el-radio-button>
+            </el-radio-group>
+          </div>
+        </div>
+        <div class="info-item">
+          <span class="info-label">城市</span>
+          <div class="info-value">
+            <input class="info-input" v-model="province" @blur="onInfoChange" placeholder="请输入城市"/>
+          </div>
+        </div>
+        <div class="info-item">
+          <span class="info-label">生日</span>
+          <div class="info-value">
             <el-date-picker
-                v-model="birthday"
-                @change="onInputChange"
-                type="date"
-                :clearable="false"
-                :editable="false"
-                format="yyyy-MM-dd"
-                style="width: 150px"
-                placeholder="选择日期">
+              v-model="birthday"
+              type="date"
+              format="yyyy-MM-dd"
+              value-format="yyyy-MM-dd"
+              placeholder="选择生日"
+              :clearable="false"
+              @change="onInfoChange"
+              size="small">
             </el-date-picker>
-          </el-col>
-        </el-row>
-      </el-collapse-item>
-    </el-collapse>
-    <el-collapse style="float: left; width: 100%">
-      <el-collapse-item title="立志信息" name="2">
-        <textarea rows="5" class="multiLineInputStyle" v-model="info" @change="onInputChange" style="margin-left: 20px;margin-right: 20px"/>
-      </el-collapse-item>
-    </el-collapse>
-    <el-collapse style="float: left; width: 100%">
-      <el-collapse-item title="实施步骤" name="3">
-        <textarea rows="stepInfoRows" class="multiLineInputStyle" v-model="stepInfo" @change="onInputChange" style="margin-left: 20px;margin-right: 20px"/>
-      </el-collapse-item>
-    </el-collapse>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    <el-collapse style="float: left; width: 100%">
-      <el-collapse-item title="设置" name="4">
-        <el-row style="text-align: left; margin-left: 30px;margin-top: 20px">
-          <el-col :span="10" style="font-weight: bold">
-            <span>打卡提醒{{ notification ? '已开启' : '已关闭' }}</span>
-          </el-col>
-          <el-col :span="14">
-            <el-switch
-                style="margin-left: 5px"
-                @change="notificationChange"
-                v-model="notification">
-            </el-switch>
-          </el-col>
-        </el-row>
+    <!-- 立志信息卡片 -->
+    <div class="section-card">
+      <div class="card-header">
+        <i class="el-icon-aim"></i>
+        <span>我的立志</span>
+      </div>
+      <div class="card-body">
+        <div class="textarea-wrapper">
+          <textarea
+            v-model="info"
+            @blur="onInfoChange"
+            placeholder="写下你的立志宣言..."
+            rows="4"
+            class="custom-textarea">
+          </textarea>
+        </div>
+      </div>
+    </div>
 
-        <el-row style="text-align: left; margin-left: 30px;margin-top: 20px">
-          <el-col :span="10" style="font-weight: bold">
-            <span>内容能否公开</span>
-          </el-col>
-          <el-col :span="14">
-            <el-switch
-                style="margin-left: 5px"
-                @change="openChange"
-                v-model="open">
-            </el-switch>
-          </el-col>
-        </el-row>
+    <!-- 实施步骤卡片 -->
+    <div class="section-card">
+      <div class="card-header">
+        <i class="el-icon-document-checked"></i>
+        <span>实施步骤</span>
+      </div>
+      <div class="card-body">
+        <div class="textarea-wrapper">
+          <textarea
+            v-model="stepInfo"
+            @blur="onInfoChange"
+            placeholder="记录你的实施计划..."
+            rows="5"
+            class="custom-textarea">
+          </textarea>
+        </div>
+      </div>
+    </div>
 
-        <el-row style="text-align: left; margin-left: 30px;margin-top: 20px" @click.native="clearUnionId">
-          <el-col :span="10" style="font-weight: bold">
+    <!-- 设置卡片 -->
+    <div class="section-card">
+      <div class="card-header">
+        <i class="el-icon-setting"></i>
+        <span>设置</span>
+      </div>
+      <div class="card-body">
+        <div class="setting-item" @click="notification = !notification; notificationChange()">
+          <div class="setting-left">
+            <i class="el-icon-bell"></i>
+            <span>打卡提醒</span>
+          </div>
+          <div class="setting-right">
+            <span class="setting-status" :class="{ active: notification }">
+              {{ notification ? '已开启' : '已关闭' }}
+            </span>
+            <el-switch v-model="notification" @change="notificationChange"></el-switch>
+          </div>
+        </div>
+        <div class="setting-item" @click="open = !open; openChange()">
+          <div class="setting-left">
+            <i class="el-icon-view"></i>
+            <span>内容公开</span>
+          </div>
+          <div class="setting-right">
+            <span class="setting-status" :class="{ active: open }">
+              {{ open ? '已公开' : '已隐藏' }}
+            </span>
+            <el-switch v-model="open" @change="openChange"></el-switch>
+          </div>
+        </div>
+        <div class="setting-item" @click="clearUnionId">
+          <div class="setting-left">
+            <i class="el-icon-delete"></i>
             <span>清空缓存</span>
-          </el-col>
-          <el-col :span="14">
-            <i class="el-icon-arrow-right" style="margin-left: 10px"></i>
-          </el-col>
-        </el-row>
-      </el-collapse-item>
-    </el-collapse>
-    <el-collapse style="float: left; width: 100%" @click.native="gotoGroup">
-      <el-row>
-        <el-col :span="22">
-          <div style="text-align: left;margin-left: 20px;font-weight: bold;margin-top: 10px;margin-bottom: 10px">我的团队 <i style="color: red;font-size: 15px;font-weight: lighter"> 新*</i></div>
-        </el-col>
-        <el-col :span="2">
-          <div class="el-icon-arrow-right" style="margin-top: 12px;margin-bottom: 10px"></div>
-        </el-col>
-      </el-row>
-    </el-collapse>
+          </div>
+          <div class="setting-right">
+            <i class="el-icon-arrow-right"></i>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    <div style="margin-bottom: 150px"/>
+    <!-- 底部间距 -->
+    <div style="height: 100px;"></div>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
-import html2canvas from "html2canvas";
 import qs from "qs";
 import global from "@/components/Common";
 
 export default {
-  name: 'TenYears',
-  props: {
-    msg: String
-  },
+  name: 'MyHome',
   data() {
     return {
       serverUrl: global.httpUrl,
@@ -163,12 +202,11 @@ export default {
       info: '',
       stepInfo: '',
       createDate: '',
-      birthday: '1988',
+      birthday: '',
       open: false,
       daixie: '',
       chujie: '',
       wechatid: '',
-
       unionid: '',
       nickname: '',
       openid: '',
@@ -178,286 +216,415 @@ export default {
       city: '',
       language: '',
       groupId: '',
-      submitDisable: false,
-      daixieDisabled: false,
-      htmlsHeader: '',
-      htmlsFooter: '',
-      dialogVisible: false,
-      dialogTableVisible: false,
-      imgUrl: '',
-      isTimeout: false,
-      chujieIndex: '11',
-      openIndex: '12',
-      smallScreen: false,
-      tenyearsLater: 0,
-      remainningTime: '',
-      lastImgUrl: '',
       notification: false,
-      stepInfoRows: 7,
+      hasChanges: false
     };
   },
-  mounted: function () {
+  mounted() {
     document.title = this.$route.meta.title
-    console.log("myHome getData")
     this.getData()
-    this.configDiv()
   },
   methods: {
-    clearUnionId() {
-      this.$confirm('是否清空缓存？', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        confirmButtonClass: 'confirmButtonClass',
-        type: 'info'
-      }).then(() => {
-        this.$store.commit('$_setUnionid', '')
-        this.$router.push("/tenyearsHome");
-      })
+    getData() {
+      this.unionid = this.$store.getters.getUnionid
+      if (this.unionid) {
+        this.unionid = this.unionid.replace(/"/g, '')
+      }
+
+      axios.get(`${this.serverUrl}getById?id=${this.unionid}`)
+        .then(res => {
+          if (res.data) {
+            const data = res.data
+            this.name = data.name || ''
+            this.headimgurl = data.headimgurl || ''
+            this.gender = String(data.gender || '1')
+            this.wechatgroup = data.wechatgroup || ''
+            this.telephone = data.telephone || ''
+            this.info = data.info || ''
+            this.stepInfo = data.stepInfo || ''
+            this.createDate = data.createDate || ''
+            this.birthday = data.birthday || ''
+            this.open = data.open === '1'
+            this.daixie = data.daixie || ''
+            this.chujie = data.chujie || ''
+            this.wechatid = data.wechatid || ''
+            this.province = data.province || ''
+            this.nickname = data.nickname || ''
+            this.notification = data.notification === '1'
+          } else {
+            this.$message.warning("请先填写立志信息")
+            this.$router.push("/tenyears")
+          }
+        })
+        .catch(err => {
+          console.error('获取数据失败:', err)
+          this.$message.error('获取数据失败')
+        })
     },
+
+    onInfoChange() {
+      this.updateUserInfo()
+    },
+
+    onGenderChange() {
+      this.updateUserInfo()
+    },
+
+    updateUserInfo() {
+      const data = qs.stringify({
+        id: this.unionid,
+        nickname: this.nickname,
+        province: this.province,
+        birthday: this.birthday,
+        info: this.info,
+        stepInfo: this.stepInfo,
+        gender: this.gender,
+      })
+
+      axios.post(`${this.serverUrl}update`, data, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      })
+        .then(() => {
+          this.$message.success("保存成功")
+        })
+        .catch(() => {
+          this.$message.error("保存失败")
+        })
+    },
+
     openChange() {
-      let data = qs.stringify({
+      const data = qs.stringify({
         id: this.unionid,
         gender: this.gender,
         open: this.open ? '1' : '0',
       })
-      axios({
-        method: "POST",
-        url: this.serverUrl + "update",
-        data: data,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      }).then(() => {
-        console.log("success")
-        this.$message.success("操作成功")
+
+      axios.post(`${this.serverUrl}update`, data, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       })
+        .then(() => {
+          this.$message.success(this.open ? "内容已公开" : "内容已隐藏")
+        })
     },
+
     notificationChange() {
-      let data = qs.stringify({
+      const data = qs.stringify({
         id: this.unionid,
         gender: this.gender,
         notification: this.notification ? '1' : '0',
       })
-      axios({
-        method: "POST",
-        url: this.serverUrl + "update",
-        data: data,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      }).then(() => {
-        console.log("success")
-        this.$message.success("每日打卡通知提醒功能已" + (this.notification ? "开启" : "关闭"))
-      })
-    },
-    onInputChange() {
-      this.$confirm('是否保存修改？', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          confirmButtonClass: 'confirmButtonClass',
-          type: 'info'
-        }).then(() => {
-          let data = qs.stringify({
-          id: this.unionid,
-          nickname: this.nickname,
-          province: this.province,
-          birthday: this.birthday,
-          info: this.info,
-          stepInfo: this.stepInfo,
-          gender: this.gender,
-        })
-        axios({
-          method: "POST",
-          url: this.serverUrl + "update",
-          data: data,
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
-        }).then(() => {
-          console.log("success")
-          this.$message.success("更新成功")
-        })
-      })
-    },
-    handleCommand(command) {
-      this.gender = command
 
-      let data = qs.stringify({
-        id: this.unionid,
-        gender: this.gender,
+      axios.post(`${this.serverUrl}update`, data, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       })
-      axios({
-        method: "POST",
-        url: this.serverUrl + "update",
-        data: data,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      }).then(() => {
-        console.log("success")
-        this.$message.success("更新成功")
-      })
+        .then(() => {
+          this.$message.success(this.notification ? "提醒已开启" : "提醒已关闭")
+        })
     },
+
+    clearUnionId() {
+      this.$confirm('清空缓存后需要重新登录，确定继续？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.$store.commit('$_setUnionid', '')
+        this.$message.success("缓存已清空")
+        this.$router.push("/tenyearsHome")
+      }).catch(() => {})
+    },
+
     gotoGroup() {
       this.$router.push("/group")
-    },
-    gotoHTQ() {
-      this.$router.push("/htq")
-    },
-    getBirthday() {
-      let date = new Date(Date.parse(this.birthday) + 8 * 3600 * 1000)
-      let year = date.getFullYear()
-      let month = date.getMonth() + 1
-      if (month < 10) month = "0" + month
-      let dates = date.getDate()
-      if (dates < 10) dates = "0" + dates
-      return year + "-" + month + "-" + dates
-    },
-    configDiv() {
-      if (Date.now() - Date.parse('2021-5-6') > 0) {
-        this.isTimeout = true
-        this.chujieIndex = '10'
-        this.openIndex = '11'
-      }
-    },
-    capture() {
-      html2canvas(this.$refs.imageWrapper, {
-        scrollY: 0,
-        scrollX: 0,
-      }).then(canvas => {
-        let dataURL = canvas.toDataURL("image/png")
-        this.imgUrl = dataURL
-        if (this.imgUrl !== "") {
-          this.dialogTableVisible = true
-          this.dialogVisible = false
-        }
-      });
-    },
-    getData() {
-      this.unionid = this.$store.getters.getUnionid
-      if (this.unionid != null) {
-        this.unionid = this.unionid.replace("\"", "").replace("\"", "")
-      }
-      console.log("getData unionid:" + this.unionid)
-      axios({
-        method: "GET",
-        url: this.serverUrl + "getById?id=" + this.unionid,
-        data: null,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      }).then((res) => {
-        console.log("getById: res:" + res.data)
-        if (res.data != null && res.data !== '') {
-          console.log("getById res:" + res)
-          console.log("getById res.data:" + res.data)
-          this.name = res.data.name
-          this.headimgurl = res.data.headimgurl
-          this.gender = res.data.gender + ''
-          this.wechatgroup = res.data.wechatgroup
-          this.telephone = res.data.telephone
-          this.info = res.data.info
-          this.stepInfo = res.data.stepInfo
-          this.createDate = res.data.createDate
-          this.birthday = res.data.birthday
-          this.open = res.data.open === '1'
-          this.daixie = res.data.daixie
-          this.chujie = res.data.chujie
-          this.wechatid = res.data.wechatid
-          this.province = res.data.province
-          this.nickname = res.data.nickname
-          this.notification = res.data.notification === '1'
-
-          this.lastImgUrl = this.headimgurl
-          if (this.stepInfo.length > 150) {
-            this.stepInfoRows = 10
-          }
-          console.log('this.notification:' + res.data.notification)
-        } else {
-          alert("信息获取失败，请先填写立志信息！" + this.unionid)
-          //this.$router.push("/index");
-        }
-      });
-    },
-  },
+    }
+  }
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-
-img {
-  pointer-events: none;
+.my-home-container {
+  min-height: 100vh;
+  background: #f5f7fa;
 }
 
-/deep/ .el-radio {
-  white-space: normal;
+/* 顶部个人信息 */
+.profile-header {
+  position: relative;
+  padding-bottom: 30px;
 }
 
-* {
-  -webkit-touch-callout: none; /*系统默认菜单被禁用*/
-  -webkit-user-select: none; /*webkit浏览器*/
-  -khtml-user-select: none; /*早期浏览器*/
-  -moz-user-select: none; /*火狐*/
-  -ms-user-select: none; /*IE10*/
-  user-select: none;
+.profile-bg {
+  height: 140px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-input, textarea {
-  -webkit-user-select: auto; /*webkit浏览器*/
-  outline: none;
+.profile-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: -50px;
+  position: relative;
 }
 
-a {
-  color: #42b983;
+.avatar-wrapper {
+  flex-shrink: 0;
 }
 
-.el-dropdown-link {
-  cursor: pointer;
-  color: #8c939d;
+.avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 4px solid white;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  background: white;
 }
 
-.el-icon-arrow-down {
-  font-size: 16px;
-}
-.inputStyle {
-  border-left-width:0;
-  border-top-width:0;
-  border-right-width:0;
-  border-bottom-width:0;
-  border-bottom-color:lightgray;
+.avatar-error {
   width: 100%;
-  height: auto;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fa;
+  border-radius: 50%;
+}
+
+.avatar-error i {
+  font-size: 40px;
+  color: #c0c4cc;
+}
+
+.profile-info {
+  text-align: center;
+  margin-top: 12px;
+}
+
+.nickname {
+  font-size: 20px;
+  font-weight: bold;
+  color: #303133;
+  margin-bottom: 6px;
+}
+
+.user-meta {
+  font-size: 13px;
+  color: #909399;
+}
+
+.user-meta span {
+  margin: 0 8px;
+}
+
+.user-meta i {
+  margin-right: 4px;
+}
+
+/* 快捷操作 */
+.quick-actions {
+  display: flex;
+  justify-content: space-around;
+  padding: 20px 15px;
+  background: white;
+  margin: 15px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.action-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  transition: transform 0.2s;
+}
+
+.action-item:active .action-icon {
+  transform: scale(0.95);
+}
+
+.action-icon i {
+  font-size: 22px;
+  color: white;
+}
+
+.action-item span {
+  font-size: 12px;
+  color: #606266;
+}
+
+/* 卡片通用样式 */
+.section-card {
+  background: white;
+  margin: 15px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
   font-size: 16px;
-  text-align: left;
-  color: #8c939d;
-  margin: 0 0;
-  padding: 0 0;
-  -webkit-appearance: none;
-  border-radius: 0;
+  font-weight: bold;
+  color: #303133;
 }
-.multiLineInputStyle {
-  border-left-width:0;
-  border-top-width:0;
-  border-right-width:0;
-  border-bottom-width:0;
-  border-bottom-color:lightgray;
-  width: 90%;
-  height: auto;
-  font-size: 16px;
-  text-align: left;
-  color: #8c939d;
-  -webkit-appearance: none;
-  border-radius: 0;
+
+.card-header i {
+  margin-right: 10px;
+  font-size: 18px;
+  color: #409eff;
 }
-.confirmButtonClass {
-  float: right;
-  margin-right: 15%;
-  width: 80px;
+
+.card-body {
+  padding: 10px 20px;
 }
-.confirmButtonClass {
-  float: right;
-  margin-right: 15%;
-  width: 80px;
+
+/* 信息项 */
+.info-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f5f7fa;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  width: 60px;
+  font-size: 14px;
+  color: #606266;
+  flex-shrink: 0;
+}
+
+.info-value {
+  flex: 1;
+}
+
+.info-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: #303133;
+  background: transparent;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.info-input:focus {
+  background: #f5f7fa;
+}
+
+.info-input::placeholder {
+  color: #c0c4cc;
+}
+
+/* 文本域 */
+.textarea-wrapper {
+  padding: 5px 0;
+}
+
+.custom-textarea {
+  width: 100%;
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+  color: #303133;
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.custom-textarea:focus {
+  border-color: #409eff;
+}
+
+.custom-textarea::placeholder {
+  color: #c0c4cc;
+}
+
+/* 设置项 */
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 0;
+  border-bottom: 1px solid #f5f7fa;
+  cursor: pointer;
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+}
+
+.setting-item:active {
+  background: #f9f9f9;
+  margin: 0 -20px;
+  padding: 15px 20px;
+}
+
+.setting-left {
+  display: flex;
+  align-items: center;
+}
+
+.setting-left i {
+  font-size: 18px;
+  color: #909399;
+  margin-right: 12px;
+}
+
+.setting-left span {
+  font-size: 14px;
+  color: #303133;
+}
+
+.setting-right {
+  display: flex;
+  align-items: center;
+}
+
+.setting-status {
+  font-size: 13px;
+  color: #909399;
+  margin-right: 10px;
+}
+
+.setting-status.active {
+  color: #67c23a;
+}
+
+.setting-right .el-icon-arrow-right {
+  color: #c0c4cc;
+}
+
+/* Element UI 样式覆盖 */
+/deep/ .el-radio-button__inner {
+  padding: 8px 20px;
+}
+
+/deep/ .el-date-editor.el-input {
+  width: 150px;
+}
+
+/deep/ .el-switch {
+  margin-left: 5px;
 }
 </style>

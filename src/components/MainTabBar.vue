@@ -44,8 +44,16 @@ export default {
   },
   methods: {
     visited() {
+      // 使用 sessionStorage 防止同一会话重复计数
+      const today = this.getDateFormat(new Date())
+      const visitedKey = 'pv_visited_' + today
+
+      if (sessionStorage.getItem(visitedKey)) {
+        return // 本次会话已记录过，跳过
+      }
+
       let data = qs.stringify({
-        date: this.getDateFormat(new Date()),
+        date: today,
       })
       axios({
         method: "POST",
@@ -54,6 +62,8 @@ export default {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
+      }).then(() => {
+        sessionStorage.setItem(visitedKey, '1')
       })
     },
     getDateFormat(date) {

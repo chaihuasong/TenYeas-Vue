@@ -473,8 +473,16 @@ export default {
       }
     },
     visitedUser() {
+      // 使用 sessionStorage 防止同一会话重复计数
+      const today = this.getDateFormat(new Date())
+      const visitedKey = 'uv_visited_' + today + '_' + this.unionid
+
+      if (sessionStorage.getItem(visitedKey)) {
+        return // 今天已记录过，跳过
+      }
+
       let data = qs.stringify({
-        date: this.getDateFormat(new Date()),
+        date: today,
         userId: this.unionid
       })
       axios({
@@ -484,6 +492,8 @@ export default {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
+      }).then(() => {
+        sessionStorage.setItem(visitedKey, '1')
       })
     },
     notificationChange() {

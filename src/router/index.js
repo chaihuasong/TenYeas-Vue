@@ -24,6 +24,7 @@ import Notification from "@/components/settings/Notification";
 import Statistics from "@/components/Statistics";
 import Group from "@/components/Group";
 import GroupTab from "@/components/admin/GroupTab";
+import CheckinCircle from "@/components/CheckinCircle";
 
 Vue.use(Router)
 
@@ -116,6 +117,15 @@ export default new Router({
       component: HTQ,
       meta: {
         title: '立志圈',
+        footShow: false,
+      }
+    },
+    {
+      path: '/checkinCircle',
+      name: 'checkinCircle',
+      component: CheckinCircle,
+      meta: {
+        title: '打卡圈',
         footShow: false,
       }
     },
