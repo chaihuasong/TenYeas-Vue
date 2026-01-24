@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="tenyears-home-page">
 
     <div>
       <el-image style="width: 100%; height: 180px"
@@ -7,10 +7,10 @@
                 fit="cover"/>
     </div>
 
-    <el-card style="float: left; width: 100%;margin-top: 10px">
+    <el-card class="countdown-card" style="float: left; width: 100%;margin-top: 10px">
       <span style="font-weight: bold">十年倒计时，离{{this.getTenYearsDate()}}，还有</span>
       <br/>
-      <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{this.getTenYearsRemaining()}}</span> 天
+      <span class="countdown-days">{{this.getTenYearsRemaining()}}</span> 天
     </el-card>
 
 <!--    <el-card style="float: left; width: 100%;margin-top: 10px">-->
@@ -1684,6 +1684,114 @@ a {
   box-shadow: 0 0 2px 2px #fff!important;
 }
 
+</style>
+<style>
+/* 页面整体背景 */
+.tenyears-home-page {
+  background: #f5f7fa;
+  min-height: 100vh;
+}
+
+/* 卡片统一样式优化 */
+.tenyears-home-page .el-card {
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s ease;
+}
+
+.tenyears-home-page .el-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* 倒计时卡片特殊样式 */
+.countdown-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+}
+
+.countdown-card span {
+  color: white !important;
+}
+
+.countdown-card .countdown-days {
+  font-size: 28px !important;
+  font-weight: bold;
+  color: #ffd700 !important;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* 折叠面板优化 */
+.tenyears-home-page .el-collapse {
+  border: none;
+  background: transparent;
+}
+
+.tenyears-home-page .el-collapse-item__header {
+  background: white;
+  border-radius: 10px;
+  padding: 0 15px;
+  font-weight: bold;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.tenyears-home-page .el-collapse-item__wrap {
+  border: none;
+  background: transparent;
+}
+
+.tenyears-home-page .el-collapse-item__content {
+  padding: 0;
+}
+
+/* 日历样式优化 */
+.tenyears-home-page .el-calendar {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  border: none;
+}
+
+.tenyears-home-page .el-calendar__header {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+  border: none;
+  padding: 15px;
+}
+
+.tenyears-home-page .el-calendar__title {
+  color: white;
+  font-weight: bold;
+}
+
+.tenyears-home-page .el-calendar__button-group .el-button--plain {
+  background: rgba(255,255,255,0.2);
+  border-color: rgba(255,255,255,0.3);
+  color: white;
+}
+
+.tenyears-home-page .el-calendar-table td.is-selected {
+  background: rgba(64, 158, 255, 0.1);
+}
+
+.tenyears-home-page .el-calendar-table td.is-today {
+  background: rgba(103, 194, 58, 0.1);
+}
+
+/* 按钮样式优化 */
+.tenyears-home-page .el-button--default {
+  border-radius: 20px;
+  border-color: #409eff;
+  color: #409eff;
+  transition: all 0.3s;
+}
+
+.tenyears-home-page .el-button--default:hover {
+  background: #409eff;
+  color: white;
+}
 </style>
 <style>
 .el-input.is-disabled .el-input__inner,.el-textarea.is-disabled .el-textarea__inner,.el-checkbox__input.is-disabled+.el-checkbox__label{
