@@ -133,8 +133,8 @@
           <el-col :span="(zaoQiTimeVisible && list.title === '早起') || ( zaoShuiTimeVisible && list.title === '早睡') ? 5 : (list.title === '诵读经典' || list.title === '经典学习' ? 6 : 7)" v-if="!editDailyReportMode && list.title !== '宽两秒'" style="text-align: right;margin-top: 10px">
             <span>{{ list.title }}</span>
           </el-col>
-          <el-col :span="7" v-if="!editDailyReportMode && list.title === '宽两秒'" style="text-align: right;margin-top: 10px">
-            <el-select v-model="kuanLiangMiao" size="medium" class="kuanLiangMiaoStyle" style="width: 107px;">
+          <el-col :span="7" v-if="!editDailyReportMode && list.title === '宽两秒'" style="text-align: right;margin-top: 8px">
+            <el-select v-model="kuanLiangMiao" size="medium" class="kuanLiangMiaoStyle">
               <el-option
                   v-for="item in kuanLiangMiaoOptions"
                   :key="item.value"
@@ -1861,12 +1861,30 @@ a {
   font-size:16px;
 }
 .kuanLiangMiaoStyle {
-  position:absolute;
-  clip:rect(2px 102px 30px 2px);
-  left: 10px;
-  top: 0;
-  width:102px;
-  font-size:16px;
+  width: auto;
+  min-width: 80px;
+  font-size: 16px;
+  vertical-align: middle;
+}
+.kuanLiangMiaoStyle .el-input__inner {
+  border: none;
+  background: transparent;
+  padding-left: 0;
+  padding-right: 18px;
+  text-align: right;
+  height: 28px;
+  line-height: 28px;
+  color: #000000;
+  font-size: 14px;
+}
+.kuanLiangMiaoStyle .el-input__suffix {
+  right: 0;
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+.kuanLiangMiaoStyle .el-select__caret {
+  color: #c0c4cc;
 }
 .el-collapse .el-collapse-item .el-collapse-item__header {
   margin-left: 20px;
