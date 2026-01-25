@@ -87,6 +87,57 @@
               </template>
             </div>
           </div>
+
+          <!-- 互动区域 -->
+          <div class="interaction-section">
+            <!-- 点赞和评论按钮 -->
+            <div class="action-bar">
+              <span class="action-btn" @click="toggleLike(item.id)">
+                <i :class="isLiked(item.id) ? 'el-icon-star-on liked' : 'el-icon-star-off'"></i>
+                <span>{{ getLikeCount(item.id) || '点赞' }}</span>
+              </span>
+              <span class="action-btn" @click="toggleCommentInput(item.id)">
+                <i class="el-icon-chat-dot-round"></i>
+                <span>{{ getCommentCount(item.id) || '评论' }}</span>
+              </span>
+            </div>
+
+            <!-- 点赞用户列表 -->
+            <div v-if="getLikeCount(item.id) > 0" class="like-users">
+              <i class="el-icon-star-on"></i>
+              <span>{{ getLikeUsers(item.id) }}</span>
+            </div>
+
+            <!-- 评论列表 -->
+            <div v-if="getComments(item.id).length > 0" class="comment-list">
+              <div v-for="comment in getComments(item.id)" :key="comment.id" class="comment-item">
+                <span class="comment-author">{{ comment.nickname }}</span>
+                <span v-if="comment.replyToNickname" class="comment-reply">
+                  回复 <span class="reply-to">{{ comment.replyToNickname }}</span>
+                </span>
+                <span>：{{ comment.content }}</span>
+                <span class="comment-actions">
+                  <span v-if="comment.userId === unionid" class="delete-btn" @click="deleteComment(item.id, comment.id)">删除</span>
+                  <span class="reply-btn" @click="startReply(item.id, comment)">回复</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- 评论输入框 -->
+            <div v-if="showComments[item.id]" class="comment-input">
+              <el-input
+                v-model="commentInputs[item.id]"
+                :placeholder="getCommentPlaceholder(item.id)"
+                size="small"
+                @keyup.enter.native="submitComment(item.id)"
+              >
+                <el-button slot="append" size="small" @click="submitComment(item.id)">发送</el-button>
+              </el-input>
+              <span v-if="replyingTo && replyingTo.reportId === item.id" class="cancel-reply" @click="cancelReply">
+                取消回复
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -134,7 +185,12 @@ export default {
       pageSize: 20,
       hasMore: true,
       todayCount: 0,
-      publicCount: 0
+      publicCount: 0,
+      // 互动相关
+      interactions: {},      // { reportId: { likes, comments, likeCount, commentCount, liked } }
+      commentInputs: {},     // { reportId: '输入的评论内容' }
+      replyingTo: null,      // { reportId, commentId, userId, nickname }
+      showComments: {}       // { reportId: true/false }
     }
   },
   computed: {
@@ -211,6 +267,12 @@ export default {
         // 统计
         this.todayCount = reports.length
         this.publicCount = this.datas.filter(d => d.open === '1').length
+
+        // 获取互动数据
+        const reportIds = reports.map(r => r.id).filter(id => id)
+        if (reportIds.length > 0) {
+          await this.fetchInteractions(reportIds)
+        }
 
       } catch (err) {
         console.error('获取数据失败', err)
@@ -297,6 +359,175 @@ export default {
       } finally {
         this.loadingMore = false
       }
+    },
+
+    // ============ 互动相关方法 ============
+
+    // 获取互动数据
+    async fetchInteractions(reportIds) {
+      if (!reportIds || reportIds.length === 0) return
+
+      try {
+        const url = `${this.serverUrl}getInteractions?reportIds=${reportIds.join(',')}&userId=${this.unionid || ''}`
+        const res = await axios.get(url)
+        this.interactions = { ...this.interactions, ...res.data }
+      } catch (err) {
+        console.error('获取互动数据失败', err)
+      }
+    },
+
+    // 点赞/取消点赞
+    async toggleLike(reportId) {
+      if (!this.unionid) {
+        this.$message.warning('请先登录')
+        return
+      }
+
+      try {
+        await axios.post(`${this.serverUrl}toggleLike`, null, {
+          params: {
+            reportId,
+            userId: this.unionid,
+            nickname: this.nickname,
+            headimgurl: this.headimgurl
+          }
+        })
+
+        // 重新获取该条记录的互动数据
+        await this.fetchInteractions([reportId])
+      } catch (err) {
+        console.error('点赞失败', err)
+        this.$message.error('操作失败，请重试')
+      }
+    },
+
+    // 切换评论输入框显示
+    toggleCommentInput(reportId) {
+      this.$set(this.showComments, reportId, !this.showComments[reportId])
+      if (!this.showComments[reportId]) {
+        this.replyingTo = null
+      }
+    },
+
+    // 提交评论
+    async submitComment(reportId) {
+      const content = this.commentInputs[reportId]
+      if (!content || !content.trim()) {
+        this.$message.warning('请输入评论内容')
+        return
+      }
+
+      if (!this.unionid) {
+        this.$message.warning('请先登录')
+        return
+      }
+
+      try {
+        const comment = {
+          reportId,
+          userId: this.unionid,
+          nickname: this.nickname,
+          headimgurl: this.headimgurl,
+          content: content.trim(),
+          parentId: this.replyingTo?.commentId || null,
+          replyToUserId: this.replyingTo?.userId || null,
+          replyToNickname: this.replyingTo?.nickname || null
+        }
+
+        await axios.post(`${this.serverUrl}addComment`, comment)
+
+        // 清空输入和回复状态
+        this.$set(this.commentInputs, reportId, '')
+        this.replyingTo = null
+
+        // 刷新互动数据
+        await this.fetchInteractions([reportId])
+
+        this.$message.success('评论成功')
+      } catch (err) {
+        console.error('评论失败', err)
+        this.$message.error('评论失败，请重试')
+      }
+    },
+
+    // 删除评论
+    async deleteComment(reportId, commentId) {
+      try {
+        await this.$confirm('确定删除这条评论吗？', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+
+        await axios.delete(`${this.serverUrl}deleteComment`, {
+          params: { commentId, userId: this.unionid }
+        })
+
+        // 刷新互动数据
+        await this.fetchInteractions([reportId])
+
+        this.$message.success('删除成功')
+      } catch (err) {
+        if (err !== 'cancel') {
+          console.error('删除评论失败', err)
+          this.$message.error('删除失败，请重试')
+        }
+      }
+    },
+
+    // 开始回复
+    startReply(reportId, comment) {
+      this.replyingTo = {
+        reportId,
+        commentId: comment.id,
+        userId: comment.userId,
+        nickname: comment.nickname
+      }
+      this.$set(this.showComments, reportId, true)
+    },
+
+    // 取消回复
+    cancelReply() {
+      this.replyingTo = null
+    },
+
+    // 获取评论占位符
+    getCommentPlaceholder(reportId) {
+      if (this.replyingTo && this.replyingTo.reportId === reportId) {
+        return `回复 ${this.replyingTo.nickname}：`
+      }
+      return '写评论...'
+    },
+
+    // 辅助方法：判断是否已点赞
+    isLiked(reportId) {
+      const interaction = this.interactions[reportId]
+      return interaction?.liked || false
+    },
+
+    // 辅助方法：获取点赞数
+    getLikeCount(reportId) {
+      const interaction = this.interactions[reportId]
+      return interaction?.likeCount || 0
+    },
+
+    // 辅助方法：获取点赞用户名列表
+    getLikeUsers(reportId) {
+      const interaction = this.interactions[reportId]
+      const likes = interaction?.likes || []
+      return likes.map(l => l.nickname || '匿名用户').join('、')
+    },
+
+    // 辅助方法：获取评论列表
+    getComments(reportId) {
+      const interaction = this.interactions[reportId]
+      return interaction?.comments || []
+    },
+
+    // 辅助方法：获取评论数
+    getCommentCount(reportId) {
+      const interaction = this.interactions[reportId]
+      return interaction?.commentCount || 0
     }
   }
 }
@@ -475,7 +706,7 @@ export default {
 
 /* 打卡内容 */
 .checkin-content {
-  padding: 0 15px 15px;
+  padding: 0 15px 5px;
 }
 
 .checkin-items {
@@ -557,6 +788,117 @@ export default {
 .load-more {
   text-align: center;
   padding: 20px;
+}
+
+/* 互动区域 */
+.interaction-section {
+  padding: 0 15px 5px;
+  background: #ffffff;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-bottom: 6px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #909399;
+  cursor: pointer;
+  font-size: 13px;
+  transition: color 0.2s;
+}
+
+.action-btn:hover {
+  color: #409eff;
+}
+
+.action-btn .liked {
+  color: #f56c6c;
+}
+
+.like-users {
+  background: #f5f7fa;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #606266;
+  margin-bottom: 8px;
+}
+
+.like-users i {
+  color: #f56c6c;
+  margin-right: 4px;
+}
+
+.comment-list {
+  background: #f5f7fa;
+  padding: 8px 10px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.comment-item {
+  font-size: 13px;
+  line-height: 1.8;
+  color: #606266;
+  text-align: left;
+}
+
+.comment-author {
+  color: #409eff;
+  font-weight: 500;
+}
+
+.comment-reply {
+  color: #909399;
+}
+
+.reply-to {
+  color: #409eff;
+}
+
+.comment-actions {
+  float: right;
+}
+
+.delete-btn, .reply-btn {
+  color: #909399;
+  font-size: 12px;
+  margin-left: 8px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.delete-btn:hover {
+  color: #f56c6c;
+}
+
+.reply-btn:hover {
+  color: #409eff;
+}
+
+.comment-input {
+  margin-top: 8px;
+  position: relative;
+}
+
+.cancel-reply {
+  position: absolute;
+  right: 70px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: #909399;
+  cursor: pointer;
+}
+
+.cancel-reply:hover {
+  color: #f56c6c;
 }
 
 /* 通用 */
