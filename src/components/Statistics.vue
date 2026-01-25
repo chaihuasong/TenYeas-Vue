@@ -324,7 +324,8 @@ export default {
 
     async loadData() {
       this.loading = true
-      const unionid = this.$store.getters.getUnionid?.replace(/"/g, '')
+      const storeUnionid = this.$store.getters.getUnionid
+      const unionid = storeUnionid ? storeUnionid.replace(/"/g, '') : ''
 
       if (!unionid) {
         this.$message.warning("请先登录")

@@ -429,9 +429,9 @@ export default {
           nickname: this.nickname,
           headimgurl: this.headimgurl,
           content: content.trim(),
-          parentId: this.replyingTo?.commentId || null,
-          replyToUserId: this.replyingTo?.userId || null,
-          replyToNickname: this.replyingTo?.nickname || null
+          parentId: (this.replyingTo && this.replyingTo.commentId) || null,
+          replyToUserId: (this.replyingTo && this.replyingTo.userId) || null,
+          replyToNickname: (this.replyingTo && this.replyingTo.nickname) || null
         }
 
         await axios.post(`${this.serverUrl}addComment`, comment)
@@ -502,32 +502,32 @@ export default {
     // 辅助方法：判断是否已点赞
     isLiked(reportId) {
       const interaction = this.interactions[reportId]
-      return interaction?.liked || false
+      return (interaction && interaction.liked) || false
     },
 
     // 辅助方法：获取点赞数
     getLikeCount(reportId) {
       const interaction = this.interactions[reportId]
-      return interaction?.likeCount || 0
+      return (interaction && interaction.likeCount) || 0
     },
 
     // 辅助方法：获取点赞用户名列表
     getLikeUsers(reportId) {
       const interaction = this.interactions[reportId]
-      const likes = interaction?.likes || []
+      const likes = (interaction && interaction.likes) || []
       return likes.map(l => l.nickname || '匿名用户').join('、')
     },
 
     // 辅助方法：获取评论列表
     getComments(reportId) {
       const interaction = this.interactions[reportId]
-      return interaction?.comments || []
+      return (interaction && interaction.comments) || []
     },
 
     // 辅助方法：获取评论数
     getCommentCount(reportId) {
       const interaction = this.interactions[reportId]
-      return interaction?.commentCount || 0
+      return (interaction && interaction.commentCount) || 0
     }
   }
 }
