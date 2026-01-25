@@ -187,11 +187,23 @@ export default {
         const userIds = [...new Set(reports.map(r => r.userId))]
         const userMap = await this.fetchUserInfos(userIds)
 
-        // 合并用户信息
-        this.datas = reports.map(report => ({
-          ...report,
-          ...userMap[report.userId]
-        }))
+        // 获取所有模板信息
+        const templateIds = [...new Set(reports.map(r => r.templateId).filter(id => id))]
+        const templateMap = await this.fetchTemplates(templateIds)
+
+        // 合并用户信息和模板信息
+        this.datas = reports.map(report => {
+          const templates = templateMap[report.templateId] || []
+          const templateData = {}
+          templates.forEach((t, i) => {
+            templateData['template' + (i + 1)] = t
+          })
+          return {
+            ...report,
+            ...userMap[report.userId],
+            ...templateData
+          }
+        })
 
         // 统计
         this.todayCount = reports.length
@@ -235,6 +247,32 @@ export default {
       }
 
       return userMap
+    },
+
+    async fetchTemplates(templateIds) {
+      const templateMap = {}
+      if (templateIds.length === 0) return templateMap
+
+      try {
+        // 批量获取模板信息
+        const promises = templateIds.map(id =>
+          axios.get(`${this.serverUrl}getReportTemplateById?id=${id}`)
+            .then(res => ({ id, data: res.data }))
+            .catch(() => ({ id, data: null }))
+        )
+
+        const results = await Promise.all(promises)
+
+        results.forEach(({ id, data }) => {
+          if (data && Array.isArray(data)) {
+            templateMap[id] = data
+          }
+        })
+      } catch (err) {
+        console.error('获取模板信息失败', err)
+      }
+
+      return templateMap
     },
 
     onDateChange() {
