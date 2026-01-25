@@ -165,7 +165,6 @@ export default {
   left: 20px;
   display: flex;
   align-items: center;
-  gap: 15px;
 }
 
 .user-avatar {
@@ -175,6 +174,7 @@ export default {
 
 .header-info {
   color: white;
+  margin-left: 15px;
 }
 
 .header-title {
@@ -211,7 +211,10 @@ export default {
 .post-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+}
+
+.post-list > *:not(:last-child) {
+  margin-bottom: 15px;
 }
 
 /* 帖子卡片 */
@@ -226,11 +229,11 @@ export default {
   display: flex;
   align-items: center;
   padding: 15px;
-  gap: 12px;
 }
 
 .post-avatar {
   flex-shrink: 0;
+  margin-right: 12px;
 }
 
 .post-user-info {

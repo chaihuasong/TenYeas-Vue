@@ -837,10 +837,13 @@ export default {
 
 .group-meta {
   display: flex;
-  gap: 15px;
   font-size: 12px;
   color: #999;
   margin-top: 3px;
+}
+
+.group-meta > *:not(:last-child) {
+  margin-right: 15px;
 }
 
 .group-arrow {
@@ -873,13 +876,19 @@ export default {
 
 .group-actions {
   display: flex;
-  gap: 8px;
+}
+
+.group-actions > *:not(:last-child) {
+  margin-right: 8px;
 }
 
 .member-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+}
+
+.member-list > *:not(:last-child) {
+  margin-bottom: 10px;
 }
 
 .member-list.simple {
@@ -899,7 +908,10 @@ export default {
 .member-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+}
+
+.member-info > *:not(:last-child) {
+  margin-right: 10px;
 }
 
 .member-name {
@@ -910,18 +922,24 @@ export default {
 .member-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+}
+
+.member-actions > *:not(:last-child) {
+  margin-right: 8px;
 }
 
 .member-chip {
   display: flex;
   align-items: center;
-  gap: 6px;
   padding: 6px 12px;
   background: #f0f2f5;
   border-radius: 20px;
   font-size: 13px;
   color: #666;
+}
+
+.member-chip > *:not(:last-child) {
+  margin-right: 6px;
 }
 
 .empty-member {
@@ -950,21 +968,30 @@ export default {
 .report-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+}
+
+.report-list > *:not(:last-child) {
+  margin-bottom: 12px;
 }
 
 .report-item {
   display: flex;
-  gap: 12px;
   padding: 12px;
   background: #f8f9fa;
   border-radius: 10px;
 }
 
+.report-item > *:not(:last-child) {
+  margin-right: 12px;
+}
+
 .report-user {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+}
+
+.report-user > *:not(:last-child) {
+  margin-right: 10px;
 }
 
 .report-user-info {
@@ -1004,7 +1031,10 @@ export default {
 .my-reports {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+}
+
+.my-reports > *:not(:last-child) {
+  margin-bottom: 15px;
 }
 
 .report-card {
@@ -1017,10 +1047,13 @@ export default {
 .report-card-header {
   display: flex;
   align-items: center;
-  gap: 12px;
   margin-bottom: 12px;
   padding-bottom: 12px;
   border-bottom: 1px solid #f0f0f0;
+}
+
+.report-card-header > *:not(:last-child) {
+  margin-right: 12px;
 }
 
 .report-card-info {

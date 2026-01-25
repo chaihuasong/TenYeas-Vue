@@ -664,7 +664,10 @@ export default {
   border-left: 3px solid #409eff;
   display: flex;
   align-items: center;
-  gap: 8px;
+}
+
+.section-title > *:not(:last-child) {
+  margin-right: 8px;
 }
 
 .year-selector {
@@ -696,7 +699,6 @@ export default {
   padding: 20px;
   display: flex;
   align-items: center;
-  gap: 15px;
 }
 
 .stats-icon {
@@ -707,6 +709,7 @@ export default {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-right: 15px;
 }
 
 .stats-icon i {

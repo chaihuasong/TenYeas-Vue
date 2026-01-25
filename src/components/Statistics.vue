@@ -800,7 +800,8 @@ export default {
 .summary-cards {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  grid-row-gap: 12px;
+  grid-column-gap: 12px;
 }
 
 .summary-card {
@@ -861,7 +862,10 @@ export default {
 .rate-card {
   display: flex;
   align-items: center;
-  gap: 10px;
+}
+
+.rate-card > *:not(:last-child) {
+  margin-right: 10px;
 }
 
 .rate-info {
@@ -957,7 +961,8 @@ export default {
 .year-stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  grid-row-gap: 12px;
+  grid-column-gap: 12px;
 }
 
 .year-stat-item {
@@ -992,7 +997,7 @@ export default {
 .summary-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  margin: -5px;
 }
 
 .summary-item {
@@ -1001,7 +1006,11 @@ export default {
   padding: 10px 15px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  margin: 5px;
+}
+
+.summary-item > *:not(:last-child) {
+  margin-right: 8px;
 }
 
 .item-name {
@@ -1031,7 +1040,8 @@ export default {
 .history-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  grid-row-gap: 12px;
+  grid-column-gap: 12px;
 }
 
 .history-item {
