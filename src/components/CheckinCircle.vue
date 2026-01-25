@@ -454,10 +454,12 @@ export default {
   font-size: 15px;
   font-weight: 600;
   color: #303133;
+  text-align: left;
 }
 
 .checkin-meta {
   display: flex;
+  justify-content: flex-start;
   gap: 12px;
   font-size: 12px;
   color: #909399;
