@@ -62,8 +62,8 @@
         <template slot-scope="scope">
           <el-image
               style="width: 60px; height: 60px"
-              :src="tableData[(currentPage - 1) * pageSize + scope.$index].headimgurl"
-              :preview-src-list="[tableData[(currentPage - 1) * pageSize + scope.$index].headimgurl != null ? tableData[(currentPage - 1) * pageSize + scope.$index].headimgurl.substring(0, tableData[(currentPage - 1) * pageSize + scope.$index].headimgurl.lastIndexOf('/')) + '/0' : null]"
+              :src="getAvatarUrl(tableData[(currentPage - 1) * pageSize + scope.$index])"
+              :preview-src-list="[getAvatarPreview(tableData[(currentPage - 1) * pageSize + scope.$index])]"
               :fit="none">
             <div slot="error" class="image-slot">
               <i class="el-icon-user" style="font-size: 30px; color: #909399;"></i>
@@ -329,6 +329,22 @@ export default {
     document.title = this.$route.meta.title
   },
   methods: {
+    getAvatarUrl(user) {
+      if (user && user.avatarUrl) return user.avatarUrl
+      if (user && user.headimgurl) return user.headimgurl
+      return ''
+    },
+    getAvatarPreview(user) {
+      const url = this.getAvatarUrl(user)
+      if (!url) return ''
+      // OSS 头像直接返回
+      if (url.includes('oss')) return url
+      // 微信头像获取大图
+      if (url.lastIndexOf('/') > 0) {
+        return url.substring(0, url.lastIndexOf('/')) + '/0'
+      }
+      return url
+    },
     birthdayFormatter(row) {
       let date = new Date(Date.parse(row.birthday) + 8 * 3600 * 1000)
       let year = date.getFullYear()

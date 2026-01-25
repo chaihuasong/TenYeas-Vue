@@ -4,16 +4,25 @@
     <div class="profile-header">
       <div class="profile-bg"></div>
       <div class="profile-content">
-        <div class="avatar-wrapper">
+        <div class="avatar-wrapper" @click="triggerAvatarUpload">
           <el-image
             class="avatar"
-            :src="headimgurl"
-            :preview-src-list="headimgurl ? [headimgurl.replace('/132', '/0')] : []"
+            :src="displayAvatar"
             fit="cover">
             <div slot="error" class="avatar-error">
               <i class="el-icon-user"></i>
             </div>
           </el-image>
+          <div class="avatar-edit-icon">
+            <i class="el-icon-camera"></i>
+          </div>
+          <input
+            type="file"
+            ref="avatarInput"
+            accept="image/*"
+            style="display: none"
+            @change="onAvatarSelected"
+          />
         </div>
         <div class="profile-info">
           <div class="nickname">{{ nickname || '未设置昵称' }}</div>
@@ -189,12 +198,15 @@
 import axios from 'axios'
 import qs from "qs";
 import global from "@/components/Common";
+import OSS from 'ali-oss'
 
 export default {
   name: 'MyHome',
   data() {
     return {
       serverUrl: global.httpUrl,
+      ossUrl: global.ossUrl,
+      akskUrl: 'http://htzchina.org/api-proxy/getaksk',
       name: '',
       gender: '1',
       telephone: '',
@@ -211,20 +223,110 @@ export default {
       nickname: '',
       openid: '',
       headimgurl: '',
+      avatarUrl: '',
       country: '',
       province: '',
       city: '',
       language: '',
       groupId: '',
       notification: false,
-      hasChanges: false
+      hasChanges: false,
+      uploadingAvatar: false
     };
+  },
+  computed: {
+    displayAvatar() {
+      return this.avatarUrl || this.headimgurl || ''
+    }
   },
   mounted() {
     document.title = this.$route.meta.title
     this.getData()
   },
   methods: {
+    triggerAvatarUpload() {
+      this.$refs.avatarInput.click()
+    },
+
+    async onAvatarSelected(event) {
+      const file = event.target.files[0]
+      if (!file) return
+
+      // 检查文件类型
+      if (!file.type.startsWith('image/')) {
+        this.$message.error('请选择图片文件')
+        return
+      }
+
+      // 检查文件大小（限制 5MB）
+      if (file.size > 5 * 1024 * 1024) {
+        this.$message.error('图片大小不能超过 5MB')
+        return
+      }
+
+      this.uploadingAvatar = true
+      const loading = this.$loading({
+        lock: true,
+        text: '上传中...',
+        background: 'rgba(0, 0, 0, 0.7)'
+      })
+
+      try {
+        // 1. 获取 AK/SK
+        const akskRes = await axios.get(this.akskUrl, {
+          params: { appName: 'htz-oss' }
+        })
+
+        if (!akskRes.data || !akskRes.data.data) {
+          throw new Error('获取上传凭证失败')
+        }
+
+        const akskData = JSON.parse(akskRes.data.data)
+        const accessKeyId = akskData.accessKey
+        const accessKeySecret = akskData.accessKeySecure
+
+        // 2. 创建 OSS 客户端
+        const client = new OSS({
+          region: 'oss-cn-shanghai',
+          accessKeyId: accessKeyId,
+          accessKeySecret: accessKeySecret,
+          bucket: 'htz-storage'
+        })
+
+        // 3. 生成文件名
+        const ext = file.name.split('.').pop() || 'jpg'
+        const objectKey = `avatars/${this.unionid}_${Date.now()}.${ext}`
+
+        // 4. 上传到 OSS
+        await client.put(objectKey, file)
+
+        // 5. 生成访问 URL
+        const avatarUrl = `${this.ossUrl}/${objectKey}`
+
+        // 6. 更新用户头像 URL 到后端
+        const updateData = qs.stringify({
+          id: this.unionid,
+          gender: this.gender,
+          avatarUrl: avatarUrl
+        })
+
+        await axios.post(`${this.serverUrl}update`, updateData, {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        })
+
+        this.avatarUrl = avatarUrl
+        this.$message.success('头像更新成功')
+      } catch (err) {
+        console.error('上传头像失败:', err)
+        this.$message.error('上传失败，请重试')
+      } finally {
+        this.uploadingAvatar = false
+        loading.close()
+        // 清空 input，允许重复选择同一文件
+        event.target.value = ''
+      }
+    },
+
     getData() {
       this.unionid = this.$store.getters.getUnionid
       if (this.unionid) {
@@ -237,6 +339,7 @@ export default {
             const data = res.data
             this.name = data.name || ''
             this.headimgurl = data.headimgurl || ''
+            this.avatarUrl = data.avatarUrl || ''
             this.gender = String(data.gender || '1')
             this.wechatgroup = data.wechatgroup || ''
             this.telephone = data.telephone || ''
@@ -368,6 +471,28 @@ export default {
 
 .avatar-wrapper {
   flex-shrink: 0;
+  position: relative;
+  cursor: pointer;
+}
+
+.avatar-edit-icon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.avatar-edit-icon i {
+  color: white;
+  font-size: 14px;
 }
 
 .avatar {
@@ -377,6 +502,7 @@ export default {
   border: 4px solid white;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   background: white;
+  pointer-events: none;
 }
 
 .avatar-error {

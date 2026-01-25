@@ -72,23 +72,20 @@
             </div>
           </div>
 
+          <!-- 反省总结/心得体会（如果有） -->
+          <div v-if="item.state" class="checkin-summary">
+            <div class="summary-text">{{ item.state === '1' ? '精气神得到长养，朝着目标' : '精气神没有长养，偏离目标' }}{{ item.note ? '：' + item.note : '' }}</div>
+          </div>
+
           <div class="checkin-content">
             <div class="checkin-items">
               <template v-for="i in 15">
                 <div v-if="item['value' + i] && item['value' + i] !== '0'" :key="i" class="checkin-item">
                   <i class="el-icon-check"></i>
-                  <span>{{ item['template' + i] ? item['template' + i].replace('_', item['value' + i]) : '' }}</span>
+                  <span v-html="formatCheckinItem(item['template' + i], item['value' + i])"></span>
                 </div>
               </template>
             </div>
-          </div>
-
-          <!-- 立志信息（如果有） -->
-          <div v-if="item.info" class="checkin-goal">
-            <div class="goal-label">
-              <i class="el-icon-aim"></i> 立志宣言
-            </div>
-            <div class="goal-text">{{ item.info }}</div>
           </div>
         </div>
       </div>
@@ -155,6 +152,12 @@ export default {
     formatTime(dateStr) {
       if (!dateStr) return ''
       return dateStr.substring(5) // 显示 MM-dd
+    },
+
+    formatCheckinItem(template, value) {
+      if (!template) return ''
+      // 将数字用特殊样式包裹，前后加空格
+      return template.replace('_', `<span class="checkin-value"> ${value} </span>`)
     },
 
     async getUserInfo() {
@@ -235,7 +238,7 @@ export default {
           if (data) {
             userMap[id] = {
               nickname: data.nickname,
-              headimgurl: data.headimgurl,
+              headimgurl: data.avatarUrl || data.headimgurl,
               province: data.province,
               open: data.open,
               info: data.info
@@ -371,7 +374,7 @@ export default {
   align-items: center;
   justify-content: space-around;
   background: white;
-  margin: -20px 15px 15px;
+  margin: -10px 15px 15px;
   padding: 15px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -478,17 +481,19 @@ export default {
 .checkin-items {
   background: #f8f9fa;
   border-radius: 10px;
-  padding: 12px 15px;
+  padding: 8px 17px;
+  text-align: left;
 }
 
 .checkin-item {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  padding: 6px 0;
+  padding: 5px 0 5px 2px;
   font-size: 14px;
   color: #606266;
   line-height: 1.5;
+  text-align: left;
 }
 
 .checkin-item i {
@@ -499,29 +504,29 @@ export default {
 
 .checkin-item span {
   flex: 1;
+  text-align: left;
 }
 
-/* 立志信息 */
-.checkin-goal {
-  border-top: 1px solid #f0f0f0;
-  padding: 12px 15px;
-  background: #fafafa;
+.checkin-value {
+  color: #409eff;
+  font-weight: 600;
+  background: #ecf5ff;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin: 0 2px;
 }
 
-.goal-label {
-  font-size: 12px;
-  color: #909399;
-  margin-bottom: 6px;
+/* 反省总结 */
+.checkin-summary {
+  padding: 6px 15px 12px;
+  background: #ffffff;
 }
 
-.goal-label i {
-  margin-right: 4px;
-}
-
-.goal-text {
-  font-size: 13px;
-  color: #606266;
+.summary-text {
+  font-size: 14px;
+  color: #303133;
   line-height: 1.6;
+  text-align: left;
 }
 
 /* 空状态 */

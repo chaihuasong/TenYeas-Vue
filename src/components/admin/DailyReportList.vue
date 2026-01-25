@@ -93,8 +93,8 @@
         <template slot-scope="scope">
           <el-image
               style="width: 60px; height: 60px"
-              :src="tableData[scope.$index].headimgurl"
-              :preview-src-list="[tableData[scope.$index].headimgurl != null ? tableData[scope.$index].headimgurl.substring(0, tableData[scope.$index].headimgurl.lastIndexOf('/')) + '/0' : null]">
+              :src="getAvatarUrl(tableData[scope.$index])"
+              :preview-src-list="[getAvatarPreview(tableData[scope.$index])]">
             <div slot="error" class="image-slot">
               <i class="el-icon-user" style="font-size: 30px; color: #909399;"></i>
             </div>
@@ -411,6 +411,20 @@ export default {
     document.title = this.$route.meta.title
   },
   methods: {
+    getAvatarUrl(user) {
+      if (user && user.avatarUrl) return user.avatarUrl
+      if (user && user.headimgurl) return user.headimgurl
+      return ''
+    },
+    getAvatarPreview(user) {
+      const url = this.getAvatarUrl(user)
+      if (!url) return ''
+      if (url.includes('oss')) return url
+      if (url.lastIndexOf('/') > 0) {
+        return url.substring(0, url.lastIndexOf('/')) + '/0'
+      }
+      return url
+    },
     getTotalReportCount() {
       this.loading = true
       axios({
