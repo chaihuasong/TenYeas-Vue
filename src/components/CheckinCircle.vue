@@ -558,7 +558,6 @@ export default {
   left: 20px;
   display: flex;
   align-items: center;
-  gap: 15px;
 }
 
 .user-avatar {
@@ -568,6 +567,7 @@ export default {
 
 .header-info {
   color: white;
+  margin-left: 15px;
 }
 
 .header-title {
@@ -658,7 +658,6 @@ export default {
 .checkin-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
 }
 
 /* 打卡卡片 */
@@ -667,17 +666,18 @@ export default {
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   overflow: hidden;
+  margin-bottom: 15px;
 }
 
 .checkin-header {
   display: flex;
   align-items: center;
-  padding: 15px;
-  gap: 12px;
+  padding: 12px 15px 8px;
 }
 
 .checkin-avatar {
   flex-shrink: 0;
+  margin-right: 12px;
 }
 
 .checkin-user-info {
@@ -694,10 +694,16 @@ export default {
 .checkin-meta {
   display: flex;
   justify-content: flex-start;
-  gap: 12px;
+  align-items: center;
   font-size: 12px;
   color: #909399;
   margin-top: 4px;
+}
+
+.checkin-meta span {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 12px;
 }
 
 .checkin-meta i {
@@ -719,7 +725,6 @@ export default {
 .checkin-item {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
   padding: 5px 0 5px 2px;
   font-size: 14px;
   color: #606266;
@@ -730,6 +735,7 @@ export default {
 .checkin-item i {
   color: #67c23a;
   margin-top: 3px;
+  margin-right: 8px;
   flex-shrink: 0;
 }
 
@@ -749,7 +755,7 @@ export default {
 
 /* 反省总结 */
 .checkin-summary {
-  padding: 6px 15px 12px;
+  padding: 3px 15px 6px;
   background: #ffffff;
 }
 
@@ -799,18 +805,21 @@ export default {
 .action-bar {
   display: flex;
   justify-content: flex-end;
-  gap: 16px;
   margin-bottom: 6px;
 }
 
 .action-btn {
   display: flex;
   align-items: center;
-  gap: 4px;
   color: #909399;
   cursor: pointer;
   font-size: 13px;
   transition: color 0.2s;
+  margin-left: 20px;
+}
+
+.action-btn i {
+  margin-right: 4px;
 }
 
 .action-btn:hover {
