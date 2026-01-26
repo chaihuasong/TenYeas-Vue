@@ -21,6 +21,7 @@
           value-format="yyyy-MM-dd"
           placeholder="选日期"
           :clearable="false"
+          :editable="false"
           @change="onDateChange"
           size="small"
           class="date-picker">
@@ -93,7 +94,7 @@
             <!-- 点赞和评论按钮 -->
             <div class="action-bar">
               <span class="action-btn" @click="toggleLike(item.id)">
-                <i :class="isLiked(item.id) ? 'el-icon-star-on liked' : 'el-icon-star-off'"></i>
+                <i :class="isLiked(item.id) ? 'heart-icon liked' : 'heart-icon'"></i>
                 <span>{{ getLikeCount(item.id) || '点赞' }}</span>
               </span>
               <span class="action-btn" @click="toggleCommentInput(item.id)">
@@ -103,8 +104,8 @@
             </div>
 
             <!-- 点赞用户列表 -->
-            <div v-if="getLikeCount(item.id) > 0" class="like-users">
-              <i class="el-icon-star-on"></i>
+            <div v-if="getLikeUsers(item.id)" class="like-users">
+              <i class="heart-icon liked"></i>
               <span>{{ getLikeUsers(item.id) }}</span>
             </div>
 
@@ -208,6 +209,14 @@ export default {
     document.title = this.$route.meta.title
     this.getUserInfo()
     this.getData()
+
+    // 防止移动端日期选择器弹出键盘
+    this.$nextTick(() => {
+      const dateInput = document.querySelector('.date-picker .el-input__inner')
+      if (dateInput) {
+        dateInput.setAttribute('readonly', 'readonly')
+      }
+    })
   },
   methods: {
     formatTime(dateStr) {
@@ -521,6 +530,9 @@ export default {
     getLikeUsers(reportId) {
       const interaction = this.interactions[reportId]
       const likes = (interaction && interaction.likes) || []
+      if (!likes || likes.length === 0) {
+        return ''
+      }
       return likes.map(l => l.nickname || '匿名用户').join('、')
     },
 
@@ -603,6 +615,16 @@ export default {
   border: none;
   border-radius: 20px;
   font-size: 13px;
+  cursor: pointer;
+  /* 防止光标显示 */
+  caret-color: transparent;
+  /* 防止文本选择 */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/deep/ .date-picker .el-input__inner:focus {
+  outline: none;
 }
 
 /* 统计栏 */
@@ -826,14 +848,46 @@ export default {
 
 .action-btn i {
   margin-right: 4px;
+  font-size: 15px;
 }
 
 .action-btn:hover {
   color: #409eff;
 }
 
-.action-btn .liked {
+/* 心形图标 */
+.heart-icon {
+  display: inline-block;
+  font-style: normal;
+  font-size: 15px;
+  margin-right: 4px;
+}
+
+.heart-icon::before {
+  content: '♡';
+  color: #909399;
+  transition: all 0.2s;
+}
+
+.heart-icon.liked::before {
+  content: '♥';
   color: #f56c6c;
+  animation: heartBeat 0.3s ease-in-out;
+}
+
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.3);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .like-users {
@@ -842,12 +896,21 @@ export default {
   border-radius: 4px;
   font-size: 12px;
   color: #606266;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #e4e7ed;
+  padding-bottom: 8px;
 }
 
-.like-users i {
-  color: #f56c6c;
-  margin-right: 4px;
+.like-users .heart-icon::before {
+  font-size: 15px;
+}
+
+.like-users span {
+  flex: 1;
+  text-align: left;
 }
 
 .comment-list {
@@ -855,6 +918,7 @@ export default {
   padding: 8px 10px;
   border-radius: 4px;
   margin-bottom: 8px;
+  margin-top: 4px;
 }
 
 .comment-item {
