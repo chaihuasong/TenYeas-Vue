@@ -4,7 +4,7 @@
     <div class="header-section">
       <div class="header-bg"></div>
       <div class="header-content">
-        <el-avatar :size="56" :src="headimgurl" class="user-avatar">
+        <el-avatar :size="56" :src="displayAvatar" class="user-avatar">
           <i class="el-icon-user-solid"></i>
         </el-avatar>
         <div class="header-info">
@@ -176,6 +176,7 @@ export default {
       unionid: '',
       nickname: '',
       headimgurl: '',
+      avatarUrl: '',
       datas: [],
       loading: true,
       loadingMore: false,
@@ -197,6 +198,10 @@ export default {
     filteredData() {
       // 只显示公开用户的打卡
       return this.datas.filter(item => item.open === '1')
+    },
+    displayAvatar() {
+      // 优先使用上传的头像，其次使用微信头像
+      return this.avatarUrl || this.headimgurl || ''
     }
   },
   mounted() {
@@ -227,6 +232,7 @@ export default {
         if (res.data) {
           this.nickname = res.data.nickname || ''
           this.headimgurl = res.data.headimgurl || ''
+          this.avatarUrl = res.data.avatarUrl || ''
         }
       } catch (err) {
         console.error('获取用户信息失败', err)
@@ -389,7 +395,7 @@ export default {
             reportId,
             userId: this.unionid,
             nickname: this.nickname,
-            headimgurl: this.headimgurl
+            headimgurl: this.displayAvatar
           }
         })
 
@@ -427,7 +433,7 @@ export default {
           reportId,
           userId: this.unionid,
           nickname: this.nickname,
-          headimgurl: this.headimgurl,
+          headimgurl: this.displayAvatar,
           content: content.trim(),
           parentId: (this.replyingTo && this.replyingTo.commentId) || null,
           replyToUserId: (this.replyingTo && this.replyingTo.userId) || null,
