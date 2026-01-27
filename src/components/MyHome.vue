@@ -318,7 +318,7 @@ export default {
         this.$message.success('头像更新成功')
       } catch (err) {
         console.error('上传头像失败:', err)
-        this.$message.error('上传失败，请重试')
+        this.$message.error('上传失败: ' + (err.message || '请重试'))
       } finally {
         this.uploadingAvatar = false
         loading.close()
