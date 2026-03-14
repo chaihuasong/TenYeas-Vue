@@ -1,12 +1,30 @@
 <template>
-  <div id="tab-bar">
+  <div id="tab-bar" v-show="!keyboardVisible">
     <slot></slot>
   </div>
 </template>
 
 <script>
 export default {
-  name: "TabBar"
+  name: "TabBar",
+  data() {
+    return {
+      keyboardVisible: false,
+      originalHeight: 0
+    }
+  },
+  mounted() {
+    this.originalHeight = window.innerHeight
+    window.addEventListener('resize', this.onResize)
+  },
+  beforeDestroy() {
+    window.removeEventListener('resize', this.onResize)
+  },
+  methods: {
+    onResize() {
+      this.keyboardVisible = window.innerHeight < this.originalHeight * 0.85
+    }
+  }
 }
 </script>
 
