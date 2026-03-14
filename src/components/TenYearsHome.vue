@@ -1103,6 +1103,7 @@ export default {
         if (res.status !== 200) {
           this.$message.warning("保存出错！\n" + res.statusText)
         } else {
+          this.getMonthNotes()
           this.$message.success("内容已成功提交并已复制，可粘贴到微信群。")
           if (this.monthsNotesList !== null && this.monthsNotesList.length === 0) {
             if (this.notification === undefined || this.notification === null || this.notification === '' || this.notification === false) {
@@ -1495,14 +1496,35 @@ export default {
             console.log("unionid:" + res.data.unionid)
             console.log("sex:" + res.data.sex)
             this.unionid = res.data.unionid
+            // 若 unionid 为空，说明用户尚未填写立志卡，用 openid 作为打卡标识
             if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
-              this.$alert('您还未填写过立志卡，点击确定跳转到填写界面', '立志信息不存在', {
-                confirmButtonText: '确定',
-                confirmButtonClass: 'confirmButtonClass',
-                callback: action => {
-                  console.log(action)
-                  this.$router.push("/index");
-                }
+              this.unionid = res.data.openid
+              this.$store.commit('$_setUnionid', this.unionid)
+              this.nickname = res.data.nickname
+              this.openid = res.data.openid
+              this.headimgurl = res.data.headimgurl
+              this.country = res.data.country
+              this.city = res.data.city
+              this.province = res.data.province + this.city
+              this.language = res.data.language
+              this.groupId = res.data.groupId
+              this.gender = res.data.sex + ''
+              // 将基础微信信息注册到服务端，保证 admin 统计可查到用户
+              this.saveWechatUserInfo({
+                id: this.unionid,
+                openid: res.data.openid,
+                nickname: res.data.nickname,
+                headimgurl: res.data.headimgurl,
+                province: res.data.province,
+                city: res.data.city,
+                gender: res.data.sex + ''
+              })
+              // unionid 刚设置好，重新加载日历数据
+              this.getMonthNotes()
+              this.$message({
+                message: '您还未填写立志卡，可先进行打卡，填写立志卡后可解锁完整功能',
+                type: 'info',
+                duration: 5000
               })
               return
             }
@@ -1567,17 +1589,54 @@ export default {
           } else {
             this.maxAge = 80
           }
+          // 若 mounted 时 unionid 尚未就绪导致 getMonthNotes 被跳过，这里补充调用
+          if (this.monthsNotesList.length === 0) {
+            this.getMonthNotes()
+          }
         } else {
-          this.$alert('您还未填写过立志卡，点击确定跳转到填写界面', '立志信息不存在', {
-            confirmButtonText: '确定',
-            confirmButtonClass: 'confirmButtonClass',
-            callback: action => {
-              console.log(action)
-              this.$router.push("/index");
-            }
-          });
+          // 未填写立志卡，仅提示，不强制跳转，允许继续打卡
+          // 从 Android 注入的 localStorage 读取用户基础信息（H5 直接从微信 OAuth 拿不到时的兜底）
+          const readLocal = key => {
+            try { return JSON.parse(localStorage.getItem(key) || 'null') || '' } catch { return '' }
+          }
+          if (!this.nickname)   this.nickname   = readLocal('htz_nickname')
+          if (!this.headimgurl) this.headimgurl = readLocal('htz_headimgurl')
+          if (!this.city)       this.city       = readLocal('htz_city')
+          if (!this.province)   this.province   = readLocal('htz_province')
+          if (!this.gender)     this.gender     = readLocal('htz_gender')
+
+          // 将用户基础信息注册到打卡服务端，保证 admin 统计和打卡圈可查到用户昵称、头像
+          this.saveWechatUserInfo({
+            id: this.unionid,
+            openid: this.openid || '',
+            nickname: this.nickname,
+            headimgurl: this.headimgurl,
+            province: this.province,
+            city: this.city,
+            gender: this.gender
+          })
+          // unionid 已设置，重新加载日历数据（mounted 时可能因 unionid 未就绪而跳过）
+          this.getMonthNotes()
+          this.$message({
+            message: '您还未填写立志卡，可先进行打卡，填写立志卡后可解锁完整功能',
+            type: 'info',
+            duration: 5000
+          })
         }
       });
+    },
+    // 将微信基础信息注册到服务端，使 getById 对新用户也能返回昵称、头像等信息
+    saveWechatUserInfo(data) {
+      axios({
+        method: "POST",
+        url: this.serverUrl + "saveWechatUser",
+        data: qs.stringify(data),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).catch(err => {
+        console.error('保存微信用户基础信息失败:', err)
+      })
     },
     configWechat() {
       axios({

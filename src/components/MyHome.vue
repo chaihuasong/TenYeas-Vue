@@ -355,8 +355,12 @@ export default {
             this.nickname = data.nickname || ''
             this.notification = data.notification === '1'
           } else {
-            this.$message.warning("请先填写立志信息")
-            this.$router.push("/tenyears")
+            // 未填写立志卡，仅提示，不强制跳转
+            this.$message({
+              message: '您还未填写立志卡，填写后可使用完整功能',
+              type: 'info',
+              duration: 5000
+            })
           }
         })
         .catch(err => {
