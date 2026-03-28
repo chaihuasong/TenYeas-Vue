@@ -191,6 +191,18 @@
 
     <!-- 底部间距 -->
     <div style="height: 100px;"></div>
+
+    <!-- 清空缓存确认弹窗 -->
+    <div v-if="showClearCacheDialog" class="confirm-overlay" @click.self="showClearCacheDialog = false">
+      <div class="confirm-dialog">
+        <div class="confirm-title">提示</div>
+        <div class="confirm-message">清空缓存后需要重新登录，确定继续？</div>
+        <div class="confirm-buttons">
+          <button class="confirm-btn cancel-btn" @click="showClearCacheDialog = false">取消</button>
+          <button class="confirm-btn ok-btn" @click="doClearCache">确定</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -231,7 +243,8 @@ export default {
       groupId: '',
       notification: false,
       hasChanges: false,
-      uploadingAvatar: false
+      uploadingAvatar: false,
+      showClearCacheDialog: false
     };
   },
   computed: {
@@ -430,15 +443,14 @@ export default {
     },
 
     clearUnionId() {
-      this.$confirm('清空缓存后需要重新登录，确定继续？', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        this.$store.commit('$_setUnionid', '')
-        this.$message.success("缓存已清空")
-        this.$router.push("/tenyearsHome")
-      }).catch(() => {})
+      this.showClearCacheDialog = true
+    },
+
+    doClearCache() {
+      this.showClearCacheDialog = false
+      this.$store.commit('$_setUnionid', '')
+      this.$message.success("缓存已清空")
+      this.$router.push("/tenyearsHome")
     },
 
     gotoGroup() {
@@ -756,5 +768,75 @@ export default {
 
 /deep/ .el-switch {
   margin-left: 5px;
+}
+
+/* 清空缓存确认弹窗 */
+.confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.confirm-dialog {
+  background: #fff;
+  border-radius: 12px;
+  width: 280px;
+  overflow: hidden;
+}
+
+.confirm-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  text-align: center;
+  padding: 20px 20px 8px;
+}
+
+.confirm-message {
+  font-size: 14px;
+  color: #606266;
+  text-align: center;
+  padding: 4px 24px 24px;
+  line-height: 1.6;
+}
+
+.confirm-buttons {
+  display: flex;
+  border-top: 1px solid #ebeef5;
+}
+
+.confirm-btn {
+  flex: 1;
+  height: 48px;
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05);
+}
+
+.cancel-btn {
+  color: #909399;
+  border-right: 1px solid #ebeef5;
+}
+
+.cancel-btn:active {
+  background: #f5f5f5;
+}
+
+.ok-btn {
+  color: #e6a23c;
+  font-weight: 500;
+}
+
+.ok-btn:active {
+  background: #fdf6ec;
 }
 </style>
