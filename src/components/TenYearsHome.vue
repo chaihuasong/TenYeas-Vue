@@ -879,7 +879,7 @@ export default {
               }
             }
           }
-          if (templateId === null) {
+          if (templateId === null || templateId === undefined || templateId === '') {
             this.reportLists = JSON.parse(JSON.stringify(this.chujie === '1' ? this.defaultReportLists1 : this.defaultReportLists2))
             this.syncNewReportList()
             this.syncReportTemplateMode()
