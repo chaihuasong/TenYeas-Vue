@@ -353,7 +353,7 @@ export default {
             this.name = data.name || ''
             this.headimgurl = data.headimgurl || ''
             this.avatarUrl = data.avatarUrl || ''
-            this.gender = String(data.gender || '1')
+            this.gender = data.gender === undefined || data.gender === null || data.gender === '' ? '1' : String(data.gender)
             this.wechatgroup = data.wechatgroup || ''
             this.telephone = data.telephone || ''
             this.info = data.info || ''
