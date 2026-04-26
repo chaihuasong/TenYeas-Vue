@@ -1521,11 +1521,6 @@ export default {
               })
               // unionid 刚设置好，重新加载日历数据
               this.getMonthNotes()
-              this.$message({
-                message: '您还未填写立志卡，可先进行打卡，填写立志卡后可解锁完整功能',
-                type: 'info',
-                duration: 5000
-              })
               return
             }
             this.$store.commit('$_setUnionid', this.unionid)
@@ -1594,7 +1589,7 @@ export default {
             this.getMonthNotes()
           }
         } else {
-          // 未填写立志卡，仅提示，不强制跳转，允许继续打卡
+          // 未填写立志卡，不强制跳转，允许继续打卡
           // 从 Android 注入的 localStorage 读取用户基础信息（H5 直接从微信 OAuth 拿不到时的兜底）
           const readLocal = key => {
             try { return JSON.parse(localStorage.getItem(key) || 'null') || '' } catch { return '' }
@@ -1617,11 +1612,6 @@ export default {
           })
           // unionid 已设置，重新加载日历数据（mounted 时可能因 unionid 未就绪而跳过）
           this.getMonthNotes()
-          this.$message({
-            message: '您还未填写立志卡，可先进行打卡，填写立志卡后可解锁完整功能',
-            type: 'info',
-            duration: 5000
-          })
         }
       });
     },
