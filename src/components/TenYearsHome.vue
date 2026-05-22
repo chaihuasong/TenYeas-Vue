@@ -1589,31 +1589,52 @@ export default {
             this.getMonthNotes()
           }
         } else {
-          // 未填写立志卡，不强制跳转，允许继续打卡
-          // 从 Android 注入的 localStorage 读取用户基础信息（H5 直接从微信 OAuth 拿不到时的兜底）
-          const readLocal = key => {
-            try { return JSON.parse(localStorage.getItem(key) || 'null') || '' } catch { return '' }
-          }
-          if (!this.nickname)   this.nickname   = readLocal('htz_nickname')
-          if (!this.headimgurl) this.headimgurl = readLocal('htz_headimgurl')
-          if (!this.city)       this.city       = readLocal('htz_city')
-          if (!this.province)   this.province   = readLocal('htz_province')
-          if (!this.gender)     this.gender     = readLocal('htz_gender')
+          // 兼容旧缓存误把 openid 存到 unionid 的情况，先反查真实 unionid 再加载日历。
+          axios({
+            method: "GET",
+            url: this.serverUrl + "getByOpenid?openid=" + this.unionid,
+            data: null,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          }).then((openidRes) => {
+            if (openidRes != null && openidRes.data != null && openidRes.data !== ''
+                && openidRes.data.unionid !== null && openidRes.data.unionid !== undefined && openidRes.data.unionid !== '') {
+              this.unionid = openidRes.data.unionid
+              this.$store.commit('$_setUnionid', this.unionid)
+              this.getUserInfoByUnionId()
+              return
+            }
 
-          // 将用户基础信息注册到打卡服务端，保证 admin 统计和打卡圈可查到用户昵称、头像
-          this.saveWechatUserInfo({
-            id: this.unionid,
-            openid: this.openid || '',
-            nickname: this.nickname,
-            headimgurl: this.headimgurl,
-            province: this.province,
-            city: this.city,
-            gender: this.gender
-          })
-          // unionid 已设置，重新加载日历数据（mounted 时可能因 unionid 未就绪而跳过）
-          this.getMonthNotes()
+            this.initNewWechatUser()
+          });
         }
       });
+    },
+    initNewWechatUser() {
+      // 未填写立志卡，不强制跳转，允许继续打卡
+      // 从 Android 注入的 localStorage 读取用户基础信息（H5 直接从微信 OAuth 拿不到时的兜底）
+      const readLocal = key => {
+        try { return JSON.parse(localStorage.getItem(key) || 'null') || '' } catch { return '' }
+      }
+      if (!this.nickname)   this.nickname   = readLocal('htz_nickname')
+      if (!this.headimgurl) this.headimgurl = readLocal('htz_headimgurl')
+      if (!this.city)       this.city       = readLocal('htz_city')
+      if (!this.province)   this.province   = readLocal('htz_province')
+      if (!this.gender)     this.gender     = readLocal('htz_gender')
+
+      // 将用户基础信息注册到打卡服务端，保证 admin 统计和打卡圈可查到用户昵称、头像
+      this.saveWechatUserInfo({
+        id: this.unionid,
+        openid: this.openid || '',
+        nickname: this.nickname,
+        headimgurl: this.headimgurl,
+        province: this.province,
+        city: this.city,
+        gender: this.gender
+      })
+      // unionid 已设置，重新加载日历数据（mounted 时可能因 unionid 未就绪而跳过）
+      this.getMonthNotes()
     },
     // 将微信基础信息注册到服务端，使 getById 对新用户也能返回昵称、头像等信息
     saveWechatUserInfo(data) {
