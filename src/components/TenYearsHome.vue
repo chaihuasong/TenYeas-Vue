@@ -148,7 +148,7 @@
             <el-input v-model="list.title" placeholder="请输入项目" disabled></el-input>
           </el-col>
           <el-col :span="(list.title === '站桩' || list.title === '禅坐' || list.title === '静坐' || list.title === '诵读经典' || list.title === '经典学习' || list.title === '宽两秒') ? 4 : 7" v-if="(!editDailyReportMode  && list.title !== '早睡' && list.title !== '早起')">
-            <input class="dailyReportInfoInputStyle" type="number" pattern="\d*" v-model="list.value" placeholder="" @change="onDailyReportResultChange" />
+            <input class="dailyReportInfoInputStyle" type="text" inputmode="numeric" pattern="[0-9]*" v-model="list.value" placeholder="" @input="onDailyReportResultChange" />
           </el-col>
           <el-col :span="1" v-if="!editDailyReportMode && (list.title === '站桩') && zhanZhuangCount === 2" style="margin-top: 10px">
             <span style="color: #909399">+</span>
@@ -157,10 +157,10 @@
             <span style="color: #909399">+</span>
           </el-col>
           <el-col :span="list.title === '站桩' || list.title === '禅坐' || list.title === '静坐' ? 4 : 6" v-if="!editDailyReportMode && list.title === '站桩' && zhanZhuangCount === 2">
-            <input class="dailyReportInfoInputStyle" type="number" pattern="\d*" v-model="zhanZhuangValue2" @change="onDailyReportResultChange" />
+            <input class="dailyReportInfoInputStyle" type="text" inputmode="numeric" pattern="[0-9]*" v-model="zhanZhuangValue2" @input="onDailyReportResultChange" />
           </el-col>
           <el-col :span="list.title === '站桩' || list.title === '禅坐' || list.title === '静坐' ? 4 : 6" v-if="!editDailyReportMode && (list.title === '禅坐' || list.title === '静坐') && jingZuoCount === 2">
-            <input class="dailyReportInfoInputStyle" type="number" pattern="\d*" v-model="jingzuoValue2" @change="onDailyReportResultChange" />
+            <input class="dailyReportInfoInputStyle" type="text" inputmode="numeric" pattern="[0-9]*" v-model="jingzuoValue2" @input="onDailyReportResultChange" />
           </el-col>
           <el-col :span="2" v-if="!editDailyReportMode && (list.title === '站桩') && zhanZhuangCount === 1" style="margin-right: 15px">
             <el-button icon="el-icon-plus" circle @click="addValue(list.title)"
@@ -183,13 +183,13 @@
             <span>{{ list.unit }}</span><span v-if="list.title === '诵读经典'">，诵读</span><span v-if="list.title === '经典学习'">，学习</span>
           </el-col>
           <el-col :span="6" v-if="!editDailyReportMode && list.title === '诵读经典'" style="text-align: left;padding: 0 0">
-            <input class="dailyReportInfoInputTextStyle" v-model="sutraRead" @change="onDailyReportResultChange" />
+            <input class="dailyReportInfoInputTextStyle" v-model="sutraRead" @input="onDailyReportResultChange" />
           </el-col>
           <el-col :span="6" v-if="!editDailyReportMode && list.title === '经典学习'" style="text-align: left;padding: 0 0">
-            <input class="dailyReportInfoInputTextStyle" v-model="sutraStudy" @change="onDailyReportResultChange" />
+            <input class="dailyReportInfoInputTextStyle" v-model="sutraStudy" @input="onDailyReportResultChange" />
           </el-col>
           <el-col :span="4" v-if="!editDailyReportMode && list.title === '宽两秒'" style="text-align: left;padding: 0 0">
-            <input class="dailyReportInfoInputStyle" type="number" pattern="\d*" v-model="kuanLiangMiaoCount" @change="onDailyReportResultChange" />
+            <input class="dailyReportInfoInputStyle" type="text" inputmode="numeric" pattern="[0-9]*" v-model="kuanLiangMiaoCount" @input="onDailyReportResultChange" />
           </el-col>
           <el-col :span="1" v-if="!editDailyReportMode && list.title === '宽两秒'" style="margin-top: 10px;text-align: left;padding: 0 0">
             <span>次</span>
@@ -275,7 +275,7 @@
           type="textarea"
           :rows="5"
           placeholder="请输入内容"
-          @change="onDailyReportResultChange"
+          @input="onDailyReportResultChange"
           v-model="share" />
       <el-button v-if="!editDailyReportMode" style="float: right;margin-top: 10px;margin-bottom: 10px" @click="submitDailyReport">提交</el-button>
     </el-card>
@@ -1063,50 +1063,122 @@ export default {
         }
       });
     },
+    normalizeReportValue(value) {
+      if (value === null || value === undefined) return ''
+      return String(value).trim()
+    },
+    formatSutraName(text) {
+      const val = this.normalizeReportValue(text)
+      if (!val) return ''
+      if (val.indexOf('《') >= 0) return val
+      return '《' + val + (val.indexOf('》') > 0 ? '' : '》')
+    },
+    shouldIncludeReportInCopy(title, rawValue) {
+      if (title === '早睡' || title === '早起') return true
+      if (rawValue !== '' && rawValue !== '0') return true
+      if (title === '诵读经典' && this.normalizeReportValue(this.sutraRead) !== '') return true
+      if (title === '经典学习' && this.normalizeReportValue(this.sutraStudy) !== '') return true
+      if (title === '宽两秒') return true
+      if (title === '站桩' && this.zhanZhuangCount === 2 && this.normalizeReportValue(this.zhanZhuangValue2) !== '') return true
+      if ((title === '静坐' || title === '禅坐') && this.jingZuoCount === 2 && this.normalizeReportValue(this.jingzuoValue2) !== '') return true
+      return false
+    },
+    formatReportCopyLine(index, item, rawValue) {
+      const title = item.title
+      const unit = item.unit || ''
+      if (title === '站桩' && this.zhanZhuangCount === 2 && this.normalizeReportValue(this.zhanZhuangValue2) !== '') {
+        return index + '. ' + title + '：' + rawValue + '+' + this.normalizeReportValue(this.zhanZhuangValue2) + unit
+      }
+      if ((title === '静坐' || title === '禅坐') && this.jingZuoCount === 2 && this.normalizeReportValue(this.jingzuoValue2) !== '') {
+        return index + '. ' + title + '：' + rawValue + '+' + this.normalizeReportValue(this.jingzuoValue2) + unit
+      }
+      if (title === '诵读经典') {
+        let line = index + '. ' + title + '：'
+        if (rawValue !== '' && rawValue !== '0') {
+          line += rawValue + unit
+        }
+        const sutra = this.formatSutraName(this.sutraRead)
+        if (sutra) {
+          line += (rawValue !== '' && rawValue !== '0' ? '，诵读' : '诵读') + sutra
+        }
+        return line
+      }
+      if (title === '经典学习') {
+        let line = index + '. ' + title + '：'
+        if (rawValue !== '' && rawValue !== '0') {
+          line += rawValue + unit
+        }
+        const sutra = this.formatSutraName(this.sutraStudy)
+        if (sutra) {
+          line += (rawValue !== '' && rawValue !== '0' ? '，学习' : '学习') + sutra
+        }
+        return line
+      }
+      if (title === '宽两秒') {
+        const kuanLiangMiaoCount = this.normalizeReportValue(this.kuanLiangMiaoCount)
+        const displayValue = rawValue === '' || rawValue === '0' ? '0' : rawValue
+        return index + '. ' + this.kuanLiangMiao + '：' + displayValue + unit + (kuanLiangMiaoCount !== '' ? '，总' + kuanLiangMiaoCount + '次' : '')
+      }
+      if (title === '早睡') {
+        return index + '. ' + title + '：' + (this.zaoShuiTimeVisible ? this.zaoShuiTime : (this.zaoShuiValue === '1' ? '' : '未') + '做到')
+      }
+      if (title === '早起') {
+        return index + '. ' + title + '：' + (this.zaoQiTimeVisible ? this.zaoQiTime : (this.zaoQiValue === '1' ? '' : '未') + '做到')
+      }
+      return index + '. ' + title + '：' + rawValue + unit
+    },
+    collectDailyReportSubmit() {
+      const data = {}
+      const copyLines = []
+      let inputted = false
+      let copyIndex = 0
+
+      for (let i = 0; i < this.reportLists.length; i++) {
+        const item = this.reportLists[i]
+        const title = item.title
+        const rawValue = this.normalizeReportValue(item.value)
+        const submitValue = rawValue === '' ? '0' : rawValue
+
+        if (submitValue !== '0') {
+          inputted = true
+        }
+        if (title === '诵读经典' && this.normalizeReportValue(this.sutraRead) !== '') {
+          inputted = true
+        }
+        if (title === '经典学习' && this.normalizeReportValue(this.sutraStudy) !== '') {
+          inputted = true
+        }
+        if (title === '站桩' && this.zhanZhuangCount === 2 && this.normalizeReportValue(this.zhanZhuangValue2) !== '') {
+          data['value' + (i + 1)] = submitValue + '+' + this.normalizeReportValue(this.zhanZhuangValue2)
+        } else if ((title === '静坐' || title === '禅坐') && this.jingZuoCount === 2 && this.normalizeReportValue(this.jingzuoValue2) !== '') {
+          data['value' + (i + 1)] = submitValue + '+' + this.normalizeReportValue(this.jingzuoValue2)
+        } else if (title === '早睡') {
+          data['value' + (i + 1)] = this.zaoShuiValue
+        } else if (title === '早起') {
+          data['value' + (i + 1)] = this.zaoQiValue
+        } else {
+          data['value' + (i + 1)] = submitValue
+        }
+
+        if (this.shouldIncludeReportInCopy(title, rawValue)) {
+          copyIndex++
+          copyLines.push(this.formatReportCopyLine(copyIndex, item, rawValue))
+        }
+      }
+
+      let copyText = ''
+      if (copyLines.length > 0) {
+        copyText = this.nickname + ' ' + this.getDateFormat(this.selectedDate) + '\n' + copyLines.join('\n')
+      }
+      if (this.normalizeReportValue(this.share) !== '') {
+        copyText += (copyText ? '\n\n' : '') + '分享：' + this.share
+      }
+
+      return { data, copyText, inputted }
+    },
     buildDailyReportResult() {
       if (this.reportLists === null || this.reportLists.length === 0) return ''
-      let data = ''
-      let index = 0;
-      for (let i = 0; i < this.reportLists.length; i++) {
-        if ((this.reportLists[i].title !== '早睡' && this.reportLists[i].title !== '早起') && (this.reportLists[i].value.trim() === '' || this.reportLists[i].value.trim() === '0')) continue
-        index++
-        let value = null;
-        if (this.reportLists[i].title === '站桩' && this.zhanZhuangCount === 2 && this.zhanZhuangValue2 !== null && this.zhanZhuangValue2 !== '') {
-          value = index + '. ' + this.reportLists[i].title + '：' + this.reportLists[i].value.trim() + '+' + this.zhanZhuangValue2 + this.reportLists[i].unit
-        } else if ((this.reportLists[i].title === '静坐' || this.reportLists[i].title === '禅坐') && this.jingZuoCount == 2 && this.jingzuoValue2 !== null && this.jingzuoValue2 !== '') {
-          value = index + '. ' + this.reportLists[i].title + '：' + this.reportLists[i].value.trim() + '+' + this.jingzuoValue2 + this.reportLists[i].unit
-        } else if (this.reportLists[i].title === '诵读经典' && this.sutraRead !== null && this.sutraRead !== '') {
-          value = index + '. ' + this.reportLists[i].title + '：' + this.reportLists[i].value.trim() + this.reportLists[i].unit
-          if (this.sutraRead !== null && this.sutraRead !== '') {
-            value = value + '，诵读' + (this.sutraRead.indexOf('《') >= 0 ? this.sutraRead : '《' + this.sutraRead + (this.sutraRead.indexOf('》') > 0 ? '' : '》'))
-          }
-        } else if (this.reportLists[i].title === '经典学习' && this.sutraStudy !== null && this.sutraStudy !== '') {
-          value = index + '. ' + this.reportLists[i].title + '：' + this.reportLists[i].value.trim() + this.reportLists[i].unit
-          if (this.sutraStudy !== null && this.sutraStudy !== '') {
-            value = value + '，学习' + (this.sutraStudy.indexOf('《') > 0 ? this.sutraStudy : '《' + this.sutraStudy + (this.sutraStudy.indexOf('》') > 0 ? '' : '》'))
-          }
-        } else if (this.reportLists[i].title === '宽两秒' && this.kuanLiangMiao !== null && this.kuanLiangMiao !== '') {
-          let kuanLiangMiaoCount = this.kuanLiangMiaoCount || ''
-          value = index + '. ' + this.kuanLiangMiao + '：' + this.reportLists[i].value.trim() + this.reportLists[i].unit + (kuanLiangMiaoCount !== '' ? '，总' + kuanLiangMiaoCount + '次' : '')
-        } else if (this.reportLists[i].title === '早睡') {
-          value = index + '. ' + this.reportLists[i].title + '：' + (this.zaoShuiTimeVisible ? this.zaoShuiTime : (this.zaoShuiValue === '1' ? '' : '未') + '做到')
-        } else if (this.reportLists[i].title === '早起') {
-          value = index + '. ' + this.reportLists[i].title + '：' + (this.zaoQiTimeVisible ? this.zaoQiTime : (this.zaoQiValue === '1' ? '' : '未') + '做到')
-        } else {
-          value = index + '. ' + this.reportLists[i].title + '：' + this.reportLists[i].value.trim() + (this.reportLists[i].unit !== null && this.reportLists[i].unit !== '' ? this.reportLists[i].unit : '')
-        }
-        data += '\n' + value
-      }
-
-      if (data !== '') {
-        data = this.nickname + ' ' + this.getDateFormat(this.selectedDate) + '\n' + data
-      }
-
-      if (this.share !== undefined && this.share !== null && this.share !== '') {
-        data = data + '\n\n分享：' + this.share
-      }
-
-      return data
+      return this.collectDailyReportSubmit().copyText
     },
     onDailyReportResultChange() {
       this.dailyReportResult = this.buildDailyReportResult()
@@ -1137,32 +1209,23 @@ export default {
         this.$message.warning("当前日期不允许打卡")
         return
       }
-      let data = {}
-      let inputted = false
-      for (let i = 0; i < this.reportLists.length; i++) {
-        let value = this.reportLists[i].value.trim() === '' ? '0' : this.reportLists[i].value.trim()
-        if (value !== '0') {
-          inputted = true
-        }
-        if (this.reportLists[i].title === '站桩' && this.zhanZhuangCount === 2 && this.zhanZhuangValue2 !== '') {
-          data['value' + (i + 1)] = value + '+' + this.zhanZhuangValue2
-        } else if ((this.reportLists[i].title === '静坐' || this.reportLists[i].title === '禅坐') && this.jingZuoCount === 2 && this.jingzuoValue2 !== '') {
-          data['value' + (i + 1)] = value + '+' + this.jingzuoValue2
-        } else if ((this.reportLists[i].title === '早睡')) {
-          data['value' + (i + 1)] = this.zaoShuiValue
-        } else if ((this.reportLists[i].title === '早起')) {
-          data['value' + (i + 1)] = this.zaoQiValue
-        } else {
-          data['value' + (i + 1)] = value
-        }
+      if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
+        this.$message.warning("信息获取失败，请刷新页面重试，注意刷新后数据会丢失！")
+        return
       }
+
+      const { data, copyText, inputted } = this.collectDailyReportSubmit()
 
       if (!inputted) {
         this.$message.warning("汇报内容不能为空！")
         return
       }
 
-      const copyText = this.buildDailyReportResult()
+      if (!copyText) {
+        this.$message.warning("复制内容生成失败，请检查填写内容")
+        return
+      }
+
       this.dailyReportResult = copyText
       const copyPromise = this.copyDailyReportText(copyText)
 
@@ -1234,6 +1297,9 @@ export default {
             }
           }
         }
+      }).catch((err) => {
+        console.error('保存功课汇报失败:', err)
+        this.$message.error('保存失败，请稍后重试')
       });
     },
     getNowTime(date) {
