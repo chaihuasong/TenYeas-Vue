@@ -93,7 +93,7 @@
     <el-calendar v-model="calendarValue">
       <template
           slot="dateCell"
-          slot-scope="{date, data}">
+          slot-scope="{data}">
         <el-row
             :class="[new Date(data.day).getFullYear() > new Date().getFullYear()
             || (new Date(data.day).getFullYear() === new Date().getFullYear() && new Date(data.day).getMonth() > new Date().getMonth())
@@ -458,6 +458,11 @@ export default {
     this.getHalfYearInfo()
     this.getAllDefaultReportsLists()
     this.visitedUser()
+  },
+  watch: {
+    calendarValue(newValue, oldValue) {
+      this.handleCalendarValueChange(newValue, oldValue)
+    }
   },
   methods: {
     addTimeValue(title) {
@@ -938,30 +943,34 @@ export default {
         }
       });
     },
+    handleCalendarValueChange(newValue, oldValue) {
+      if (!newValue) {
+        return
+      }
+
+      let selectedDate = new Date(newValue)
+      let previousDate = oldValue ? new Date(oldValue) : this.selectedDate
+      let monthChanged = previousDate.getFullYear() !== selectedDate.getFullYear()
+          || previousDate.getMonth() !== selectedDate.getMonth()
+      let dateChanged = this.getDateFormat(this.selectedDate) !== this.getDateFormat(selectedDate)
+
+      this.selectedDate = selectedDate
+
+      if (monthChanged) {
+        this.getMonthInfo()
+        this.getLastMonthInfo()
+        this.getHalfYearInfo()
+        this.getMonthNotes()
+        return
+      }
+
+      if (dateChanged) {
+        this.getDailyReportInfoByDate(selectedDate)
+      }
+    },
     dateChanged(data) {
       if (data.isSelected) {
-        let selectedDate = new Date(data.day)
-        if (this.selectedDate.getMonth() !== selectedDate.getMonth()) {
-          this.getMonthInfo()
-          this.getLastMonthInfo()
-          this.getHalfYearInfo()
-        }
-        if (this.selectedDate.getDate() !== selectedDate.getDate()) {
-          this.selectedDate = selectedDate
-
-          this.getDailyReportInfoByDate(selectedDate)
-        }
-        axios({
-          method: "GET",
-          url: this.serverUrl + "getReportInfoByUserIdAndDate?userId=" + this.unionid + "&date=" + data.day,
-          data: null,
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
-        }).then((res) => {
-          this.note = res.data.note
-          this.state = res.data.state
-        });
+        this.handleCalendarValueChange(new Date(data.day), this.selectedDate)
       }
       return ''
     },
@@ -1167,7 +1176,6 @@ export default {
       return ''
     },
     getDailyNoteFormat(data) {
-      this.dateChanged(data)
       let maxLength = 15
       for (let i = 0; i < this.monthsNotesList.length; i++) {
         if (data.day === this.monthsNotesList[i].date) {
