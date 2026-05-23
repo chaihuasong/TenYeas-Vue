@@ -446,10 +446,12 @@ export default {
   mounted: function () {
     document.title = this.$route.meta.title
     console.log("TenYearsHome getData")
-    this.getDefaultReportTemplate1()
-    this.getDefaultReportTemplate2()
-    this.getData()
-    this.getMonthNotes()
+    Promise.all([
+      this.getDefaultReportTemplate1(),
+      this.getDefaultReportTemplate2()
+    ]).then(() => {
+      this.getData()
+    })
     this.configWechat()
     this.getMonthInfo()
     this.getLastMonthInfo()
@@ -515,7 +517,7 @@ export default {
       })
     },
     getDefaultReportTemplate1() {
-      axios({
+      return axios({
         method: "GET",
         url: this.serverUrl + 'getAllDefaultTemplate1',
         data: null,
@@ -534,10 +536,12 @@ export default {
             this.defaultReportLists1.push(item)
           }
         }
+      }).catch((err) => {
+        console.error('获取初阶默认模板失败:', err)
       });
     },
     getDefaultReportTemplate2() {
-      axios({
+      return axios({
         method: "GET",
         url: this.serverUrl + 'getAllDefaultTemplate2',
         data: null,
@@ -556,6 +560,8 @@ export default {
             this.defaultReportLists2.push(item)
           }
         }
+      }).catch((err) => {
+        console.error('获取默认模板失败:', err)
       });
     },
     confirmAddTemplate() {
