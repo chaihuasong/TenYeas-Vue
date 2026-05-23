@@ -91,7 +91,7 @@ export default {
   },
   methods: {
     handleRemove() {
-      this.$message.success("已移除")
+      this.$quickMessage("已移除")
     },
     beforeRemove(file) {
       return this.$confirm(`确定移除 ${ file.name }？`);

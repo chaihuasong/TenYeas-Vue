@@ -95,6 +95,7 @@
           slot="dateCell"
           slot-scope="{data}">
         <el-row
+            @click.native="onCalendarDayClick(data)"
             :class="[new Date(data.day).getFullYear() > new Date().getFullYear()
             || (new Date(data.day).getFullYear() === new Date().getFullYear() && new Date(data.day).getMonth() > new Date().getMonth())
             || (new Date(data.day).getFullYear() === new Date().getFullYear() && new Date(data.day).getMonth() === new Date().getMonth() && new Date(data.day).getDate() > new Date().getDate()) ? 'disabled-color' : '']">
@@ -276,8 +277,7 @@
           placeholder="请输入内容"
           @change="onDailyReportResultChange"
           v-model="share" />
-      <el-button v-if="!editDailyReportMode" style="float: right;margin-top: 10px;margin-bottom: 10px" @click="submitDailyReport"
-                 v-clipboard:copy="dailyReportResult">提交</el-button>
+      <el-button v-if="!editDailyReportMode" style="float: right;margin-top: 10px;margin-bottom: 10px" @click="submitDailyReport">提交</el-button>
     </el-card>
     <el-dialog title="从模板库中选择" :visible.sync="addTemplateDialogVisible" custom-class="templateStyle">
       <el-checkbox-group v-model="newReportLists">
@@ -312,6 +312,7 @@ import axios from "axios";
 import qs from "qs";
 import wx from 'weixin-js-sdk'
 import global from './Common.vue'
+import { copyToClipboardSync, copyToClipboard } from '@/utils/clipboard'
 
 export default {
   name: 'TenYears',
@@ -373,6 +374,7 @@ export default {
       note: '',
       notification: false,
       monthsNotesList: [],
+      dailyReportRequestId: 0,
       template: {},
       templateId: '0',
       state: '1',
@@ -518,7 +520,7 @@ export default {
         }
       }).then(() => {
         console.log("success")
-        this.$message.success("每日打卡通知提醒功能已" + (this.notification ? "开启" : "关闭"))
+        this.$quickMessage("每日打卡通知提醒功能已" + (this.notification ? "开启" : "关闭"))
       })
     },
     getDefaultReportTemplate1() {
@@ -623,6 +625,44 @@ export default {
         }
       });
     },
+    normalizeDateString(dateStr) {
+      if (!dateStr) return ''
+      const parts = String(dateStr).trim().split('-')
+      if (parts.length !== 3) return String(dateStr).trim()
+      return `${parts[0]}-${String(parts[1]).padStart(2, '0')}-${String(parts[2]).padStart(2, '0')}`
+    },
+    isFutureCalendarDay(day) {
+      return this.isAfterToday(new Date(day))
+    },
+    onCalendarDayClick(data) {
+      if (this.isFutureCalendarDay(data.day)) {
+        return
+      }
+      const nextDate = new Date(data.day)
+      if (this.getDateFormat(this.selectedDate) === this.getDateFormat(nextDate)) {
+        this.getDailyReportInfoByDate(nextDate)
+        return
+      }
+      this.calendarValue = nextDate
+    },
+    upsertMonthNoteEntry(date, state, note, templateId) {
+      const normalizedDate = this.normalizeDateString(date)
+      const entry = {
+        date: normalizedDate,
+        state: state == null ? '' : String(state),
+        note: note == null ? '' : String(note),
+        templateId: templateId == null ? '' : String(templateId),
+      }
+      const index = this.monthsNotesList.findIndex(item => this.normalizeDateString(item.date) === normalizedDate)
+      if (index >= 0) {
+        this.$set(this.monthsNotesList, index, {
+          ...this.monthsNotesList[index],
+          ...entry,
+        })
+      } else {
+        this.monthsNotesList.push(entry)
+      }
+    },
     isToday() {
       let now = new Date()
       return this.selectedDate.getFullYear() === now.getFullYear() && this.selectedDate.getMonth() === now.getMonth() && this.selectedDate.getDate() === now.getDate()
@@ -682,11 +722,11 @@ export default {
     },
     getMonthNotes() {
       if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
-        return
+        return Promise.resolve()
       }
       let currentDate = this.getDateFormat(this.calendarValue)
       let monthDate = currentDate.substr(0, currentDate.lastIndexOf('-') + 1)
-      axios({
+      return axios({
         method: "GET",
         url: this.serverUrl + 'getReportInfoListByIdAndMonth?userId=' + this.unionid + "&monthDate=" + monthDate,
         data: null,
@@ -698,44 +738,42 @@ export default {
           this.monthsNotesList = []
           for (let i = 0; i < res.data.length; i++) {
             let item = {
-              date: res.data[i].date,
+              date: this.normalizeDateString(res.data[i].date),
               note: res.data[i].note,
-              templateId: res.data[i].value1 != null ? res.data[i].templateId : '',
+              templateId: res.data[i].templateId || '',
               state: res.data[i].state,
             }
             this.monthsNotesList.push(item)
           }
           this.getDailyReportInfoByDate(this.selectedDate)
-        } else {
-          //可能是新的月份，获取一次上个月的值
-          let lastDate = this.getLastMonthDateFormat(this.calendarValue)
-          let lastMonthDate = lastDate.substr(0, lastDate.lastIndexOf('-') + 1)
-          axios({
-            method: "GET",
-            url: this.serverUrl + "getReportInfoListByIdAndMonth?userId=" + this.unionid + "&monthDate=" + lastMonthDate,
-            data: null,
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded'
-            }
-          }).then((res) => {
-            if (res.data !== '' && res.data.length > 0) {
-              this.monthsNotesList = []
-              for (let i = 0; i < res.data.length; i++) {
-                let item = {
-                  date: res.data[i].date,
-                  note: res.data[i].note,
-                  templateId: res.data[i].templateId,
-                  state: res.data[i].state,
-                }
-                this.monthsNotesList.push(item)
-              }
-              this.getDailyReportInfoByDate(this.selectedDate)
-            } else {
-              this.initReportTemplateId()
-            }
-          });
+          return
         }
-      });
+
+        this.monthsNotesList = []
+        let lastDate = this.getLastMonthDateFormat(this.calendarValue)
+        let lastMonthDate = lastDate.substr(0, lastDate.lastIndexOf('-') + 1)
+        return axios({
+          method: "GET",
+          url: this.serverUrl + "getReportInfoListByIdAndMonth?userId=" + this.unionid + "&monthDate=" + lastMonthDate,
+          data: null,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }).then((res) => {
+          if (res.data !== '' && res.data.length > 0) {
+            const lastMonthNotes = res.data.map(row => ({
+              date: this.normalizeDateString(row.date),
+              note: row.note,
+              templateId: row.templateId || '',
+              state: row.state,
+            }))
+            this.initReportTemplateId(lastMonthNotes)
+          } else {
+            this.initReportTemplateId([])
+          }
+          this.getDailyReportInfoByDate(this.selectedDate)
+        })
+      })
     },
     getReportTemplate(templateId) {
       axios({
@@ -765,14 +803,15 @@ export default {
         this.syncReportTemplateMode()
       });
     },
-    initReportTemplateId() {
+    initReportTemplateId(sourceList) {
+      const notesList = sourceList || this.monthsNotesList
       let templateId = -1
       let preDay = 0
-      for (let i = 0; i < this.monthsNotesList.length; i++) {
-        let tempDay = parseInt(this.monthsNotesList[i].date.split('-')[2])
+      for (let i = 0; i < notesList.length; i++) {
+        let tempDay = parseInt(notesList[i].date.split('-')[2])
         if (preDay < tempDay) {
-          if (this.monthsNotesList[i].templateId !== null) {
-            templateId = parseInt(this.monthsNotesList[i].templateId)
+          if (notesList[i].templateId !== null && notesList[i].templateId !== undefined && notesList[i].templateId !== '') {
+            templateId = parseInt(notesList[i].templateId)
             preDay = tempDay
           }
         }
@@ -813,6 +852,7 @@ export default {
     },
     getDailyReportInfoByDate(val) {
       let date = this.getDateFormat(val)
+      const requestId = ++this.dailyReportRequestId
       axios({
         method: "GET",
         url: this.serverUrl + "getReportInfoByUserIdAndDate?userId=" + this.unionid + "&date=" + date,
@@ -821,6 +861,9 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
+        if (requestId !== this.dailyReportRequestId) {
+          return
+        }
         this.jingZuoCount = 1
         this.zhanZhuangCount = 1
         this.jingzuoValue2 = ''
@@ -831,9 +874,10 @@ export default {
         this.zaoQiTimeVisible = false
         this.zaoShuiTimeVisible = false
         if (res.data !== null && res.data !== '') {
-          this.note = res.data.note
-          this.share = res.data.share
-          this.state = res.data.state
+          this.note = res.data.note == null ? '' : String(res.data.note)
+          this.share = res.data.share == null ? '' : String(res.data.share)
+          this.state = res.data.state == null ? '' : String(res.data.state)
+          this.upsertMonthNoteEntry(date, this.state, this.note, res.data.templateId)
           this.sutraRead = res.data.sutraRead
           this.sutraStudy = res.data.sutraStudy
           this.zaoQiTime = res.data.zaoQiTime
@@ -904,6 +948,9 @@ export default {
               'Content-Type': 'application/x-www-form-urlencoded'
             }
           }).then((resp) => {
+            if (requestId !== this.dailyReportRequestId) {
+              return
+            }
             if (reports != null && reports.length > 0  && reports[0] != null && reports[0] !== undefined) {
               this.templateId = templateId
               this.reportLists = []
@@ -1008,13 +1055,16 @@ export default {
         if (res.status !== 200) {
           this.$message.warning("保存出错！\n" + res.statusText)
         } else {
-          this.getMonthNotes()
+          const date = this.getDateFormat(this.selectedDate)
+          this.getMonthNotes().then(() => {
+            this.upsertMonthNoteEntry(date, this.state, this.note)
+          })
           this.$message.success("提交成功！")
         }
       });
     },
-    onDailyReportResultChange() {
-      if (this.reportLists === null || this.reportLists.length === 0) return
+    buildDailyReportResult() {
+      if (this.reportLists === null || this.reportLists.length === 0) return ''
       let data = ''
       let index = 0;
       for (let i = 0; i < this.reportLists.length; i++) {
@@ -1056,7 +1106,31 @@ export default {
         data = data + '\n\n分享：' + this.share
       }
 
-      this.dailyReportResult = data
+      return data
+    },
+    onDailyReportResultChange() {
+      this.dailyReportResult = this.buildDailyReportResult()
+    },
+    showCopyFallbackDialog(text) {
+      const safeText = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+      this.$alert(
+        `<div style="white-space:pre-wrap;word-break:break-word;text-align:left;max-height:60vh;overflow-y:auto;">${safeText}</div>`,
+        '自动复制失败，请长按以下内容手动复制',
+        {
+          confirmButtonText: '知道了',
+          customClass: 'copy-fallback-dialog',
+          dangerouslyUseHTMLString: true,
+        }
+      )
+    },
+    copyDailyReportText(text) {
+      if (copyToClipboardSync(text)) {
+        return Promise.resolve(true)
+      }
+      return copyToClipboard(text, this)
     },
     submitDailyReport() {
       if (this.isAfterToday(this.selectedDate)) {
@@ -1087,6 +1161,10 @@ export default {
         this.$message.warning("汇报内容不能为空！")
         return
       }
+
+      const copyText = this.buildDailyReportResult()
+      this.dailyReportResult = copyText
+      const copyPromise = this.copyDailyReportText(copyText)
 
       data['userId'] = this.unionid
       data['templateId'] = this.templateId
@@ -1120,7 +1198,14 @@ export default {
           this.$message.warning("保存出错！\n" + res.statusText)
         } else {
           this.getMonthNotes()
-          this.$message.success("内容已成功提交并已复制，可粘贴到微信群。")
+          copyPromise.then((copied) => {
+            if (copied) {
+              this.$quickMessage("内容已成功提交并已复制，可粘贴到微信群。", 'success', 2000)
+            } else {
+              this.$quickMessage("内容已提交，但自动复制失败", 'warning', 2000)
+              this.showCopyFallbackDialog(copyText)
+            }
+          })
           if (this.monthsNotesList !== null && this.monthsNotesList.length === 0) {
             if (this.notification === undefined || this.notification === null || this.notification === '' || this.notification === false) {
               this.$confirm('是否打开通知提醒功能？', '提示', {
@@ -1166,10 +1251,11 @@ export default {
       return yy + '-' + mm + '-' + dd + ' '+ hh + ':' + mf + ':' + ss
     },
     getState(data) {
+      const day = this.normalizeDateString(data.day)
       for (let i = 0; i < this.monthsNotesList.length; i++) {
-        if (data.day === this.monthsNotesList[i].date) {
+        if (day === this.normalizeDateString(this.monthsNotesList[i].date)) {
           if (this.monthsNotesList[i].state === null || this.monthsNotesList[i].state === '') return ''
-          let sign = this.monthsNotesList[i].state === '0' ? '-' : '+'
+          let sign = String(this.monthsNotesList[i].state) === '0' ? '-' : '+'
           return sign
         }
       }
@@ -1177,8 +1263,9 @@ export default {
     },
     getDailyNoteFormat(data) {
       let maxLength = 15
+      const day = this.normalizeDateString(data.day)
       for (let i = 0; i < this.monthsNotesList.length; i++) {
-        if (data.day === this.monthsNotesList[i].date) {
+        if (day === this.normalizeDateString(this.monthsNotesList[i].date)) {
           if (this.monthsNotesList[i].note === null || this.monthsNotesList[i].note === '') return ''
           if (this.monthsNotesList[i].note.trim().length > maxLength) {
             return this.monthsNotesList[i].note.trim().substring(0, maxLength - 1) + '…'
@@ -1267,7 +1354,7 @@ export default {
     },
     addEl() {
       if (this.reportLists.length > 19) {
-        this.$message.warning("已达到上限！")
+        this.$quickMessage("已达到上限！", "warning")
         return
       }
       this.addTemplateDialogVisible = true

@@ -456,7 +456,7 @@ export default {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       })
         .then(() => {
-          this.$message.success(this.open ? "内容已公开" : "内容已隐藏")
+          this.$quickMessage(this.open ? "内容已公开" : "内容已隐藏")
         })
     },
 
@@ -471,7 +471,7 @@ export default {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       })
         .then(() => {
-          this.$message.success(this.notification ? "提醒已开启" : "提醒已关闭")
+          this.$quickMessage(this.notification ? "提醒已开启" : "提醒已关闭")
         })
     },
 

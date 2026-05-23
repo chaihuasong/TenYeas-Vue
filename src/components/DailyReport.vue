@@ -274,7 +274,7 @@ export default {
     },
     addEl: function () {
       if (this.lists.length > 19) {
-        this.$message.warning("已达到上限！")
+        this.$quickMessage("已达到上限！", "warning")
         return
       }
       let cope = {
