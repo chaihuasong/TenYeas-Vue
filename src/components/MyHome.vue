@@ -67,18 +67,19 @@
       <div class="card-header">
         <i class="el-icon-user"></i>
         <span>基本信息</span>
+        <span class="save-tip">{{ hasChanges ? '有未保存修改' : '资料已保存' }}</span>
       </div>
       <div class="card-body">
         <div class="info-item">
           <span class="info-label">昵称</span>
           <div class="info-value">
-            <input class="info-input" v-model="nickname" @blur="onInfoChange" placeholder="请输入昵称"/>
+            <input class="info-input" v-model="nickname" @input="markInfoChanged" placeholder="请输入昵称"/>
           </div>
         </div>
         <div class="info-item">
           <span class="info-label">性别</span>
           <div class="info-value">
-            <el-radio-group v-model="gender" @change="onGenderChange" size="small">
+            <el-radio-group v-model="gender" @change="markInfoChanged" size="small">
               <el-radio-button label="1">男</el-radio-button>
               <el-radio-button label="0">女</el-radio-button>
             </el-radio-group>
@@ -87,7 +88,7 @@
         <div class="info-item">
           <span class="info-label">城市</span>
           <div class="info-value">
-            <input class="info-input" v-model="province" @blur="onInfoChange" placeholder="请输入城市"/>
+            <input class="info-input" v-model="province" @input="markInfoChanged" placeholder="请输入城市"/>
           </div>
         </div>
         <div class="info-item">
@@ -100,7 +101,7 @@
               value-format="yyyy-MM-dd"
               placeholder="选择生日"
               :clearable="false"
-              @change="onInfoChange"
+              @change="markInfoChanged"
               size="small">
             </el-date-picker>
           </div>
@@ -118,7 +119,7 @@
         <div class="textarea-wrapper">
           <textarea
             v-model="info"
-            @blur="onInfoChange"
+            @input="markInfoChanged"
             placeholder="写下你的立志宣言..."
             rows="4"
             class="custom-textarea">
@@ -137,7 +138,7 @@
         <div class="textarea-wrapper">
           <textarea
             v-model="stepInfo"
-            @blur="onInfoChange"
+            @input="markInfoChanged"
             placeholder="记录你的实施计划..."
             rows="5"
             class="custom-textarea">
@@ -190,7 +191,17 @@
     </div>
 
     <!-- 底部间距 -->
-    <div style="height: 100px;"></div>
+    <div style="height: 165px;"></div>
+
+    <div class="profile-save-bar">
+      <button
+        class="profile-save-btn"
+        :class="{ disabled: !hasChanges || savingProfile }"
+        :disabled="!hasChanges || savingProfile"
+        @click="updateUserInfo">
+        {{ savingProfile ? '保存中...' : '保存资料' }}
+      </button>
+    </div>
 
     <!-- 清空缓存确认弹窗 -->
     <div v-if="showClearCacheDialog" class="confirm-overlay" @click.self="showClearCacheDialog = false">
@@ -244,6 +255,7 @@ export default {
       notification: false,
       hasChanges: false,
       uploadingAvatar: false,
+      savingProfile: false,
       showClearCacheDialog: false
     };
   },
@@ -367,6 +379,7 @@ export default {
             this.province = data.province || ''
             this.nickname = data.nickname || ''
             this.notification = data.notification === '1'
+            this.hasChanges = false
           } else {
             // 未填写立志卡，仅提示，不强制跳转
             this.$message({
@@ -382,15 +395,19 @@ export default {
         })
     },
 
-    onInfoChange() {
-      this.updateUserInfo()
+    markInfoChanged() {
+      this.hasChanges = true
     },
 
-    onGenderChange() {
-      this.updateUserInfo()
-    },
+    async updateUserInfo() {
+      if (!this.hasChanges || this.savingProfile) {
+        return
+      }
+      if (!this.unionid || this.unionid === 'undefined') {
+        this.$message.warning('未获取到用户信息，请重新进入后再保存')
+        return
+      }
 
-    updateUserInfo() {
       const data = qs.stringify({
         id: this.unionid,
         nickname: this.nickname,
@@ -401,15 +418,19 @@ export default {
         gender: this.gender,
       })
 
-      axios.post(`${this.serverUrl}update`, data, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-      })
-        .then(() => {
-          this.$message.success("保存成功")
+      this.savingProfile = true
+      try {
+        await axios.post(`${this.serverUrl}update`, data, {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         })
-        .catch(() => {
-          this.$message.error("保存失败")
-        })
+        this.hasChanges = false
+        this.$message.success("保存成功")
+      } catch (err) {
+        console.error('保存资料失败:', err)
+        this.$message.error("保存失败，请稍后重试")
+      } finally {
+        this.savingProfile = false
+      }
     },
 
     openChange() {
@@ -623,6 +644,13 @@ export default {
   color: #303133;
 }
 
+.save-tip {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: normal;
+  color: #909399;
+}
+
 .card-header i {
   margin-right: 10px;
   font-size: 18px;
@@ -768,6 +796,39 @@ export default {
 
 /deep/ .el-switch {
   margin-left: 5px;
+}
+
+.profile-save-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 65px;
+  z-index: 1000;
+  padding: 10px 15px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+}
+
+.profile-save-btn {
+  width: 100%;
+  height: 44px;
+  border: none;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.profile-save-btn.disabled {
+  background: #c0c4cc;
+  cursor: not-allowed;
+}
+
+.profile-save-btn:active:not(.disabled) {
+  transform: scale(0.99);
 }
 
 /* 清空缓存确认弹窗 */
