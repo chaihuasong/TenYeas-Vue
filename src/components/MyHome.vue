@@ -163,7 +163,11 @@
             <span class="setting-status" :class="{ active: notification }">
               {{ notification ? '已开启' : '已关闭' }}
             </span>
-            <el-switch v-model="notification" @change="notificationChange"></el-switch>
+            <el-switch
+              v-model="notification"
+              @click.native.stop
+              @change="notificationChange">
+            </el-switch>
           </div>
         </div>
         <div class="setting-item" @click="open = !open; openChange()">
@@ -175,7 +179,11 @@
             <span class="setting-status" :class="{ active: open }">
               {{ open ? '已公开' : '已隐藏' }}
             </span>
-            <el-switch v-model="open" @change="openChange"></el-switch>
+            <el-switch
+              v-model="open"
+              @click.native.stop
+              @change="openChange">
+            </el-switch>
           </div>
         </div>
         <div class="setting-item" @click="clearUnionId">
@@ -372,13 +380,13 @@ export default {
             this.stepInfo = data.stepInfo || ''
             this.createDate = data.createDate || ''
             this.birthday = data.birthday || ''
-            this.open = data.open === '1'
+            this.open = this.isEnabled(data.open)
             this.daixie = data.daixie || ''
             this.chujie = data.chujie || ''
             this.wechatid = data.wechatid || ''
             this.province = data.province || ''
             this.nickname = data.nickname || ''
-            this.notification = data.notification === '1'
+            this.notification = this.isEnabled(data.notification)
             this.hasChanges = false
           } else {
             // 未填写立志卡，仅提示，不强制跳转
@@ -397,6 +405,10 @@ export default {
 
     markInfoChanged() {
       this.hasChanges = true
+    },
+
+    isEnabled(value) {
+      return value === true || value === 1 || value === '1'
     },
 
     async updateUserInfo() {
