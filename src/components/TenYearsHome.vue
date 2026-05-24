@@ -1708,6 +1708,18 @@ export default {
         window.location.href = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx83aec75c3ca58f0e&redirect_uri=http://htzchina.org/wc_redirect4&response_type=code&scope=snsapi_base&state=123#wechat_redirect"
       }
     },
+    syncCanonicalUserId(user) {
+      if (!user || !user.id) {
+        return
+      }
+      if (user.openid) {
+        this.openid = user.openid
+      }
+      if (this.unionid !== user.id) {
+        this.unionid = user.id
+        this.$store.commit('$_setUnionid', this.unionid)
+      }
+    },
     getUserInfoByUnionId() {
       if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
         this.$message.warning("信息获取失败，请刷新页面重试！")
@@ -1724,6 +1736,7 @@ export default {
         if (res != null && res.data != null && res.data !== '') {
           console.log("getById res:" + res)
           console.log("getById res.data:" + res.data)
+          this.syncCanonicalUserId(res.data)
           this.name = res.data.name
           this.nickname = res.data.nickname
           this.gender = res.data.gender + ''
@@ -1766,10 +1779,8 @@ export default {
               'Content-Type': 'application/x-www-form-urlencoded'
             }
           }).then((openidRes) => {
-            if (openidRes != null && openidRes.data != null && openidRes.data !== ''
-                && openidRes.data.unionid !== null && openidRes.data.unionid !== undefined && openidRes.data.unionid !== '') {
-              this.unionid = openidRes.data.unionid
-              this.$store.commit('$_setUnionid', this.unionid)
+            if (openidRes != null && openidRes.data != null && openidRes.data !== '' && openidRes.data.id) {
+              this.syncCanonicalUserId(openidRes.data)
               this.getUserInfoByUnionId()
               return
             }
