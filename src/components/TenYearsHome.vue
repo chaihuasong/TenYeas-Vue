@@ -131,7 +131,7 @@
       <br/>
 
       <div style="margin-top: 20px;margin-bottom: 15px">
-        <el-row :gutter="5" v-for='(list,index) in reportLists' v-bind:key='list.id' style="margin-top: 5px">
+        <el-row :gutter="5" v-for='(list,index) in reportLists' :key="list.title + '-' + index" style="margin-top: 5px">
           <el-col :span="(zaoQiTimeVisible && list.title === '早起') || ( zaoShuiTimeVisible && list.title === '早睡') ? 5 : (list.title === '诵读经典' || list.title === '经典学习' ? 6 : 7)" v-if="!editDailyReportMode && list.title !== '宽两秒'" style="text-align: right;margin-top: 10px">
             <span>{{ list.title }}</span>
           </el-col>
@@ -577,12 +577,16 @@ export default {
         this.$message.warning('至少添加一项内容！')
         return
       }
+      const valueByTitle = {}
+      for (let i = 0; i < this.reportLists.length; i++) {
+        valueByTitle[this.reportLists[i].title] = this.reportLists[i].value
+      }
       this.addTemplateDialogVisible = false
       this.reportLists = []
       for (let i = 0; i < this.newReportLists.length; i++) {
         let title = this.newReportLists[i].split('_')[0]
         let unit = this.newReportLists[i].split('_').length === 2 ? this.newReportLists[i].split('_')[1] : ''
-        let value = ''
+        let value = valueByTitle[title] != null ? valueByTitle[title] : ''
         let cope = {
           title: title,
           value: value,
@@ -814,7 +818,7 @@ export default {
             this.reportLists.push(cope);
           }
         } else {
-          this.reportLists = JSON.parse(JSON.stringify(this.chujie === '1' ? this.defaultReportLists1 : this.defaultReportLists2))
+          this.reportLists = this.cloneDefaultReportLists()
         }
         this.syncNewReportList()
         this.syncReportTemplateMode()
@@ -834,7 +838,7 @@ export default {
         }
       }
       if (templateId === -1 || isNaN(templateId)) {
-        this.reportLists = JSON.parse(JSON.stringify(this.chujie === '1' ? this.defaultReportLists1 : this.defaultReportLists2))
+        this.reportLists = this.cloneDefaultReportLists()
         this.syncNewReportList()
         this.syncReportTemplateMode()
       } else {
@@ -867,6 +871,167 @@ export default {
       if (day < 10) day = '0' + day
       return year + "-" + month + "-" + day
     },
+    cloneDefaultReportLists() {
+      return JSON.parse(JSON.stringify(this.chujie === '1' ? this.defaultReportLists1 : this.defaultReportLists2))
+    },
+    extractReportsFromData(resData) {
+      const reports = []
+      for (let i = 1; i <= 20; i++) {
+        reports.push(resData['value' + i])
+      }
+      return reports
+    },
+    hasReportValues(reports) {
+      if (!reports || reports.length === 0) return false
+      for (let i = 0; i < reports.length; i++) {
+        if (reports[i] != null && reports[i] !== undefined) {
+          return true
+        }
+      }
+      return false
+    },
+    resolveReportTemplateId(resData) {
+      let templateId = resData.templateId
+      if ((templateId === undefined || templateId === null || templateId === '')
+          && this.monthsNotesList !== null && this.monthsNotesList.length > 0) {
+        let index = 0
+        let temp = 0
+        for (let i = 0; i < this.monthsNotesList.length; i++) {
+          let day = parseInt(this.monthsNotesList[i].date.split('-')[2])
+          let tmpTemplateId = this.monthsNotesList[index].templateId
+          if (temp === 0) {
+            temp = day
+            if (tmpTemplateId !== null && tmpTemplateId !== undefined && tmpTemplateId !== '') {
+              templateId = tmpTemplateId
+            }
+          } else if (day > temp) {
+            temp = day
+            index = i
+            if (tmpTemplateId !== null && tmpTemplateId !== undefined && tmpTemplateId !== '') {
+              templateId = tmpTemplateId
+            }
+          }
+        }
+      }
+      return templateId
+    },
+    resetDailyReportTableFields() {
+      this.jingZuoCount = 1
+      this.zhanZhuangCount = 1
+      this.jingzuoValue2 = ''
+      this.zhanZhuangValue2 = ''
+      this.kuanLiangMiaoCount = ''
+      this.sutraRead = ''
+      this.sutraStudy = ''
+      this.zaoQiTimeVisible = false
+      this.zaoShuiTimeVisible = false
+      this.zaoQiValue = '1'
+      this.zaoShuiValue = '1'
+    },
+    applyDailyReportExtraFields(resData) {
+      this.sutraRead = resData.sutraRead == null ? '' : String(resData.sutraRead)
+      this.sutraStudy = resData.sutraStudy == null ? '' : String(resData.sutraStudy)
+      this.zaoQiTime = resData.zaoQiTime
+      this.zaoShuiTime = resData.zaoShuiTime
+      this.zaoShuiTimeVisible = resData.zaoShuiTimeVisible === '1'
+      this.zaoQiTimeVisible = resData.zaoQiTimeVisible === '1'
+      this.kuanLiangMiao = resData.kuanLiangMiao ? resData.kuanLiangMiao : '宽两秒'
+      this.kuanLiangMiaoCount = resData.kuanLiangMiaoCount || ''
+    },
+    parseReportCellValue(rawValue, title, unit) {
+      if (rawValue == null || rawValue === undefined) return ''
+      const str = String(rawValue)
+      if (title === '早睡' || title === '早起') {
+        return str
+      }
+      let value = str.replace(title, '')
+      value = value.replace(unit, '')
+      return value.trim()
+    },
+    buildReportListsFromTemplateAndReports(templateRows, reports) {
+      this.resetDailyReportTableFields()
+      const reportLists = []
+      for (let i = 0; i < templateRows.length; i++) {
+        let title = templateRows[i].split('_')[0]
+        let unit = templateRows[i].split('_').length === 2 ? templateRows[i].split('_')[1] : ''
+        let rawValue = i < reports.length ? reports[i] : ''
+        let value = this.parseReportCellValue(rawValue, title, unit)
+        if (title === '早睡') {
+          this.zaoShuiValue = value === '' ? '1' : value
+          value = ''
+        } else if (title === '早起') {
+          this.zaoQiValue = value === '' ? '1' : value
+          value = ''
+        } else if (value !== '' && value.indexOf('+') > 0 && title === '站桩') {
+          this.zhanZhuangCount = 2
+          this.zhanZhuangValue2 = value.split('+')[1]
+          value = value.split('+')[0]
+        } else if (value !== '' && value.indexOf('+') > 0 && (title === '静坐' || title === '禅坐')) {
+          this.jingZuoCount = 2
+          this.jingzuoValue2 = value.split('+')[1]
+          value = value.split('+')[0]
+        }
+        reportLists.push({
+          title: title,
+          value: value,
+          unit: unit,
+        })
+      }
+      return reportLists
+    },
+    buildEmptyReportListsFromTemplate(templateRows) {
+      this.resetDailyReportTableFields()
+      const reportLists = []
+      for (let i = 0; i < templateRows.length; i++) {
+        let title = templateRows[i].split('_')[0]
+        let unit = templateRows[i].split('_').length === 2 ? templateRows[i].split('_')[1] : ''
+        reportLists.push({
+          title: title,
+          value: '',
+          unit: unit,
+        })
+      }
+      return reportLists
+    },
+    applyLoadedDailyReport(date, resData, templateRows, templateId) {
+      this.note = resData.note == null ? '' : String(resData.note)
+      this.share = resData.share == null ? '' : String(resData.share)
+      this.state = resData.state == null ? '' : String(resData.state)
+      this.upsertMonthNoteEntry(date, this.state, this.note, resData.templateId)
+      this.applyDailyReportExtraFields(resData)
+
+      const reports = this.extractReportsFromData(resData)
+      if (templateId != null && templateId !== undefined && templateId !== '') {
+        this.templateId = templateId
+      }
+
+      if (templateRows != null && templateRows.length > 0) {
+        if (this.hasReportValues(reports)) {
+          this.reportLists = this.buildReportListsFromTemplateAndReports(templateRows, reports)
+          this.onDailyReportResultChange()
+        } else {
+          this.reportLists = this.buildEmptyReportListsFromTemplate(templateRows)
+        }
+      } else {
+        this.reportLists = this.cloneDefaultReportLists()
+      }
+      this.syncNewReportList()
+    },
+    fetchReportTemplateRows(templateId) {
+      return axios({
+        method: "GET",
+        url: this.serverUrl + "getReportTemplateById?id=" + templateId,
+        data: null,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((resp) => {
+        if (resp.data !== '' && resp.data != null && resp.data.length > 0) {
+          return resp.data
+        }
+        return null
+      })
+    },
     getDailyReportInfoByDate(val) {
       let date = this.getDateFormat(val)
       const requestId = ++this.dailyReportRequestId
@@ -881,131 +1046,40 @@ export default {
         if (requestId !== this.dailyReportRequestId) {
           return
         }
-        this.jingZuoCount = 1
-        this.zhanZhuangCount = 1
-        this.jingzuoValue2 = ''
-        this.zhanZhuangValue2 = ''
-        this.kuanLiangMiaoCount = ''
-        this.sutraRead = ''
-        this.sutraStudy = ''
-        this.zaoQiTimeVisible = false
-        this.zaoShuiTimeVisible = false
-        if (res.data !== null && res.data !== '') {
-          this.note = res.data.note == null ? '' : String(res.data.note)
-          this.share = res.data.share == null ? '' : String(res.data.share)
-          this.state = res.data.state == null ? '' : String(res.data.state)
-          this.upsertMonthNoteEntry(date, this.state, this.note, res.data.templateId)
-          this.sutraRead = res.data.sutraRead
-          this.sutraStudy = res.data.sutraStudy
-          this.zaoQiTime = res.data.zaoQiTime
-          this.zaoShuiTime = res.data.zaoShuiTime
-          this.zaoShuiTimeVisible = res.data.zaoShuiTimeVisible === '1'
-          this.zaoQiTimeVisible = res.data.zaoQiTimeVisible === '1'
-          if (res.data.kuanLiangMiao) {
-            this.kuanLiangMiao = res.data.kuanLiangMiao
-          } else {
-            this.kuanLiangMiao = '宽两秒'
-          }
-          this.kuanLiangMiaoCount = res.data.kuanLiangMiaoCount || ''
-          console.log(res.data)
-          let reports = []
-          reports.push(res.data.value1)
-          reports.push(res.data.value2)
-          reports.push(res.data.value3)
-          reports.push(res.data.value4)
-          reports.push(res.data.value5)
-          reports.push(res.data.value6)
-          reports.push(res.data.value7)
-          reports.push(res.data.value8)
-          reports.push(res.data.value9)
-          reports.push(res.data.value10)
-          reports.push(res.data.value11)
-          reports.push(res.data.value12)
-          reports.push(res.data.value13)
-          reports.push(res.data.value14)
-          reports.push(res.data.value15)
-          reports.push(res.data.value16)
-          reports.push(res.data.value17)
-          reports.push(res.data.value18)
-          reports.push(res.data.value19)
-          reports.push(res.data.value20)
-          let templateId = res.data.templateId
-          if ((templateId === undefined || templateId === null || templateId === '')
-              && this.monthsNotesList !== null && this.monthsNotesList.length > 0) {
-            let index = 0
-            let temp = 0
-            for (let i = 0; i < this.monthsNotesList.length; i++) {
-              let day = parseInt(this.monthsNotesList[i].date.split('-')[2])
-              let tmpTemplateId = this.monthsNotesList[index].templateId
-              if (temp === 0) {
-                temp = day
-                if (tmpTemplateId !== null && tmpTemplateId !== undefined && tmpTemplateId !== '') {
-                  templateId = tmpTemplateId
-                }
-              } else if (day > temp) {
-                temp = day
-                index = i
-                if (tmpTemplateId !== null && tmpTemplateId !== undefined && tmpTemplateId !== '') {
-                  templateId = tmpTemplateId
-                }
-              }
-            }
-          }
-          if (templateId === null || templateId === undefined || templateId === '') {
-            this.reportLists = JSON.parse(JSON.stringify(this.chujie === '1' ? this.defaultReportLists1 : this.defaultReportLists2))
-            this.syncNewReportList()
-            this.syncReportTemplateMode()
-            return
-          }
-          axios({
-            method: "GET",
-            url: this.serverUrl + "getReportTemplateById?id=" + templateId,
-            data: null,
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded'
-            }
-          }).then((resp) => {
-            if (requestId !== this.dailyReportRequestId) {
-              return
-            }
-            if (reports != null && reports.length > 0  && reports[0] != null && reports[0] !== undefined) {
-              this.templateId = templateId
-              this.reportLists = []
-              for (let i = 0; i < resp.data.length; i++) {
-                let title = resp.data[i].split('_')[0]
-                let unit = resp.data[i].split('_').length === 2 ? resp.data[i].split('_')[1] : ''
-                let value = reports[i].replace(title, '')
-                value = value.replace(unit, '')
-                if (value !== '' && value.indexOf('+') > 0 && title === '站桩') {
-                  this.zhanZhuangCount = 2
-                  this.zhanZhuangValue2 = value.split('+')[1]
-                  value = value.split('+')[0]
-                } else if (value !== '' && value.indexOf('+') > 0 && (title === '静坐' || title === '禅坐')) {
-                  this.jingZuoCount = 2
-                  this.jingzuoValue2 = value.split('+')[1]
-                  value = value.split('+')[0]
-                }
-                let cope = {
-                  title: title,
-                  value: value,
-                  unit: unit,
-                }
-                this.reportLists.push(cope);
-              }
-              this.onDailyReportResultChange()
-            } else {
-              this.reportLists = JSON.parse(JSON.stringify(this.chujie === '1' ? this.defaultReportLists1 : this.defaultReportLists2))
-            }
-            this.syncNewReportList()
-            this.syncReportTemplateMode()
-          });
-        } else {
-          this.initReportTemplateId()
+        if (res.data === null || res.data === '') {
+          this.resetDailyReportTableFields()
           this.note = ''
           this.share = ''
           this.state = ''
+          this.initReportTemplateId()
+          return
         }
-      });
+
+        const templateId = this.resolveReportTemplateId(res.data)
+        const applyWithTemplateRows = (templateRows) => {
+          if (requestId !== this.dailyReportRequestId) {
+            return
+          }
+          this.applyLoadedDailyReport(date, res.data, templateRows, templateId)
+        }
+
+        if (templateId === null || templateId === undefined || templateId === '') {
+          applyWithTemplateRows(null)
+          return
+        }
+
+        this.fetchReportTemplateRows(templateId).then((templateRows) => {
+          applyWithTemplateRows(templateRows)
+        }).catch((err) => {
+          console.error('获取打卡模板失败:', err)
+          if (requestId !== this.dailyReportRequestId) {
+            return
+          }
+          applyWithTemplateRows(null)
+        })
+      }).catch((err) => {
+        console.error('获取打卡记录失败:', err)
+      })
     },
     handleCalendarValueChange(newValue, oldValue) {
       if (!newValue) {
@@ -1374,38 +1448,41 @@ export default {
       return ''
     },
     changeDailyReportTemplateMode() {
-      if (this.editDailyReportMode) {
-        this.template = {}
-        for (let i = 0; i < this.reportLists.length; i++) {
-          if (this.reportLists[i].title.trim() === '') {
-            this.$message.warning("请输入项目")
-            return
-          }
-          this.template['template' + (i + 1)] = this.reportLists[i].title.trim() + "_" + this.reportLists[i].unit.trim()
-        }
-
-        if (this.template['template1'] === undefined) {
-          this.$message.warning("至少添加一项功课模板！")
+      if (!this.editDailyReportMode) {
+        this.editDailyReportMode = true
+        return
+      }
+      this.template = {}
+      for (let i = 0; i < this.reportLists.length; i++) {
+        if (this.reportLists[i].title.trim() === '') {
+          this.$message.warning("请输入项目")
           return
         }
-
-        let data = qs.stringify(this.template)
-        axios({
-          method: "POST",
-          url: this.serverUrl + "saveTemplate",
-          data: data,
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
-        }).then((res) => {
-          if (res.status !== 200) {
-            this.$message.warning("保存出错！\n" + res.statusText)
-          } else {
-            this.templateId = res.data
-          }
-        });
+        this.template['template' + (i + 1)] = this.reportLists[i].title.trim() + "_" + this.reportLists[i].unit.trim()
       }
-      this.editDailyReportMode = !this.editDailyReportMode
+
+      if (this.template['template1'] === undefined) {
+        this.$message.warning("至少添加一项功课模板！")
+        return
+      }
+
+      let data = qs.stringify(this.template)
+      axios({
+        method: "POST",
+        url: this.serverUrl + "saveTemplate",
+        data: data,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        if (res.status !== 200) {
+          this.$message.warning("保存出错！\n" + res.statusText)
+          return
+        }
+        this.templateId = res.data
+        this.editDailyReportMode = false
+        this.getDailyReportInfoByDate(this.selectedDate)
+      })
     },
     syncReportTemplateMode() {
       this.template = {}
@@ -1435,18 +1512,27 @@ export default {
       });
     },
     resetDefaultTemplate() {
-      this.reportLists = []
-      for (let i = 0; i < (this.chujie === '1' ? this.defaultReportLists1.length : this.defaultReportLists2.length); i++) {
-        let data = {
-          title: this.chujie === '1' ? this.defaultReportLists1[i].title : this.defaultReportLists2[i].title,
-          unit: this.chujie === '1' ? this.defaultReportLists1[i].unit : this.defaultReportLists2[i].unit,
-          value: ''
-        }
-        this.reportLists.push(data);
-        this.editDailyReportMode = false
-        this.syncNewReportList()
-        this.syncReportTemplateMode()
+      this.reportLists = this.cloneDefaultReportLists()
+      this.editDailyReportMode = false
+      this.syncNewReportList()
+      this.template = {}
+      for (let i = 0; i < this.reportLists.length; i++) {
+        this.template['template' + (i + 1)] = this.reportLists[i].title.trim() + "_" + this.reportLists[i].unit.trim()
       }
+      if (this.template['template1'] === undefined) {
+        return
+      }
+      axios({
+        method: "POST",
+        url: this.serverUrl + "saveTemplate",
+        data: qs.stringify(this.template),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        this.templateId = res.data
+        this.getDailyReportInfoByDate(this.selectedDate)
+      })
     },
     addEl() {
       if (this.reportLists.length > 19) {
