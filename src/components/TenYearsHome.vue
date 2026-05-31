@@ -96,9 +96,10 @@
           slot-scope="{data}">
         <el-row
             @click.native="onCalendarDayClick(data)"
-            :class="[new Date(data.day).getFullYear() > new Date().getFullYear()
-            || (new Date(data.day).getFullYear() === new Date().getFullYear() && new Date(data.day).getMonth() > new Date().getMonth())
-            || (new Date(data.day).getFullYear() === new Date().getFullYear() && new Date(data.day).getMonth() === new Date().getMonth() && new Date(data.day).getDate() > new Date().getDate()) ? 'disabled-color' : '']">
+            :class="[
+              isFutureCalendarDay(data.day) ? 'disabled-color' : '',
+              isSelectedCalendarDay(data.day) ? 'calendar-selected-day' : ''
+            ]">
           <div class="calendar-day" style="display:inline-block; font-size: 15px; margin-right: 5px">{{ data.day.split('-').slice(2).join('-') }}</div>
           <span style="font-size: 18px" :class="getState(data) === '-' ? 'red' : 'green'">{{ getState(data) }}</span><br/>
           <span style="font-size: 9px;color: #66b1ff">{{ getDailyNoteFormat(data) }}</span>
@@ -634,6 +635,18 @@ export default {
     isFutureCalendarDay(day) {
       return this.isAfterToday(new Date(day))
     },
+    isSelectedCalendarDay(day) {
+      return this.getDateFormat(new Date(day)) === this.getDateFormat(this.selectedDate)
+    },
+    returnToTodayAfterSubmit() {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      if (this.isToday()) {
+        this.getDailyReportInfoByDate(today)
+        return
+      }
+      this.calendarValue = today
+    },
     onCalendarDayClick(data) {
       if (this.isFutureCalendarDay(data.day)) {
         return
@@ -720,7 +733,7 @@ export default {
         }
       });
     },
-    getMonthNotes() {
+    getMonthNotes(reloadDailyReport = true) {
       if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
         return Promise.resolve()
       }
@@ -745,7 +758,9 @@ export default {
             }
             this.monthsNotesList.push(item)
           }
-          this.getDailyReportInfoByDate(this.selectedDate)
+          if (reloadDailyReport) {
+            this.getDailyReportInfoByDate(this.selectedDate)
+          }
           return
         }
 
@@ -771,7 +786,9 @@ export default {
           } else {
             this.initReportTemplateId([])
           }
-          this.getDailyReportInfoByDate(this.selectedDate)
+          if (reloadDailyReport) {
+            this.getDailyReportInfoByDate(this.selectedDate)
+          }
         })
       })
     },
@@ -1056,8 +1073,14 @@ export default {
           this.$message.warning("保存出错！\n" + res.statusText)
         } else {
           const date = this.getDateFormat(this.selectedDate)
-          this.getMonthNotes().then(() => {
+          const submittedForToday = this.isToday()
+          this.getMonthNotes(!submittedForToday).then(() => {
             this.upsertMonthNoteEntry(date, this.state, this.note)
+            if (submittedForToday) {
+              this.getDailyReportInfoByDate(this.selectedDate)
+            } else {
+              this.returnToTodayAfterSubmit()
+            }
           })
           this.$message.success("提交成功！")
         }
@@ -1260,7 +1283,14 @@ export default {
         if (res.status !== 200) {
           this.$message.warning("保存出错！\n" + res.statusText)
         } else {
-          this.getMonthNotes()
+          const submittedForToday = this.isToday()
+          this.getMonthNotes(!submittedForToday).then(() => {
+            if (submittedForToday) {
+              this.getDailyReportInfoByDate(this.selectedDate)
+            } else {
+              this.returnToTodayAfterSubmit()
+            }
+          })
           copyPromise.then((copied) => {
             if (copied) {
               this.$quickMessage("内容已成功提交并已复制，可粘贴到微信群。", 'success', 2000)
@@ -2023,12 +2053,21 @@ a {
   color: white;
 }
 
-.tenyears-home-page .el-calendar-table td.is-selected {
-  background: rgba(64, 158, 255, 0.1);
+.tenyears-home-page .el-calendar-table td.is-selected:not(.is-today) {
+  background: rgba(255, 193, 7, 0.45);
 }
 
 .tenyears-home-page .el-calendar-table td.is-today {
-  background: rgba(103, 194, 58, 0.1);
+  background: rgba(103, 194, 58, 0.15);
+}
+
+.tenyears-home-page .el-calendar-table td.is-today.is-selected {
+  background: rgba(255, 87, 34, 0.35);
+  box-shadow: inset 0 0 0 2px rgba(103, 194, 58, 0.55);
+}
+
+.tenyears-home-page .el-calendar-table .calendar-selected-day {
+  border-radius: 6px;
 }
 
 /* 按钮样式优化 */
