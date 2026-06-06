@@ -1160,7 +1160,7 @@ export default {
     },
     shouldIncludeReportInCopy(title, rawValue) {
       if (title === '早睡' || title === '早起') return true
-      if (rawValue !== '' && rawValue !== '0') return true
+      if (rawValue !== '') return true
       if (title === '诵读经典' && this.normalizeReportValue(this.sutraRead) !== '') return true
       if (title === '经典学习' && this.normalizeReportValue(this.sutraStudy) !== '') return true
       if (title === '宽两秒') return true
@@ -1179,23 +1179,23 @@ export default {
       }
       if (title === '诵读经典') {
         let line = index + '. ' + title + '：'
-        if (rawValue !== '' && rawValue !== '0') {
+        if (rawValue !== '') {
           line += rawValue + unit
         }
         const sutra = this.formatSutraName(this.sutraRead)
         if (sutra) {
-          line += (rawValue !== '' && rawValue !== '0' ? '，诵读' : '诵读') + sutra
+          line += (rawValue !== '' ? '，诵读' : '诵读') + sutra
         }
         return line
       }
       if (title === '经典学习') {
         let line = index + '. ' + title + '：'
-        if (rawValue !== '' && rawValue !== '0') {
+        if (rawValue !== '') {
           line += rawValue + unit
         }
         const sutra = this.formatSutraName(this.sutraStudy)
         if (sutra) {
-          line += (rawValue !== '' && rawValue !== '0' ? '，学习' : '学习') + sutra
+          line += (rawValue !== '' ? '，学习' : '学习') + sutra
         }
         return line
       }
