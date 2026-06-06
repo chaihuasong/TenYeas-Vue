@@ -642,15 +642,6 @@ export default {
     isSelectedCalendarDay(day) {
       return this.getDateFormat(new Date(day)) === this.getDateFormat(this.selectedDate)
     },
-    returnToTodayAfterSubmit() {
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      if (this.isToday()) {
-        this.getDailyReportInfoByDate(today)
-        return
-      }
-      this.calendarValue = today
-    },
     onCalendarDayClick(data) {
       if (this.isFutureCalendarDay(data.day)) {
         return
@@ -1150,11 +1141,7 @@ export default {
           const submittedForToday = this.isToday()
           this.getMonthNotes(!submittedForToday).then(() => {
             this.upsertMonthNoteEntry(date, this.state, this.note)
-            if (submittedForToday) {
-              this.getDailyReportInfoByDate(this.selectedDate)
-            } else {
-              this.returnToTodayAfterSubmit()
-            }
+            this.getDailyReportInfoByDate(this.selectedDate)
           })
           this.$message.success("提交成功！")
         }
@@ -1359,11 +1346,7 @@ export default {
         } else {
           const submittedForToday = this.isToday()
           this.getMonthNotes(!submittedForToday).then(() => {
-            if (submittedForToday) {
-              this.getDailyReportInfoByDate(this.selectedDate)
-            } else {
-              this.returnToTodayAfterSubmit()
-            }
+            this.getDailyReportInfoByDate(this.selectedDate)
           })
           copyPromise.then((copied) => {
             if (copied) {
