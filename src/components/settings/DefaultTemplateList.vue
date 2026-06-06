@@ -75,6 +75,10 @@
 .el-aside {
   color: #333;
 }
+
+.dialog-footer .el-button {
+  border-radius: 4px;
+}
 </style>
 
 <script>
