@@ -594,6 +594,7 @@ export default {
         }
         this.reportLists.push(cope)
       }
+      this.syncNewReportList()
     },
     syncNewReportList() {
       this.newReportLists = []
@@ -1432,6 +1433,7 @@ export default {
     },
     changeDailyReportTemplateMode() {
       if (!this.editDailyReportMode) {
+        this.syncNewReportList()
         this.editDailyReportMode = true
         return
       }
@@ -1464,7 +1466,7 @@ export default {
         }
         this.templateId = res.data
         this.editDailyReportMode = false
-        this.getDailyReportInfoByDate(this.selectedDate)
+        this.syncNewReportList()
       })
     },
     syncReportTemplateMode() {
@@ -1522,6 +1524,7 @@ export default {
         this.$quickMessage("已达到上限！", "warning")
         return
       }
+      this.syncNewReportList()
       this.addTemplateDialogVisible = true
     },
     del(index) {
