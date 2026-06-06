@@ -175,7 +175,7 @@
             <el-input disabled/>
           </el-col>
           <el-col :span="8" v-if="editDailyReportMode">
-            <el-input v-model="list.unit" placeholder="请输入单位" disabled></el-input>
+            <el-input v-model="list.unit" disabled></el-input>
           </el-col>
           <el-col :span="list.title === '宽两秒' ? 4 : 7" v-if="!editDailyReportMode && list.title !== '诵读经典' && list.title !== '经典学习'" style="margin-top: 10px;text-align: left;padding: 0 0">
             <span>{{ list.unit }}</span><span v-if="list.title === '宽两秒'">，总</span>
