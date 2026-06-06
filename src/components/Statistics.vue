@@ -530,7 +530,12 @@ export default {
     async calculateSummaries() {
       const last7Days = []
       const today = new Date()
-      for (let i = 6; i >= 0; i--) {
+      const todayStr = this.formatDate(today)
+      const todayHasCheckin = this.allReports.some(r => r.date === todayStr)
+      // 当日未打卡时，最近7日不包含当日，从昨天起往前取7天
+      const maxDaysAgo = todayHasCheckin ? 6 : 7
+      const minDaysAgo = todayHasCheckin ? 0 : 1
+      for (let i = maxDaysAgo; i >= minDaysAgo; i--) {
         const date = new Date(today.getTime() - i * 86400000)
         last7Days.push(this.formatDate(date))
       }
