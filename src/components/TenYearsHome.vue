@@ -1168,6 +1168,71 @@ export default {
       if (value === null || value === undefined) return ''
       return String(value).trim()
     },
+    parseReportNumber(value) {
+      const normalized = this.normalizeReportValue(value)
+      if (normalized === '') return null
+      if (!/^\d+(\.\d+)?$/.test(normalized)) return NaN
+      const num = Number(normalized)
+      if (!Number.isFinite(num) || num < 0) return NaN
+      return num
+    },
+    validateDailyReportContent() {
+      for (let i = 0; i < this.reportLists.length; i++) {
+        const item = this.reportLists[i]
+        const title = item.title
+        const rawValue = this.normalizeReportValue(item.value)
+
+        if (title === '早睡' || title === '早起') {
+          continue
+        }
+
+        if (rawValue !== '') {
+          const num = this.parseReportNumber(rawValue)
+          if (Number.isNaN(num)) {
+            return { valid: false, message: '「' + title + '」请填写有效的非负数字' }
+          }
+        }
+
+        if (title === '站桩' && this.zhanZhuangCount === 2) {
+          const val2 = this.normalizeReportValue(this.zhanZhuangValue2)
+          if (val2 !== '') {
+            const num2 = this.parseReportNumber(val2)
+            if (Number.isNaN(num2)) {
+              return { valid: false, message: '「站桩」第二次时长请填写有效的非负数字' }
+            }
+          }
+        }
+
+        if ((title === '静坐' || title === '禅坐') && this.jingZuoCount === 2) {
+          const val2 = this.normalizeReportValue(this.jingzuoValue2)
+          if (val2 !== '') {
+            const num2 = this.parseReportNumber(val2)
+            if (Number.isNaN(num2)) {
+              return { valid: false, message: '「' + title + '」第二次时长请填写有效的非负数字' }
+            }
+          }
+        }
+
+        if (title === '宽两秒') {
+          const dailyNum = rawValue === '' ? 0 : this.parseReportNumber(rawValue)
+          const totalStr = this.normalizeReportValue(this.kuanLiangMiaoCount)
+          if (totalStr !== '') {
+            const totalNum = this.parseReportNumber(totalStr)
+            if (Number.isNaN(totalNum)) {
+              return { valid: false, message: '「' + this.kuanLiangMiao + '」总次数请填写有效的非负数字' }
+            }
+            if (dailyNum > totalNum) {
+              return {
+                valid: false,
+                message: '「' + this.kuanLiangMiao + '」当日次数（' + dailyNum + '）不能大于总次数（' + totalNum + '），请修改后重新提交'
+              }
+            }
+          }
+        }
+      }
+
+      return { valid: true, message: '' }
+    },
     formatSutraName(text) {
       const val = this.normalizeReportValue(text)
       if (!val) return ''
@@ -1312,6 +1377,12 @@ export default {
       }
       if (this.unionid === null || this.unionid === '' || this.unionid === undefined) {
         this.$message.warning("信息获取失败，请刷新页面重试，注意刷新后数据会丢失！")
+        return
+      }
+
+      const validation = this.validateDailyReportContent()
+      if (!validation.valid) {
+        this.$message.warning(validation.message)
         return
       }
 
