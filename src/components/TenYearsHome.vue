@@ -127,7 +127,7 @@
     <el-card style="float: left; width: 100%;margin-bottom: 20px;margin-top: 10px">
       <div style="float: left; margin-bottom: 10px;font-weight: bold;text-align: left">每日养气功课 & 经典实践</div>
       <i :class="[editDailyReportMode ?'el-icon-finished' : 'el-icon-edit']"
-         style="float: right;" @click="changeDailyReportTemplateMode" v-if="this.isToday()"></i>
+         style="float: right;" @click="changeDailyReportTemplateMode" v-if="canEditDailyReportTemplate()"></i>
       <br/>
 
       <div style="margin-top: 20px;margin-bottom: 15px">
@@ -369,6 +369,7 @@ export default {
       editMonthInfoMode: false,
       editLastMonthInfoMode: false,
       editDailyReportMode: false,
+      hasExistingReportData: false,
       selectedDate: new Date(),
       calendarValue: new Date(),
       share: '',
@@ -675,6 +676,12 @@ export default {
     isToday() {
       let now = new Date()
       return this.selectedDate.getFullYear() === now.getFullYear() && this.selectedDate.getMonth() === now.getMonth() && this.selectedDate.getDate() === now.getDate()
+    },
+    canEditDailyReportTemplate() {
+      if (this.isAfterToday(this.selectedDate)) {
+        return false
+      }
+      return !this.hasExistingReportData
     },
     isAfterToday(val) {
       let value = new Date(val)
@@ -993,6 +1000,10 @@ export default {
       this.applyDailyReportExtraFields(resData)
 
       const reports = this.extractReportsFromData(resData)
+      this.hasExistingReportData = this.hasReportValues(reports)
+      if (this.hasExistingReportData) {
+        this.editDailyReportMode = false
+      }
       if (templateId != null && templateId !== undefined && templateId !== '') {
         this.templateId = templateId
       }
@@ -1043,6 +1054,8 @@ export default {
           this.note = ''
           this.share = ''
           this.state = ''
+          this.hasExistingReportData = false
+          this.editDailyReportMode = false
           this.initReportTemplateId()
           return
         }
@@ -1085,6 +1098,9 @@ export default {
       let dateChanged = this.getDateFormat(this.selectedDate) !== this.getDateFormat(selectedDate)
 
       this.selectedDate = selectedDate
+      if (dateChanged) {
+        this.editDailyReportMode = false
+      }
 
       if (monthChanged) {
         this.getMonthInfo()
