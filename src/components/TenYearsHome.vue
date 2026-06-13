@@ -199,7 +199,7 @@
             <el-button v-if="editDailyReportMode" icon="el-icon-minus" circle @click="del(index)"></el-button>
           </el-col>
           <el-col :span="5" v-if="!editDailyReportMode && list.title === '早睡'">
-            <el-select v-model="zaoShuiValue" size="medium" class="zaoQiStyle" :class="{'zaoQiStyle2': !zaoShuiTimeVisible}" style="width: 90px;">
+            <el-select v-model="zaoShuiValue" size="medium" class="zaoQiStyle" :class="{'zaoQiStyle2': !zaoShuiTimeVisible}" style="width: 90px;" @change="onDailyReportResultChange">
               <el-option
                   v-for="item in doneUndoneOptions"
                   :key="item.value"
@@ -209,7 +209,7 @@
             </el-select>
           </el-col>
           <el-col :span="4" v-if="!editDailyReportMode && list.title === '早起'">
-            <el-select v-model="zaoQiValue" size="medium" class="zaoQiStyle" :class="{'zaoQiStyle2': !zaoQiTimeVisible}" style="width: 90px;">
+            <el-select v-model="zaoQiValue" size="medium" class="zaoQiStyle" :class="{'zaoQiStyle2': !zaoQiTimeVisible}" style="width: 90px;" @change="onDailyReportResultChange">
               <el-option
                   v-for="item in doneUndoneOptions"
                   :key="item.value"
@@ -240,7 +240,8 @@
                   step: '00:15',
                   end: '07:00'
                 }"
-                placeholder="选择时间">
+                placeholder="选择时间"
+                @change="onDailyReportResultChange">
             </el-time-select>
           </el-col>
 
@@ -255,7 +256,8 @@
                   step: '00:15',
                   end: '23:00'
                 }"
-                placeholder="选择时间">
+                placeholder="选择时间"
+                @change="onDailyReportResultChange">
             </el-time-select>
           </el-col>
 
@@ -475,6 +477,7 @@ export default {
       } else if (title === '早睡') {
         this.zaoShuiTimeVisible =true
       }
+      this.onDailyReportResultChange()
     },
     addValue(title) {
       if (title === '站桩') {
@@ -997,7 +1000,6 @@ export default {
       this.share = resData.share == null ? '' : String(resData.share)
       this.state = resData.state == null ? '' : String(resData.state)
       this.upsertMonthNoteEntry(date, this.state, this.note, resData.templateId)
-      this.applyDailyReportExtraFields(resData)
 
       const reports = this.extractReportsFromData(resData)
       this.hasExistingReportData = this.hasReportValues(reports)
@@ -1011,6 +1013,7 @@ export default {
       if (templateRows != null && templateRows.length > 0) {
         if (this.hasReportValues(reports)) {
           this.reportLists = this.buildReportListsFromTemplateAndReports(templateRows, reports)
+          this.applyDailyReportExtraFields(resData)
           this.onDailyReportResultChange()
         } else {
           this.reportLists = this.buildEmptyReportListsFromTemplate(templateRows)
