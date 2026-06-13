@@ -198,7 +198,7 @@
           <el-col :span="4">
             <el-button v-if="editDailyReportMode" icon="el-icon-minus" circle @click="del(index)"></el-button>
           </el-col>
-          <el-col :span="5" v-if="!editDailyReportMode && list.title === '早睡'">
+          <el-col :span="5" v-if="!editDailyReportMode && list.title === '早睡'" style="position: relative">
             <el-select v-model="zaoShuiValue" size="medium" class="zaoQiStyle" :class="{'zaoQiStyle2': !zaoShuiTimeVisible}" style="width: 90px;" @change="onDailyReportResultChange">
               <el-option
                   v-for="item in doneUndoneOptions"
@@ -208,7 +208,7 @@
               </el-option>
             </el-select>
           </el-col>
-          <el-col :span="4" v-if="!editDailyReportMode && list.title === '早起'">
+          <el-col :span="4" v-if="!editDailyReportMode && list.title === '早起'" style="position: relative">
             <el-select v-model="zaoQiValue" size="medium" class="zaoQiStyle" :class="{'zaoQiStyle2': !zaoQiTimeVisible}" style="width: 90px;" @change="onDailyReportResultChange">
               <el-option
                   v-for="item in doneUndoneOptions"
@@ -2299,7 +2299,7 @@ a {
 .zaoQiStyle {
   position:absolute;
   clip:rect(2px 85px 30px 2px);
-  left: 80px;
+  left: 0;
   top: 2px;
   width:85px;
   font-size:16px;
@@ -2307,7 +2307,7 @@ a {
 .zaoQiStyle2 {
   position:absolute;
   clip:rect(2px 85px 30px 2px);
-  left: 110px;
+  left: 0;
   top: 2px;
   width:85px;
   font-size:16px;
