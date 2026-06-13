@@ -896,22 +896,21 @@ export default {
       let templateId = resData.templateId
       if ((templateId === undefined || templateId === null || templateId === '')
           && this.monthsNotesList !== null && this.monthsNotesList.length > 0) {
-        let index = 0
-        let temp = 0
+        // 用月份记录中最新的有模板ID的日期作为模板
+        let latestIndex = -1
+        let latestDay = 0
         for (let i = 0; i < this.monthsNotesList.length; i++) {
           let day = parseInt(this.monthsNotesList[i].date.split('-')[2])
-          let tmpTemplateId = this.monthsNotesList[index].templateId
-          if (temp === 0) {
-            temp = day
-            if (tmpTemplateId !== null && tmpTemplateId !== undefined && tmpTemplateId !== '') {
-              templateId = tmpTemplateId
-            }
-          } else if (day > temp) {
-            temp = day
-            index = i
-            if (tmpTemplateId !== null && tmpTemplateId !== undefined && tmpTemplateId !== '') {
-              templateId = tmpTemplateId
-            }
+          let tmpTemplateId = this.monthsNotesList[i].templateId
+          if (tmpTemplateId && day > latestDay) {
+            latestDay = day
+            latestIndex = i
+          }
+        }
+        if (latestIndex >= 0) {
+          let tmpTemplateId = this.monthsNotesList[latestIndex].templateId
+          if (tmpTemplateId) {
+            templateId = tmpTemplateId
           }
         }
       }
@@ -1159,9 +1158,11 @@ export default {
         } else {
           const date = this.getDateFormat(this.selectedDate)
           const submittedForToday = this.isToday()
-          this.getMonthNotes(!submittedForToday).then(() => {
+          this.getMonthNotes(false).then(() => {
             this.upsertMonthNoteEntry(date, this.state, this.note)
-            this.getDailyReportInfoByDate(this.selectedDate)
+            if (submittedForToday) {
+              this.getDailyReportInfoByDate(this.selectedDate)
+            }
           })
           this.$message.success("提交成功！")
         }
@@ -1436,8 +1437,10 @@ export default {
           this.$message.warning("保存出错！\n" + res.statusText)
         } else {
           const submittedForToday = this.isToday()
-          this.getMonthNotes(!submittedForToday).then(() => {
-            this.getDailyReportInfoByDate(this.selectedDate)
+          this.getMonthNotes(false).then(() => {
+            if (submittedForToday) {
+              this.getDailyReportInfoByDate(this.selectedDate)
+            }
           })
           copyPromise.then((copied) => {
             if (copied) {
@@ -2216,7 +2219,7 @@ a {
 }
 
 .tenyears-home-page .el-calendar-table td.is-selected:not(.is-today) {
-  background: rgba(255, 193, 7, 0.45);
+  background: rgba(255, 152, 0, 0.55);
 }
 
 .tenyears-home-page .el-calendar-table td.is-today {
@@ -2224,8 +2227,8 @@ a {
 }
 
 .tenyears-home-page .el-calendar-table td.is-today.is-selected {
-  background: rgba(255, 87, 34, 0.35);
-  box-shadow: inset 0 0 0 2px rgba(103, 194, 58, 0.55);
+  background: rgba(103, 194, 58, 0.25);
+  box-shadow: inset 0 0 0 2px rgba(244, 67, 54, 0.6);
 }
 
 .tenyears-home-page .el-calendar-table .calendar-selected-day {
