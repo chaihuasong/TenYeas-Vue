@@ -286,7 +286,10 @@
       <el-checkbox-group v-model="newReportLists">
         <el-row style="margin-top: 10px;font-size: 16px;" v-for="item in allDefaultReportsLists" :key="item.id">
           <el-col :span="10">
-            <el-checkbox :label="item.template" style="height:30px;width: 50px; font-size: 18px;text-align: left;margin-left: 30px" />
+            <el-checkbox :label="item.template" style="height:30px;width: 100%;text-align: left;margin-left: 30px">
+              <span style="font-size: 16px">{{ item.template.split('_')[0] }}</span>
+              <span v-if="item.template.split('_').length > 1 && item.template.split('_')[1]" style="font-size: 14px;color: #909399;margin-left: 4px">{{ item.template.split('_')[1] }}</span>
+            </el-checkbox>
           </el-col>
         </el-row>
       </el-checkbox-group>
