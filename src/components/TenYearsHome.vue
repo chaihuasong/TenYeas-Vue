@@ -7,7 +7,7 @@
                 fit="cover"/>
     </div>
 
-    <el-card class="countdown-card" style="float: left; width: 100%;margin-top: 10px">
+    <el-card v-if="createDate" class="countdown-card" style="float: left; width: 100%;margin-top: 10px">
       <span style="font-weight: bold">十年倒计时，离{{this.getTenYearsDate()}}，还有</span>
       <br/>
       <span class="countdown-days">{{this.getTenYearsRemaining()}}</span> 天
