@@ -357,13 +357,6 @@ export default {
         this.unionid = uid.replace("\"","").replace("\"","")
         console.log("unionid:" + this.unionid)
         this.getUserInfoByUnionId()
-
-        //修复bug
-        if (this.openid === '' || this.openid === null || this.openid === undefined) {
-          console.log("openid!!!!!!!!!!!!!!:" + this.openid)
-          this.$store.commit('$_setUnionid', '')
-          this.getData()
-        }
         return;
       }
       let openid = getOpenId()
@@ -431,7 +424,7 @@ export default {
           this.wechatgroup = res.data.wechatgroup
           this.telephone = res.data.telephone
           this.info = res.data.info
-          this.stepInfo = res.data.stepInfo
+          this.stepInfo = res.data.stepInfo ? res.data.stepInfo.replace(/↓/g, '\n') : ''
           this.createDate = res.data.createDate
           this.birthday = res.data.birthday
           this.open = res.data.open
@@ -574,7 +567,8 @@ export default {
       }).then((res) => {
         console.log(res.status)
         if (res.status !== 200) {
-          alert("error!")
+          alert("保存失败，请稍后重试！")
+          return
         }
         axios({
           method: "GET",
