@@ -84,7 +84,7 @@
 }
 
 .dialog-footer .el-button {
-  border-radius: 4px;
+  border-radius: 15px;
 }
 </style>
 

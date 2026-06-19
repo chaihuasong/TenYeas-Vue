@@ -25,4 +25,9 @@ export default {
   color: #2c3e50;
   margin-top: 20px;
 }
+
+/* 全局对话框按钮样式 - 统一为椭圆形 */
+.dialog-footer .el-button {
+  border-radius: 15px;
+}
 </style>
