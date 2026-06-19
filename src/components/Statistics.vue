@@ -582,9 +582,11 @@ export default {
         if (!template) return
 
         template.forEach((tpl, idx) => {
-          if (!tpl || tpl === '七分饱_') return
+          if (!tpl || tpl.startsWith('七分饱')) return
 
-          const [name, unit] = tpl.split('_')
+          let [name, unit] = tpl.split('_')
+          name = name.replace(/[（(]早[）)]/g, '')
+          unit = unit || ''
           const value = this.parseValue(report[`value${idx + 1}`])
 
           if (value > 0) {
@@ -619,9 +621,11 @@ export default {
         if (!template) return
 
         template.forEach((tpl, idx) => {
-          if (!tpl || tpl === '七分饱_') return
+          if (!tpl || tpl.startsWith('七分饱')) return
 
-          const [name, unit] = tpl.split('_')
+          let [name, unit] = tpl.split('_')
+          name = name.replace(/[（(]早[）)]/g, '')
+          unit = unit || ''
           const value = this.parseValue(report[`value${idx + 1}`])
 
           if (value > 0) {

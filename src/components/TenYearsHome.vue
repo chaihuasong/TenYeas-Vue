@@ -287,7 +287,7 @@
         <el-row style="margin-top: 10px;font-size: 16px;" v-for="item in allDefaultReportsLists" :key="item.id">
           <el-col :span="10">
             <el-checkbox :label="item.template" style="height:30px;width: 100%;text-align: left;margin-left: 30px">
-              <span style="font-size: 16px">{{ item.template.split('_')[0] }}</span>
+              <span style="font-size: 16px">{{ cleanTemplateTitle(item.template.split('_')[0]) }}</span>
               <span v-if="item.template.split('_').length > 1 && item.template.split('_')[1]" style="font-size: 14px;color: #909399;margin-left: 4px">{{ item.template.split('_')[1] }}</span>
             </el-checkbox>
           </el-col>
@@ -482,6 +482,10 @@ export default {
       }
       this.onDailyReportResultChange()
     },
+    cleanTemplateTitle(title) {
+      if (!title) return ''
+      return title.replace(/[（(]早[）)]/g, '')
+    },
     addValue(title) {
       if (title === '站桩') {
         this.zhanZhuangCount = 2
@@ -544,7 +548,7 @@ export default {
           this.defaultReportLists1 = []
           for (let i = 0; i < res.data.length; i++) {
             let item = {
-              title: res.data[i].template.split('_')[0],
+              title: this.cleanTemplateTitle(res.data[i].template.split('_')[0]),
               unit: res.data[i].template.split('_')[1],
               value: '',
             }
@@ -568,7 +572,7 @@ export default {
           this.defaultReportLists2 = []
           for (let i = 0; i < res.data.length; i++) {
             let item = {
-              title: res.data[i].template.split('_')[0],
+              title: this.cleanTemplateTitle(res.data[i].template.split('_')[0]),
               unit: res.data[i].template.split('_')[1],
               value: '',
             }
@@ -591,7 +595,7 @@ export default {
       this.addTemplateDialogVisible = false
       this.reportLists = []
       for (let i = 0; i < this.newReportLists.length; i++) {
-        let title = this.newReportLists[i].split('_')[0]
+        let title = this.cleanTemplateTitle(this.newReportLists[i].split('_')[0])
         let unit = this.newReportLists[i].split('_').length === 2 ? this.newReportLists[i].split('_')[1] : ''
         let value = valueByTitle[title] != null ? valueByTitle[title] : ''
         let cope = {
@@ -813,7 +817,7 @@ export default {
         if (res.data !== '' && res.data.length > 0) {
           this.reportLists = []
           for (let i = 0; i < res.data.length; i++) {
-            let title = res.data[i].split('_')[0]
+            let title = this.cleanTemplateTitle(res.data[i].split('_')[0])
             let unit = res.data[i].split('_').length === 2 ? res.data[i].split('_')[1] : ''
             let cope = {
               title: title,
@@ -956,7 +960,7 @@ export default {
       this.resetDailyReportTableFields()
       const reportLists = []
       for (let i = 0; i < templateRows.length; i++) {
-        let title = templateRows[i].split('_')[0]
+        let title = this.cleanTemplateTitle(templateRows[i].split('_')[0])
         let unit = templateRows[i].split('_').length === 2 ? templateRows[i].split('_')[1] : ''
         let rawValue = i < reports.length ? reports[i] : ''
         let value = this.parseReportCellValue(rawValue, title, unit)
@@ -987,7 +991,7 @@ export default {
       this.resetDailyReportTableFields()
       const reportLists = []
       for (let i = 0; i < templateRows.length; i++) {
-        let title = templateRows[i].split('_')[0]
+        let title = this.cleanTemplateTitle(templateRows[i].split('_')[0])
         let unit = templateRows[i].split('_').length === 2 ? templateRows[i].split('_')[1] : ''
         reportLists.push({
           title: title,
