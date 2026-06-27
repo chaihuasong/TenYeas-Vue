@@ -389,12 +389,7 @@ export default {
             this.notification = this.isEnabled(data.notification)
             this.hasChanges = false
           } else {
-            // 未填写立志卡，仅提示，不强制跳转
-            this.$message({
-              message: '您还未填写立志卡，填写后可使用完整功能',
-              type: 'info',
-              duration: 5000
-            })
+            // 未填写立志卡，不提示，不强制跳转
           }
         })
         .catch(err => {
