@@ -1187,6 +1187,11 @@ export default {
       if (!Number.isFinite(num) || num < 0) return NaN
       return num
     },
+    getKuanLiangMiaoZeroThreshold() {
+      if (this.kuanLiangMiao === '成人成己') return 30
+      if (this.kuanLiangMiao === '大小先后') return 40
+      return 20
+    },
     validateDailyReportContent() {
       for (let i = 0; i < this.reportLists.length; i++) {
         const item = this.reportLists[i]
@@ -1232,7 +1237,9 @@ export default {
             if (Number.isNaN(totalNum)) {
               return { valid: false, message: '「' + this.kuanLiangMiao + '」总次数请填写有效的非负数字' }
             }
-            if (dailyNum > totalNum) {
+            // 允许总次数归零：当日练习次数小于对应阈值（宽两秒20/成人成己30/大小先后40）时，总次数可填0
+            const allowZeroTotal = totalNum === 0 && dailyNum < this.getKuanLiangMiaoZeroThreshold()
+            if (!allowZeroTotal && dailyNum > totalNum) {
               return {
                 valid: false,
                 message: '「' + this.kuanLiangMiao + '」当日次数（' + dailyNum + '）不能大于总次数（' + totalNum + '），请修改后重新提交'
