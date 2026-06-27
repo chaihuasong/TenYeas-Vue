@@ -177,7 +177,7 @@
           <el-col :span="8" v-if="editDailyReportMode">
             <el-input v-model="list.unit" disabled></el-input>
           </el-col>
-          <el-col :span="list.title === '宽两秒' ? 4 : 7" v-if="!editDailyReportMode && list.title !== '诵读经典' && list.title !== '经典学习'" style="margin-top: 10px;text-align: left;padding: 0 0">
+          <el-col :span="list.title === '宽两秒' ? 4 : ((list.title === '早起' || list.title === '早睡') ? 4 : 7)" v-if="!editDailyReportMode && list.title !== '诵读经典' && list.title !== '经典学习'" style="margin-top: 10px;text-align: left;padding: 0 0">
             <span>{{ list.unit }}</span><span v-if="list.title === '宽两秒'">，总</span>
           </el-col>
           <el-col :span="7" v-if="!editDailyReportMode && (list.title === '诵读经典' || list.title === '经典学习')" style="margin-top: 10px;text-align: center;padding: 0 0">
@@ -198,7 +198,7 @@
           <el-col :span="4">
             <el-button v-if="editDailyReportMode" icon="el-icon-minus" circle @click="del(index)"></el-button>
           </el-col>
-          <el-col :span="5" v-if="!editDailyReportMode && list.title === '早睡'" style="position: relative">
+          <el-col :span="7" v-if="!editDailyReportMode && list.title === '早睡'" style="position: relative">
             <el-select v-model="zaoShuiValue" size="medium" class="zaoQiStyle" :class="{'zaoQiStyle2': !zaoShuiTimeVisible}" style="width: 90px;" @change="onDailyReportResultChange">
               <el-option
                   v-for="item in doneUndoneOptions"
@@ -208,7 +208,7 @@
               </el-option>
             </el-select>
           </el-col>
-          <el-col :span="4" v-if="!editDailyReportMode && list.title === '早起'" style="position: relative">
+          <el-col :span="7" v-if="!editDailyReportMode && list.title === '早起'" style="position: relative">
             <el-select v-model="zaoQiValue" size="medium" class="zaoQiStyle" :class="{'zaoQiStyle2': !zaoQiTimeVisible}" style="width: 90px;" @change="onDailyReportResultChange">
               <el-option
                   v-for="item in doneUndoneOptions"
@@ -288,7 +288,7 @@
           <el-col :span="10">
             <el-checkbox :label="item.template" style="height:30px;width: 100%;text-align: left;margin-left: 30px">
               <span style="font-size: 16px">{{ cleanTemplateTitle(item.template.split('_')[0]) }}</span>
-              <span v-if="item.template.split('_').length > 1 && item.template.split('_')[1]" style="font-size: 14px;color: #909399;margin-left: 4px">{{ item.template.split('_')[1] }}</span>
+              <span v-if="item.template.split('_').length > 1 && item.template.split('_')[1] && cleanTemplateTitle(item.template.split('_')[0]) !== '七分饱'" style="font-size: 14px;color: #909399;margin-left: 4px">{{ item.template.split('_')[1] }}</span>
             </el-checkbox>
           </el-col>
         </el-row>
@@ -2388,5 +2388,21 @@ a {
 }
 .el-checkbox .el-checkbox__label {
   font-size: 18px;
+}
+.templateStyle .el-checkbox__inner {
+  border-radius: 50%;
+}
+.templateStyle .el-checkbox__input.is-checked .el-checkbox__inner::after {
+  box-sizing: content-box;
+  content: "";
+  border: none;
+  border-radius: 50%;
+  width: 4px;
+  height: 4px;
+  background-color: #fff;
+  left: 50%;
+  top: 50%;
+  margin: 0;
+  transform: translate(-50%, -50%);
 }
 </style>
