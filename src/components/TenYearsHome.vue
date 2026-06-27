@@ -177,7 +177,7 @@
           <el-col :span="8" v-if="editDailyReportMode">
             <el-input v-model="list.unit" disabled></el-input>
           </el-col>
-          <el-col :span="list.title === '宽两秒' ? 4 : ((list.title === '早起' || list.title === '早睡') ? 4 : 7)" v-if="!editDailyReportMode && list.title !== '诵读经典' && list.title !== '经典学习'" style="margin-top: 10px;text-align: left;padding: 0 0">
+          <el-col :span="list.title === '宽两秒' ? 4 : 7" v-if="!editDailyReportMode && list.title !== '诵读经典' && list.title !== '经典学习' && list.title !== '早起' && list.title !== '早睡'" style="margin-top: 10px;text-align: left;padding: 0 0">
             <span>{{ list.unit }}</span><span v-if="list.title === '宽两秒'">，总</span>
           </el-col>
           <el-col :span="7" v-if="!editDailyReportMode && (list.title === '诵读经典' || list.title === '经典学习')" style="margin-top: 10px;text-align: center;padding: 0 0">
@@ -195,11 +195,11 @@
           <el-col :span="1" v-if="!editDailyReportMode && list.title === '宽两秒'" style="margin-top: 10px;text-align: left;padding: 0 0">
             <span>次</span>
           </el-col>
-          <el-col :span="4">
+          <el-col :span="4" v-if="editDailyReportMode || (list.title !== '早起' && list.title !== '早睡')">
             <el-button v-if="editDailyReportMode" icon="el-icon-minus" circle @click="del(index)"></el-button>
           </el-col>
-          <el-col :span="7" v-if="!editDailyReportMode && list.title === '早睡'" style="position: relative">
-            <el-select v-model="zaoShuiValue" size="medium" class="zaoQiStyle" :class="{'zaoQiStyle2': !zaoShuiTimeVisible}" style="width: 90px;" @change="onDailyReportResultChange">
+          <el-col :span="8" v-if="!editDailyReportMode && list.title === '早睡'" class="zaoDoneCol">
+            <el-select v-model="zaoShuiValue" size="medium" class="zaoDoneSelect" @change="onDailyReportResultChange">
               <el-option
                   v-for="item in doneUndoneOptions"
                   :key="item.value"
@@ -207,9 +207,11 @@
                   :value="item.value">
               </el-option>
             </el-select>
+            <el-button v-if="!zaoShuiTimeVisible" icon="el-icon-plus" circle @click="addTimeValue(list.title)"
+                       class="zaoDonePlusBtn" size="mini"></el-button>
           </el-col>
-          <el-col :span="7" v-if="!editDailyReportMode && list.title === '早起'" style="position: relative">
-            <el-select v-model="zaoQiValue" size="medium" class="zaoQiStyle" :class="{'zaoQiStyle2': !zaoQiTimeVisible}" style="width: 90px;" @change="onDailyReportResultChange">
+          <el-col :span="8" v-if="!editDailyReportMode && list.title === '早起'" class="zaoDoneCol">
+            <el-select v-model="zaoQiValue" size="medium" class="zaoDoneSelect" @change="onDailyReportResultChange">
               <el-option
                   v-for="item in doneUndoneOptions"
                   :key="item.value"
@@ -217,16 +219,8 @@
                   :value="item.value">
               </el-option>
             </el-select>
-          </el-col>
-
-          <el-col :span="2" v-if="!editDailyReportMode && list.title === '早起' && !zaoQiTimeVisible" style="margin-right: 5px">
-            <el-button icon="el-icon-plus" circle @click="addTimeValue(list.title)"
-                       style="background: lightcyan;margin-top: 6px;" size="mini"></el-button>
-          </el-col>
-
-          <el-col :span="2" v-if="!editDailyReportMode && list.title === '早睡' && !zaoShuiTimeVisible" style="margin-right: 5px">
-            <el-button icon="el-icon-plus" circle @click="addTimeValue(list.title)"
-                       style="background: lightcyan;margin-top: 6px;" size="mini"></el-button>
+            <el-button v-if="!zaoQiTimeVisible" icon="el-icon-plus" circle @click="addTimeValue(list.title)"
+                       class="zaoDonePlusBtn" size="mini"></el-button>
           </el-col>
 
           <el-col :span="5" v-if="!editDailyReportMode && list.title === '早起' && zaoQiTimeVisible">
@@ -2313,21 +2307,19 @@ a {
   -webkit-appearance: none;
   border-radius: 0;
 }
-.zaoQiStyle {
-  position:absolute;
-  clip:rect(2px 85px 30px 2px);
-  left: 0;
-  top: 2px;
-  width:85px;
-  font-size:16px;
+.zaoDoneCol {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
-.zaoQiStyle2 {
-  position:absolute;
-  clip:rect(2px 85px 30px 2px);
-  left: 0;
-  top: 2px;
-  width:85px;
-  font-size:16px;
+.zaoDoneSelect {
+  width: 80px;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+.zaoDonePlusBtn {
+  flex-shrink: 0;
+  background: lightcyan;
 }
 .kuanLiangMiaoStyle {
   width: auto;
