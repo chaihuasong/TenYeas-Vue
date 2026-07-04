@@ -17,6 +17,11 @@ export default {
 </script>
 
 <style>
+/* 去掉移动端点击时的方形高亮框，避免与圆角按钮不一致 */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

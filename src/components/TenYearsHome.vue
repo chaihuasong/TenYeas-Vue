@@ -226,6 +226,7 @@
           <el-col :span="5" v-if="!editDailyReportMode && list.title === '早起' && zaoQiTimeVisible">
             <el-time-select
                 v-model="zaoQiTime"
+                class="zaoTimeSelect"
                 :editable="false"
                 size="medium"
                 style="width: 200%"
@@ -242,6 +243,7 @@
           <el-col :span="5" v-if="!editDailyReportMode && list.title === '早睡' && zaoShuiTimeVisible">
             <el-time-select
                 v-model="zaoShuiTime"
+                class="zaoTimeSelect"
                 :editable="false"
                 size="medium"
                 style="width: 200%"
@@ -1298,10 +1300,12 @@ export default {
         return index + '. ' + this.kuanLiangMiao + '：' + displayValue + unit + (kuanLiangMiaoCount !== '' ? '，总' + kuanLiangMiaoCount + '次' : '')
       }
       if (title === '早睡') {
-        return index + '. ' + title + '：' + (this.zaoShuiTimeVisible ? this.zaoShuiTime : (this.zaoShuiValue === '1' ? '' : '未') + '做到')
+        const doneText = (this.zaoShuiValue === '1' ? '' : '未') + '做到'
+        return index + '. ' + title + '：' + (this.zaoShuiTimeVisible && this.zaoShuiTime ? this.zaoShuiTime : doneText)
       }
       if (title === '早起') {
-        return index + '. ' + title + '：' + (this.zaoQiTimeVisible ? this.zaoQiTime : (this.zaoQiValue === '1' ? '' : '未') + '做到')
+        const doneText = (this.zaoQiValue === '1' ? '' : '未') + '做到'
+        return index + '. ' + title + '：' + (this.zaoQiTimeVisible && this.zaoQiTime ? this.zaoQiTime : doneText)
       }
       return index + '. ' + title + '：' + rawValue + unit
     },
@@ -2381,6 +2385,9 @@ a {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+.zaoTimeSelect .el-input__inner {
+  padding-left: 30px;
 }
 .zaoDoneSelect {
   width: 80px;
