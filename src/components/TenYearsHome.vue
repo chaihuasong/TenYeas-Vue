@@ -130,9 +130,9 @@
          style="float: right;" @click="changeDailyReportTemplateMode" v-if="canEditDailyReportTemplate()"></i>
       <br/>
 
-      <div style="margin-top: 20px;margin-bottom: 15px">
+      <div class="daily-report-list" style="margin-top: 20px;margin-bottom: 15px">
         <el-row :gutter="5" v-for='(list,index) in reportLists' :key="list.title + '-' + index" style="margin-top: 5px">
-          <el-col :span="(zaoQiTimeVisible && list.title === '早起') || ( zaoShuiTimeVisible && list.title === '早睡') ? 5 : (list.title === '诵读经典' || list.title === '经典学习' ? 6 : 7)" v-if="!editDailyReportMode && list.title !== '宽两秒'" style="text-align: right;margin-top: 10px">
+          <el-col :span="(zaoQiTimeVisible && list.title === '早起') || ( zaoShuiTimeVisible && list.title === '早睡') ? 5 : 7" v-if="!editDailyReportMode && list.title !== '宽两秒'" style="text-align: right;margin-top: 10px">
             <span>{{ list.title }}</span>
           </el-col>
           <el-col :span="7" v-if="!editDailyReportMode && list.title === '宽两秒'" style="text-align: right;margin-top: 8px">
@@ -180,13 +180,13 @@
           <el-col :span="list.title === '宽两秒' ? 4 : 7" v-if="!editDailyReportMode && list.title !== '诵读经典' && list.title !== '经典学习' && list.title !== '早起' && list.title !== '早睡'" style="margin-top: 10px;text-align: left;padding: 0 0">
             <span>{{ list.unit }}</span><span v-if="list.title === '宽两秒'">，总</span>
           </el-col>
-          <el-col :span="7" v-if="!editDailyReportMode && (list.title === '诵读经典' || list.title === '经典学习')" style="margin-top: 10px;text-align: center;padding: 0 0">
+          <el-col :span="6" v-if="!editDailyReportMode && (list.title === '诵读经典' || list.title === '经典学习')" class="sutraUnitCol">
             <span>{{ list.unit }}</span><span v-if="list.title === '诵读经典'">，诵读</span><span v-if="list.title === '经典学习'">，学习</span>
           </el-col>
-          <el-col :span="6" v-if="!editDailyReportMode && list.title === '诵读经典'" style="text-align: left;padding: 0 0">
+          <el-col :span="7" v-if="!editDailyReportMode && list.title === '诵读经典'" style="padding: 0 0">
             <input class="dailyReportInfoInputTextStyle" v-model="sutraRead" @input="onDailyReportResultChange" />
           </el-col>
-          <el-col :span="6" v-if="!editDailyReportMode && list.title === '经典学习'" style="text-align: left;padding: 0 0">
+          <el-col :span="7" v-if="!editDailyReportMode && list.title === '经典学习'" style="padding: 0 0">
             <input class="dailyReportInfoInputTextStyle" v-model="sutraStudy" @input="onDailyReportResultChange" />
           </el-col>
           <el-col :span="4" v-if="!editDailyReportMode && list.title === '宽两秒'" style="text-align: left;padding: 0 0">
@@ -195,8 +195,8 @@
           <el-col :span="1" v-if="!editDailyReportMode && list.title === '宽两秒'" style="margin-top: 10px;text-align: left;padding: 0 0">
             <span>次</span>
           </el-col>
-          <el-col :span="4" v-if="editDailyReportMode || (list.title !== '早起' && list.title !== '早睡')">
-            <el-button v-if="editDailyReportMode" icon="el-icon-minus" circle @click="del(index)"></el-button>
+          <el-col :span="4" v-if="editDailyReportMode">
+            <el-button icon="el-icon-minus" circle @click="del(index)"></el-button>
           </el-col>
           <el-col :span="8" v-if="!editDailyReportMode && list.title === '早睡'" class="zaoDoneCol">
             <el-select v-model="zaoShuiValue" size="medium" class="zaoDoneSelect" @change="onDailyReportResultChange">
@@ -2306,6 +2306,21 @@ a {
   padding: 0 0;
   -webkit-appearance: none;
   border-radius: 0;
+  min-width: 0;
+}
+.sutraUnitCol {
+  margin-top: 10px;
+  text-align: center;
+  padding: 0;
+  white-space: nowrap;
+  font-size: 14px;
+}
+.daily-report-list .el-col {
+  min-width: 0;
+}
+.daily-report-list .el-input__inner {
+  padding-left: 8px;
+  padding-right: 8px;
 }
 .zaoDoneCol {
   display: flex;
