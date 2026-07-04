@@ -190,7 +190,7 @@
             <input class="dailyReportInfoInputTextStyle" v-model="sutraStudy" @input="onDailyReportResultChange" />
           </el-col>
           <el-col :span="4" v-if="!editDailyReportMode && list.title === '宽两秒'" style="text-align: left;padding: 0 0">
-            <input class="dailyReportInfoInputStyle" type="text" inputmode="numeric" pattern="[0-9]*" v-model="kuanLiangMiaoCount" @input="onDailyReportResultChange" />
+            <input class="dailyReportInfoInputStyle dailyReportInfoInputReadonly" type="text" v-model="kuanLiangMiaoCount" readonly />
           </el-col>
           <el-col :span="1" v-if="!editDailyReportMode && list.title === '宽两秒'" style="margin-top: 10px;text-align: left;padding: 0 0">
             <span>次</span>
@@ -1392,6 +1392,57 @@ export default {
         return
       }
 
+      // 自动累计宽两秒/成人成己/大小先后的总次数后，再进行校验并保存
+      this.applyKuanLiangMiaoAutoTotal().then(() => {
+        this.finalizeDailyReportSubmit()
+      })
+    },
+    // 计算宽两秒/成人成己/大小先后的当日练习次数
+    getKuanLiangMiaoDailyCount() {
+      for (let i = 0; i < this.reportLists.length; i++) {
+        if (this.reportLists[i].title === '宽两秒') {
+          const raw = this.normalizeReportValue(this.reportLists[i].value)
+          if (raw === '') return 0
+          const num = this.parseReportNumber(raw)
+          return Number.isNaN(num) ? 0 : num
+        }
+      }
+      return 0
+    },
+    // 自动填充「当日练习总数」：达到阈值则累加前一天总数，未达阈值则归零
+    applyKuanLiangMiaoAutoTotal() {
+      const dailyNum = this.getKuanLiangMiaoDailyCount()
+      // 当日练习次数小于对应阈值（宽两秒20/成人成己30/大小先后40）时，总次数归零
+      if (dailyNum < this.getKuanLiangMiaoZeroThreshold()) {
+        this.kuanLiangMiaoCount = '0'
+        return Promise.resolve()
+      }
+      return this.fetchPreviousDayKuanLiangMiaoTotal().then((prevTotal) => {
+        this.kuanLiangMiaoCount = String(prevTotal + dailyNum)
+      })
+    },
+    // 获取前一天已保存的「当日练习总数」，无记录时按 0 处理
+    fetchPreviousDayKuanLiangMiaoTotal() {
+      const prevDate = new Date(this.selectedDate)
+      prevDate.setDate(prevDate.getDate() - 1)
+      const dateStr = this.getDateFormat(prevDate)
+      return axios({
+        method: "GET",
+        url: this.serverUrl + "getReportInfoByUserIdAndDate?userId=" + this.unionid + "&date=" + dateStr,
+        data: null,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then((res) => {
+        if (res.data === null || res.data === '' || res.data === undefined) return 0
+        const num = Number(res.data.kuanLiangMiaoCount)
+        return Number.isFinite(num) && num >= 0 ? num : 0
+      }).catch((err) => {
+        console.error('获取前一天累计次数失败:', err)
+        return 0
+      })
+    },
+    finalizeDailyReportSubmit() {
       const validation = this.validateDailyReportContent()
       if (!validation.valid) {
         this.$message.warning(validation.message)
@@ -2291,6 +2342,10 @@ a {
   padding: 0 0;
   -webkit-appearance: none;
   border-radius: 0;
+}
+.dailyReportInfoInputReadonly {
+  background: transparent;
+  color: #909399;
 }
 .dailyReportInfoInputTextStyle {
   border-left-width:0px;
