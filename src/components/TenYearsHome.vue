@@ -1183,9 +1183,10 @@ export default {
       if (!Number.isFinite(num) || num < 0) return NaN
       return num
     },
-    getKuanLiangMiaoZeroThreshold() {
-      if (this.kuanLiangMiao === '成人成己') return 30
-      if (this.kuanLiangMiao === '大小先后') return 40
+    getKuanLiangMiaoZeroThreshold(practiceName) {
+      const practice = practiceName || this.kuanLiangMiao
+      if (practice === '成人成己') return 30
+      if (practice === '大小先后') return 40
       return 20
     },
     validateDailyReportContent() {
@@ -1397,8 +1398,12 @@ export default {
       }
 
       // 自动累计宽两秒/成人成己/大小先后的总次数后，再进行校验并保存
+      // 获取前一天累计失败时中止提交，避免总次数被错误地按 0 起算覆盖
       this.applyKuanLiangMiaoAutoTotal().then(() => {
         this.finalizeDailyReportSubmit()
+      }).catch((err) => {
+        console.error('获取前一天累计次数失败:', err)
+        this.$message.warning('获取前一天「' + this.kuanLiangMiao + '」累计次数失败，请检查网络后重新提交')
       })
     },
     // 计算宽两秒/成人成己/大小先后的当日练习次数
@@ -1425,11 +1430,7 @@ export default {
         this.kuanLiangMiaoCount = String(prevTotal + dailyNum)
       })
     },
-    // 获取前一天已保存的「当日练习总数」，无记录时按 0 处理
-    fetchPreviousDayKuanLiangMiaoTotal() {
-      const prevDate = new Date(this.selectedDate)
-      prevDate.setDate(prevDate.getDate() - 1)
-      const dateStr = this.getDateFormat(prevDate)
+    fetchReportInfoByDate(dateStr) {
       return axios({
         method: "GET",
         url: this.serverUrl + "getReportInfoByUserIdAndDate?userId=" + this.unionid + "&date=" + dateStr,
@@ -1438,12 +1439,118 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        if (res.data === null || res.data === '' || res.data === undefined) return 0
-        const num = Number(res.data.kuanLiangMiaoCount)
-        return Number.isFinite(num) && num >= 0 ? num : 0
+        if (res.data === null || res.data === '' || res.data === undefined) return null
+        return res.data
+      })
+    },
+    parseKuanLiangMiaoTotal(rawTotal) {
+      const num = Number(rawTotal)
+      return Number.isFinite(num) && num >= 0 ? num : 0
+    },
+    // 获取前一天已保存的「当日练习总数」，无记录时按 0 处理；请求失败时向外抛出，由调用方中止提交
+    fetchPreviousDayKuanLiangMiaoTotal() {
+      const prevDate = new Date(this.selectedDate)
+      prevDate.setDate(prevDate.getDate() - 1)
+      return this.fetchReportInfoByDate(this.getDateFormat(prevDate)).then((resData) => {
+        if (!resData) return 0
+        return this.parseKuanLiangMiaoTotal(resData.kuanLiangMiaoCount)
+      })
+    },
+    // 解析某天打卡记录中「宽两秒」的当日练习次数，记录的字段位置由该天使用的模板决定
+    getReportTitlesForRecord(resData, titlesCache) {
+      const defaultTitles = () => this.cloneDefaultReportLists().map((item) => item.title)
+      const templateId = resData.templateId
+      if (templateId === null || templateId === undefined || templateId === '') {
+        return Promise.resolve(defaultTitles())
+      }
+      if (titlesCache[templateId]) {
+        return Promise.resolve(titlesCache[templateId])
+      }
+      return this.fetchReportTemplateRows(templateId).then((templateRows) => {
+        const titles = templateRows && templateRows.length > 0
+          ? templateRows.map((row) => this.cleanTemplateTitle(row.split('_')[0]))
+          : defaultTitles()
+        titlesCache[templateId] = titles
+        return titles
+      })
+    },
+    extractKuanLiangMiaoDailyFromRecord(resData, titles) {
+      for (let i = 0; i < titles.length; i++) {
+        if (titles[i] === '宽两秒') {
+          const value = this.parseReportCellValue(resData['value' + (i + 1)], '宽两秒', '次')
+          const num = this.parseReportNumber(this.normalizeReportValue(value))
+          return num === null || Number.isNaN(num) ? 0 : num
+        }
+      }
+      return 0
+    },
+    buildKuanLiangMiaoSyncPayload(resData, dateStr, newTotal) {
+      const data = {}
+      for (let i = 1; i <= 20; i++) {
+        const value = resData['value' + i]
+        if (value !== null && value !== undefined) {
+          data['value' + i] = value
+        }
+      }
+      const passFields = ['templateId', 'state', 'note', 'share', 'sutraRead', 'sutraStudy',
+        'kuanLiangMiao', 'zaoShuiTime', 'zaoQiTime', 'zaoShuiTimeVisible', 'zaoQiTimeVisible']
+      for (let i = 0; i < passFields.length; i++) {
+        const value = resData[passFields[i]]
+        if (value !== null && value !== undefined) {
+          data[passFields[i]] = value
+        }
+      }
+      data['userId'] = this.unionid
+      data['date'] = dateStr
+      data['kuanLiangMiaoCount'] = String(newTotal)
+      data['createTime'] = this.getNowTime(new Date())
+      return data
+    },
+    // 修改历史日期后，沿日期链向后重算已打卡日期的累计次数；
+    // 遇到无记录的日期（链在此处断开，后续记录本就按 0 起算）或重算结果与已存值一致（后续不受影响）时停止
+    syncKuanLiangMiaoTotalsForward() {
+      const titlesCache = {}
+      const startTotal = this.parseKuanLiangMiaoTotal(this.kuanLiangMiaoCount)
+
+      const updateNext = (date, prevTotal, updatedDates) => {
+        const nextDate = new Date(date)
+        nextDate.setDate(nextDate.getDate() + 1)
+        if (this.isAfterToday(nextDate) || updatedDates.length >= 92) {
+          return Promise.resolve(updatedDates)
+        }
+        const dateStr = this.getDateFormat(nextDate)
+        return this.fetchReportInfoByDate(dateStr).then((resData) => {
+          if (!resData) return updatedDates
+          return this.getReportTitlesForRecord(resData, titlesCache).then((titles) => {
+            const dailyNum = this.extractKuanLiangMiaoDailyFromRecord(resData, titles)
+            const threshold = this.getKuanLiangMiaoZeroThreshold(resData.kuanLiangMiao)
+            const newTotal = dailyNum < threshold ? 0 : prevTotal + dailyNum
+            if (newTotal === this.parseKuanLiangMiaoTotal(resData.kuanLiangMiaoCount)) {
+              return updatedDates
+            }
+            return axios({
+              method: "POST",
+              url: this.serverUrl + "saveReportInfo",
+              data: qs.stringify(this.buildKuanLiangMiaoSyncPayload(resData, dateStr, newTotal)),
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+              }
+            }).then(() => {
+              updatedDates.push(dateStr)
+              return updateNext(nextDate, newTotal, updatedDates)
+            })
+          })
+        })
+      }
+
+      return updateNext(this.selectedDate, startTotal, []).then((updatedDates) => {
+        if (updatedDates.length > 0) {
+          this.$quickMessage('已自动更新 ' + updatedDates[0] + ' 至 ' + updatedDates[updatedDates.length - 1]
+            + ' 共 ' + updatedDates.length + ' 天的「' + this.kuanLiangMiao + '」累计次数', 'success', 3000)
+        }
       }).catch((err) => {
-        console.error('获取前一天累计次数失败:', err)
-        return 0
+        console.error('同步后续日期累计次数失败:', err)
+        this.$message.warning('后续日期的「' + this.kuanLiangMiao + '」累计次数同步失败，请打开对应日期重新提交')
       })
     },
     finalizeDailyReportSubmit() {
@@ -1505,6 +1612,10 @@ export default {
               this.getDailyReportInfoByDate(this.selectedDate)
             }
           })
+          if (!submittedForToday) {
+            // 补卡/修改历史日期会影响其后每天的累计次数，需向后逐天同步
+            this.syncKuanLiangMiaoTotalsForward()
+          }
           copyPromise.then((copied) => {
             if (copied) {
               this.$quickMessage("内容已成功提交并已复制，可粘贴到微信群。", 'success', 2000)
