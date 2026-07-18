@@ -602,6 +602,7 @@ export default {
         this.reportLists.push(cope)
       }
       this.syncNewReportList()
+      this.syncReportTemplateMode(true)
     },
     syncNewReportList() {
       this.newReportLists = []
@@ -827,7 +828,43 @@ export default {
         }
         this.syncNewReportList()
         this.syncReportTemplateMode()
+      }).catch((err) => {
+        console.error('获取打卡模板失败:', err)
+        if (String(this.getStoredTemplateId()) === String(templateId)) {
+          this.clearStoredTemplateId()
+        }
+        this.reportLists = this.cloneDefaultReportLists()
+        this.syncNewReportList()
+        this.syncReportTemplateMode()
       });
+    },
+    templateIdStorageKey() {
+      return 'lastTemplateId_' + this.unionid
+    },
+    getStoredTemplateId() {
+      try {
+        const raw = localStorage.getItem(this.templateIdStorageKey())
+        if (raw === null || raw === '') return null
+        const id = parseInt(raw)
+        return isNaN(id) ? null : id
+      } catch (e) {
+        return null
+      }
+    },
+    storeTemplateId(id) {
+      if (id === null || id === undefined || id === '') return
+      try {
+        localStorage.setItem(this.templateIdStorageKey(), String(id))
+      } catch (e) {
+        // 存储失败不影响保存主流程
+      }
+    },
+    clearStoredTemplateId() {
+      try {
+        localStorage.removeItem(this.templateIdStorageKey())
+      } catch (e) {
+        // 忽略
+      }
     },
     initReportTemplateId(sourceList) {
       const notesList = sourceList || this.monthsNotesList
@@ -841,6 +878,12 @@ export default {
             preDay = tempDay
           }
         }
+      }
+      // 模板ID随打卡记录保存，若修改模板后未重新打卡就退出，从记录推导的是旧模板；
+      // 因此优先使用最近一次显式保存的模板ID
+      const storedTemplateId = this.getStoredTemplateId()
+      if (storedTemplateId !== null) {
+        templateId = storedTemplateId
       }
       if (templateId === -1 || isNaN(templateId)) {
         this.reportLists = this.cloneDefaultReportLists()
@@ -1065,7 +1108,14 @@ export default {
           return
         }
 
-        const templateId = this.resolveReportTemplateId(res.data)
+        let templateId = this.resolveReportTemplateId(res.data)
+        if (!this.hasReportValues(this.extractReportsFromData(res.data))) {
+          // 当天尚无打卡数据时，优先使用最近一次显式保存的模板ID
+          const storedTemplateId = this.getStoredTemplateId()
+          if (storedTemplateId !== null) {
+            templateId = String(storedTemplateId)
+          }
+        }
         const applyWithTemplateRows = (templateRows) => {
           if (requestId !== this.dailyReportRequestId) {
             return
@@ -1732,11 +1782,12 @@ export default {
           return
         }
         this.templateId = res.data
+        this.storeTemplateId(res.data)
         this.editDailyReportMode = false
         this.syncNewReportList()
       })
     },
-    syncReportTemplateMode() {
+    syncReportTemplateMode(storeId = false) {
       this.template = {}
       for (let i = 0; i < this.reportLists.length; i++) {
         if (this.reportLists[i].title.trim() === '') {
@@ -1761,6 +1812,9 @@ export default {
         }
       }).then((res) => {
         this.templateId = res.data
+        if (storeId) {
+          this.storeTemplateId(res.data)
+        }
       });
     },
     resetDefaultTemplate() {
@@ -1783,6 +1837,7 @@ export default {
         }
       }).then((res) => {
         this.templateId = res.data
+        this.storeTemplateId(res.data)
         this.getDailyReportInfoByDate(this.selectedDate)
       })
     },
@@ -1797,6 +1852,7 @@ export default {
     del(index) {
       this.reportLists.splice(index, 1)
       this.syncNewReportList()
+      this.syncReportTemplateMode(true)
     },
     changeInfoMode() {
       if (this.editInfoMode) {
