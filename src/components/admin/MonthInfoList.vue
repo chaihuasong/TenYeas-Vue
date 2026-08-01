@@ -98,12 +98,14 @@ export default {
         date: '',
         userId: '',
         monthInfo: '',
+        monthSummery: '',
       },
       newMonthInfo: {
         id : '',
         date: '',
         userId: '',
         monthInfo: '',
+        monthSummery: '',
       },
       monthInfoIndex: 0,
     }
@@ -158,6 +160,7 @@ export default {
         date: item.date,
         userId: item.userId,
         monthInfo: item.monthInfo,
+        monthSummery: item.monthSummery,
       }
       this.editDialogVisible = true
     },

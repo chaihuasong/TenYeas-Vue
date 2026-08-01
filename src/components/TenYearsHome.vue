@@ -1158,6 +1158,10 @@ export default {
       }
 
       if (monthChanged) {
+        // 内容会被重新拉取覆盖，编辑态若还开着，点保存会把上一个月的文字存到当前月
+        this.editHalfYearInfoMode = false
+        this.editMonthInfoMode = false
+        this.editLastMonthInfoMode = false
         this.getMonthInfo()
         this.getLastMonthInfo()
         this.getHalfYearInfo()
@@ -1965,8 +1969,11 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        if (res != null && res.data != null && res.data !== '') {
+        // 同 getMonthInfo：没有记录时清空，避免跨半年残留
+        if (res != null && res.data != null && res.data !== '' && res.data.halfYearInfo != null) {
           this.halfYearInfo = res.data.halfYearInfo
+        } else {
+          this.halfYearInfo = ''
         }
       });
     },
@@ -1983,8 +1990,11 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        if (res != null && res.data != null && res.data !== '') {
+        // 该月没有记录时必须清空，否则会残留上一个月的内容，误存到当前月
+        if (res != null && res.data != null && res.data !== '' && res.data.monthInfo != null) {
           this.monthInfo = res.data.monthInfo
+        } else {
+          this.monthInfo = ''
         }
       });
     },
@@ -2001,10 +2011,12 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
-        if (res != null && res.data != null && res.data !== '') {
-          if (res.data.monthSummery != null && res.data.monthSummery !== '') {
-            this.lastMonthInfo = res.data.monthSummery
-          }
+        // 同 getMonthInfo：没有记录时清空，避免跨月残留
+        if (res != null && res.data != null && res.data !== ''
+            && res.data.monthSummery != null && res.data.monthSummery !== '') {
+          this.lastMonthInfo = res.data.monthSummery
+        } else {
+          this.lastMonthInfo = ''
         }
       });
     },
