@@ -378,6 +378,12 @@ export default {
       notification: false,
       monthsNotesList: [],
       dailyReportRequestId: 0,
+      // 未提交内容的本地草稿：按日期分别缓存，切换日期查看别天记录后不丢失
+      draftDateKey: '',
+      draftServerSnapshot: '',
+      draftPending: null,
+      draftSaveTimer: null,
+      draftMaxAgeMs: 7 * 24 * 60 * 60 * 1000,
       template: {},
       templateId: '0',
       state: '1',
@@ -463,10 +469,23 @@ export default {
     this.getHalfYearInfo()
     this.getAllDefaultReportsLists()
     this.visitedUser()
+    this.pruneDailyDrafts()
+  },
+  beforeDestroy: function () {
+    this.flushDailyDraft()
+  },
+  computed: {
+    // 当前表单中所有可编辑内容的快照，用于判断是否有未提交的改动
+    dailyDraftSnapshot() {
+      return JSON.stringify(this.buildDailyDraftPayload())
+    }
   },
   watch: {
     calendarValue(newValue, oldValue) {
       this.handleCalendarValueChange(newValue, oldValue)
+    },
+    dailyDraftSnapshot(newValue) {
+      this.scheduleDailyDraftSave(newValue)
     }
   },
   methods: {
@@ -866,6 +885,157 @@ export default {
         // 忽略
       }
     },
+    // ========== 未提交内容的本地草稿 ==========
+    // 打卡填到一半去看别的日期作参考，回来时内容会被该日期的加载流程覆盖。
+    // 这里按「用户+日期」把未提交的内容存进 localStorage，重新载入该日期时再盖回去。
+    dailyDraftKeyPrefix() {
+      return 'dailyReportDraft_'
+    },
+    dailyDraftStorageKey(dateStr) {
+      return this.dailyDraftKeyPrefix() + this.unionid + '_' + dateStr
+    },
+    dailyDraftScalarFields() {
+      return ['templateId', 'state', 'note', 'share', 'sutraRead', 'sutraStudy',
+        'jingZuoCount', 'zhanZhuangCount', 'jingzuoValue2', 'zhanZhuangValue2',
+        'kuanLiangMiao', 'kuanLiangMiaoCount', 'zaoQiValue', 'zaoShuiValue',
+        'zaoQiTime', 'zaoShuiTime', 'zaoQiTimeVisible', 'zaoShuiTimeVisible']
+    },
+    buildDailyDraftPayload() {
+      const payload = {
+        reportLists: this.reportLists.map((item) => ({
+          title: item.title,
+          unit: item.unit,
+          value: item.value,
+        }))
+      }
+      const fields = this.dailyDraftScalarFields()
+      for (let i = 0; i < fields.length; i++) {
+        payload[fields[i]] = this[fields[i]]
+      }
+      return payload
+    },
+    applyDailyDraftPayload(payload) {
+      if (Array.isArray(payload.reportLists)) {
+        this.reportLists = payload.reportLists.map((item) => ({
+          title: item.title,
+          unit: item.unit,
+          value: item.value,
+        }))
+      }
+      const fields = this.dailyDraftScalarFields()
+      for (let i = 0; i < fields.length; i++) {
+        if (payload[fields[i]] !== undefined) {
+          this[fields[i]] = payload[fields[i]]
+        }
+      }
+      this.syncNewReportList()
+      this.onDailyReportResultChange()
+    },
+    readDailyDraft(dateStr) {
+      try {
+        const raw = localStorage.getItem(this.dailyDraftStorageKey(dateStr))
+        if (raw === null || raw === '') return null
+        const parsed = JSON.parse(raw)
+        if (!parsed || !parsed.payload) return null
+        if (!parsed.savedAt || (Date.now() - parsed.savedAt) > this.draftMaxAgeMs) {
+          this.clearDailyDraft(dateStr)
+          return null
+        }
+        return parsed.payload
+      } catch (e) {
+        return null
+      }
+    },
+    writeDailyDraft(dateStr, snapshot) {
+      try {
+        localStorage.setItem(this.dailyDraftStorageKey(dateStr), JSON.stringify({
+          savedAt: Date.now(),
+          payload: JSON.parse(snapshot),
+        }))
+      } catch (e) {
+        // 存储空间不足等情况不影响正常填写
+      }
+    },
+    clearDailyDraft(dateStr) {
+      try {
+        localStorage.removeItem(this.dailyDraftStorageKey(dateStr))
+      } catch (e) {
+        // 忽略
+      }
+    },
+    // 内容有改动才留草稿；改回与服务器一致时把草稿删掉，避免旧内容以后又冒出来
+    scheduleDailyDraftSave(snapshot) {
+      if (!this.unionid || this.draftDateKey === '') return
+      this.draftPending = {
+        dateStr: this.draftDateKey,
+        snapshot: snapshot,
+        dirty: snapshot !== this.draftServerSnapshot,
+      }
+      if (this.draftSaveTimer) clearTimeout(this.draftSaveTimer)
+      this.draftSaveTimer = setTimeout(() => {
+        this.flushDailyDraft()
+      }, 400)
+    },
+    flushDailyDraft() {
+      if (this.draftSaveTimer) {
+        clearTimeout(this.draftSaveTimer)
+        this.draftSaveTimer = null
+      }
+      const pending = this.draftPending
+      this.draftPending = null
+      if (!pending) return
+      if (pending.dirty) {
+        this.writeDailyDraft(pending.dateStr, pending.snapshot)
+      } else {
+        this.clearDailyDraft(pending.dateStr)
+      }
+    },
+    // 某天的内容加载完后调用：记下服务器状态，再把该天的草稿盖回去
+    finishDailyReportLoad(dateStr) {
+      this.draftDateKey = dateStr
+      this.draftServerSnapshot = JSON.stringify(this.buildDailyDraftPayload())
+      const draft = this.readDailyDraft(dateStr)
+      if (!draft) return
+      this.applyDailyDraftPayload(draft)
+      if (JSON.stringify(this.buildDailyDraftPayload()) === this.draftServerSnapshot) {
+        // 草稿和服务器内容一致，没有必要再留着
+        this.clearDailyDraft(dateStr)
+      } else {
+        this.$quickMessage('已恢复未提交的内容', 'info', 2000)
+      }
+    },
+    // 提交成功后把该天的草稿清掉，并把服务器基线更新为当前内容
+    resetDailyDraftAfterSubmit(dateStr) {
+      this.flushDailyDraft()
+      this.clearDailyDraft(dateStr)
+      this.draftDateKey = dateStr
+      this.draftServerSnapshot = JSON.stringify(this.buildDailyDraftPayload())
+    },
+    pruneDailyDrafts() {
+      try {
+        const prefix = this.dailyDraftKeyPrefix()
+        const now = Date.now()
+        const expired = []
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (key === null || key.indexOf(prefix) !== 0) continue
+          let savedAt = 0
+          try {
+            savedAt = (JSON.parse(localStorage.getItem(key)) || {}).savedAt || 0
+          } catch (e) {
+            savedAt = 0
+          }
+          if (!savedAt || (now - savedAt) > this.draftMaxAgeMs) {
+            expired.push(key)
+          }
+        }
+        for (let i = 0; i < expired.length; i++) {
+          localStorage.removeItem(expired[i])
+        }
+      } catch (e) {
+        // 忽略
+      }
+    },
     initReportTemplateId(sourceList) {
       const notesList = sourceList || this.monthsNotesList
       let templateId = -1
@@ -1067,6 +1237,7 @@ export default {
         this.reportLists = this.cloneDefaultReportLists()
       }
       this.syncNewReportList()
+      this.finishDailyReportLoad(date)
     },
     fetchReportTemplateRows(templateId) {
       return axios({
@@ -1085,6 +1256,9 @@ export default {
     },
     getDailyReportInfoByDate(val) {
       let date = this.getDateFormat(val)
+      // 切换日期前先把上一天未提交的内容落盘；加载期间的字段变动不算用户输入，不写草稿
+      this.flushDailyDraft()
+      this.draftDateKey = ''
       const requestId = ++this.dailyReportRequestId
       axios({
         method: "GET",
@@ -1105,6 +1279,7 @@ export default {
           this.hasExistingReportData = false
           this.editDailyReportMode = false
           this.initReportTemplateId()
+          this.finishDailyReportLoad(date)
           return
         }
 
@@ -1213,6 +1388,7 @@ export default {
         if (res.status !== 200) {
           this.$message.warning("保存出错！\n" + res.statusText)
         } else {
+          // 这里只保存了 state/note，打卡表格仍是未提交状态，草稿要留着
           const date = this.getDateFormat(this.selectedDate)
           const submittedForToday = this.isToday()
           this.getMonthNotes(false).then(() => {
@@ -1661,6 +1837,7 @@ export default {
           this.$message.warning("保存出错！\n" + res.statusText)
         } else {
           const submittedForToday = this.isToday()
+          this.resetDailyDraftAfterSubmit(data['date'])
           this.getMonthNotes(false).then(() => {
             if (submittedForToday) {
               this.getDailyReportInfoByDate(this.selectedDate)
