@@ -1497,51 +1497,74 @@ export default {
       if (val.indexOf('《') >= 0) return val
       return '《' + val + (val.indexOf('》') > 0 ? '' : '》')
     },
+    // 未填写或填写为 0 都视为当日没有练习，不参与复制到微信群的内容
+    hasReportValue(value) {
+      const val = this.normalizeReportValue(value)
+      if (val === '') return false
+      const num = Number(val)
+      if (!isNaN(num)) return num !== 0
+      return true
+    },
     shouldIncludeReportInCopy(title, rawValue) {
       if (title === '早睡' || title === '早起') return true
-      if (rawValue !== '') return true
-      if (title === '诵读经典' && this.normalizeReportValue(this.sutraRead) !== '') return true
-      if (title === '经典学习' && this.normalizeReportValue(this.sutraStudy) !== '') return true
-      if (title === '宽两秒') return true
-      if (title === '站桩' && this.zhanZhuangCount === 2 && this.normalizeReportValue(this.zhanZhuangValue2) !== '') return true
-      if ((title === '静坐' || title === '禅坐') && this.jingZuoCount === 2 && this.normalizeReportValue(this.jingzuoValue2) !== '') return true
-      return false
+      if (title === '诵读经典') {
+        return this.hasReportValue(rawValue) || this.normalizeReportValue(this.sutraRead) !== ''
+      }
+      if (title === '经典学习') {
+        return this.hasReportValue(rawValue) || this.normalizeReportValue(this.sutraStudy) !== ''
+      }
+      if (title === '站桩' && this.zhanZhuangCount === 2) {
+        return this.hasReportValue(rawValue) || this.hasReportValue(this.zhanZhuangValue2)
+      }
+      if ((title === '静坐' || title === '禅坐') && this.jingZuoCount === 2) {
+        return this.hasReportValue(rawValue) || this.hasReportValue(this.jingzuoValue2)
+      }
+      return this.hasReportValue(rawValue)
     },
     formatReportCopyLine(index, item, rawValue) {
       const title = item.title
       const unit = item.unit || ''
-      if (title === '站桩' && this.zhanZhuangCount === 2 && this.normalizeReportValue(this.zhanZhuangValue2) !== '') {
-        return index + '. ' + title + '：' + rawValue + '+' + this.normalizeReportValue(this.zhanZhuangValue2) + unit
+      if (title === '站桩' && this.zhanZhuangCount === 2) {
+        const second = this.normalizeReportValue(this.zhanZhuangValue2)
+        if (this.hasReportValue(rawValue) && this.hasReportValue(second)) {
+          return index + '. ' + title + '：' + rawValue + '+' + second + unit
+        }
+        return index + '. ' + title + '：' + (this.hasReportValue(rawValue) ? rawValue : second) + unit
       }
-      if ((title === '静坐' || title === '禅坐') && this.jingZuoCount === 2 && this.normalizeReportValue(this.jingzuoValue2) !== '') {
-        return index + '. ' + title + '：' + rawValue + '+' + this.normalizeReportValue(this.jingzuoValue2) + unit
+      if ((title === '静坐' || title === '禅坐') && this.jingZuoCount === 2) {
+        const second = this.normalizeReportValue(this.jingzuoValue2)
+        if (this.hasReportValue(rawValue) && this.hasReportValue(second)) {
+          return index + '. ' + title + '：' + rawValue + '+' + second + unit
+        }
+        return index + '. ' + title + '：' + (this.hasReportValue(rawValue) ? rawValue : second) + unit
       }
       if (title === '诵读经典') {
+        const hasValue = this.hasReportValue(rawValue)
         let line = index + '. ' + title + '：'
-        if (rawValue !== '') {
+        if (hasValue) {
           line += rawValue + unit
         }
         const sutra = this.formatSutraName(this.sutraRead)
         if (sutra) {
-          line += (rawValue !== '' ? '，诵读' : '诵读') + sutra
+          line += (hasValue ? '，诵读' : '诵读') + sutra
         }
         return line
       }
       if (title === '经典学习') {
+        const hasValue = this.hasReportValue(rawValue)
         let line = index + '. ' + title + '：'
-        if (rawValue !== '') {
+        if (hasValue) {
           line += rawValue + unit
         }
         const sutra = this.formatSutraName(this.sutraStudy)
         if (sutra) {
-          line += (rawValue !== '' ? '，学习' : '学习') + sutra
+          line += (hasValue ? '，学习' : '学习') + sutra
         }
         return line
       }
       if (title === '宽两秒') {
         const kuanLiangMiaoCount = this.normalizeReportValue(this.kuanLiangMiaoCount)
-        const displayValue = rawValue === '' || rawValue === '0' ? '0' : rawValue
-        return index + '. ' + this.kuanLiangMiao + '：' + displayValue + unit + (kuanLiangMiaoCount !== '' ? '，总' + kuanLiangMiaoCount + '次' : '')
+        return index + '. ' + this.kuanLiangMiao + '：' + rawValue + unit + (kuanLiangMiaoCount !== '' ? '，总' + kuanLiangMiaoCount + '次' : '')
       }
       if (title === '早睡') {
         const doneText = (this.zaoShuiValue === '1' ? '' : '未') + '做到'
