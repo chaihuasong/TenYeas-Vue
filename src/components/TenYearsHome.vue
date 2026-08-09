@@ -101,8 +101,8 @@
               isSelectedCalendarDay(data.day) ? 'calendar-selected-day' : ''
             ]">
           <div class="calendar-day" style="display:inline-block; font-size: 15px; margin-right: 5px">{{ data.day.split('-').slice(2).join('-') }}</div>
-          <span style="font-size: 18px" :class="getState(data) === '-' ? 'red' : 'green'">{{ getState(data) }}</span><br/>
-          <span style="font-size: 9px;color: #66b1ff">{{ getDailyNoteFormat(data) }}</span>
+          <span class="calendar-day-state" style="font-size: 18px" :class="getState(data) === '-' ? 'red' : 'green'">{{ getState(data) }}</span><br/>
+          <span class="calendar-day-note" style="font-size: 9px">{{ getDailyNoteFormat(data) }}</span>
         </el-row>
       </template>
     </el-calendar>
@@ -2677,17 +2677,37 @@ a {
   color: white;
 }
 
-.tenyears-home-page .el-calendar-table td.is-selected:not(.is-today) {
-  background: rgba(255, 152, 0, 0.55);
-}
-
+/* 今天（未选中时）用淡绿底标记 */
 .tenyears-home-page .el-calendar-table td.is-today {
   background: rgba(103, 194, 58, 0.15);
 }
 
+/* 选中的日期（补打卡选历史日期时同样适用）：实心橙底 + 深色描边，一眼能看出补的是哪天 */
+.tenyears-home-page .el-calendar-table td.is-selected,
 .tenyears-home-page .el-calendar-table td.is-today.is-selected {
-  background: rgba(103, 194, 58, 0.25);
-  box-shadow: inset 0 0 0 2px rgba(244, 67, 54, 0.6);
+  background: #ff8f1f;
+  box-shadow: inset 0 0 0 2px #d2620a;
+  transition: background 0.2s;
+}
+
+/* 选中格里的文字压在橙底上，统一转白保证可读 */
+.tenyears-home-page .el-calendar-table td.is-selected .calendar-day,
+.tenyears-home-page .el-calendar-table td.is-selected .calendar-day-note {
+  color: #fff;
+}
+
+.tenyears-home-page .el-calendar-table td.is-selected .calendar-day {
+  font-weight: bold;
+}
+
+/* +/- 换成白底圆片，橙底上依旧保留红绿的含义 */
+.tenyears-home-page .el-calendar-table td.is-selected .calendar-day-state:not(:empty) {
+  display: inline-block;
+  min-width: 18px;
+  line-height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  font-weight: bold;
 }
 
 .tenyears-home-page .el-calendar-table .calendar-selected-day {
@@ -2836,6 +2856,9 @@ a {
 }
 .green {
   color: green;
+}
+.calendar-day-note {
+  color: #66b1ff;
 }
 .confirmButtonClass {
   float: right;
