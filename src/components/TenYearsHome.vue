@@ -464,9 +464,8 @@ export default {
       this.getData()
     })
     this.configWechat()
-    this.getMonthInfo()
-    this.getLastMonthInfo()
-    this.getHalfYearInfo()
+    // unionid 此时通常还没解析出来，真正的拉取由 unionid 的 watch 触发
+    this.loadPlanInfo()
     this.getAllDefaultReportsLists()
     this.visitedUser()
     this.pruneDailyDrafts()
@@ -483,6 +482,13 @@ export default {
   watch: {
     calendarValue(newValue, oldValue) {
       this.handleCalendarValueChange(newValue, oldValue)
+    },
+    // mounted 时 unionid 还没解析出来，计划和总结会拉到空值，
+    // 等 unionid 就绪后必须重新拉一次，否则进来永远显示为空
+    unionid(newValue) {
+      if (newValue) {
+        this.loadPlanInfo()
+      }
     },
     dailyDraftSnapshot(newValue) {
       this.scheduleDailyDraftSave(newValue)
@@ -1350,9 +1356,7 @@ export default {
         this.editHalfYearInfoMode = false
         this.editMonthInfoMode = false
         this.editLastMonthInfoMode = false
-        this.getMonthInfo()
-        this.getLastMonthInfo()
-        this.getHalfYearInfo()
+        this.loadPlanInfo()
         this.getMonthNotes()
         return
       }
@@ -2173,7 +2177,13 @@ export default {
       }
       this.editLastMonthInfoMode = !this.editLastMonthInfoMode
     },
+    loadPlanInfo() {
+      this.getMonthInfo()
+      this.getLastMonthInfo()
+      this.getHalfYearInfo()
+    },
     getHalfYearInfo() {
+      if (!this.unionid) return
       let halfYearFormat = this.getHalfYearFormat(this.calendarValue)
       let data = {
         userId: this.unionid,
@@ -2195,6 +2205,7 @@ export default {
       });
     },
     getMonthInfo() {
+      if (!this.unionid) return
       let dateFormat = this.getDateFormat(this.calendarValue)
       let data = {
         userId: this.unionid,
@@ -2216,6 +2227,7 @@ export default {
       });
     },
     getLastMonthInfo() {
+      if (!this.unionid) return
       let dateFormat = this.getLastMonthDateFormat(this.calendarValue)
       let data = {
         date: dateFormat.substr(0, dateFormat.lastIndexOf('-')),
