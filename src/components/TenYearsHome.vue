@@ -199,7 +199,7 @@
             <el-button icon="el-icon-minus" circle @click="del(index)"></el-button>
           </el-col>
           <el-col :span="8" v-if="!editDailyReportMode && list.title === '早睡'" class="zaoDoneCol">
-            <el-select v-model="zaoShuiValue" size="medium" class="zaoDoneSelect" @change="onDailyReportResultChange">
+            <el-select v-model="zaoShuiValue" size="medium" class="zaoDoneSelect" @change="onZaoDoneChange(list.title)">
               <el-option
                   v-for="item in doneUndoneOptions"
                   :key="item.value"
@@ -211,7 +211,7 @@
                        class="zaoDonePlusBtn" size="mini"></el-button>
           </el-col>
           <el-col :span="8" v-if="!editDailyReportMode && list.title === '早起'" class="zaoDoneCol">
-            <el-select v-model="zaoQiValue" size="medium" class="zaoDoneSelect" @change="onDailyReportResultChange">
+            <el-select v-model="zaoQiValue" size="medium" class="zaoDoneSelect" @change="onZaoDoneChange(list.title)">
               <el-option
                   v-for="item in doneUndoneOptions"
                   :key="item.value"
@@ -500,6 +500,14 @@ export default {
         this.zaoQiTimeVisible = true
       } else if (title === '早睡') {
         this.zaoShuiTimeVisible =true
+      }
+      this.onDailyReportResultChange()
+    },
+    onZaoDoneChange(title) {
+      if (title === '早起' && this.zaoQiValue === '0') {
+        this.zaoQiTimeVisible = false
+      } else if (title === '早睡' && this.zaoShuiValue === '0') {
+        this.zaoShuiTimeVisible = false
       }
       this.onDailyReportResultChange()
     },
