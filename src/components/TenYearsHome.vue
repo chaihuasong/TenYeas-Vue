@@ -821,8 +821,11 @@ export default {
         })
       })
     },
+    // 返回 Promise，调用方可等模板套用完毕后再恢复草稿，避免空模板把恢复的内容冲掉；
+    // 请求期间若又切换了日期，requestId 已变，过期的模板不再覆盖当前显示的内容
     getReportTemplate(templateId) {
-      axios({
+      const requestId = this.dailyReportRequestId
+      return axios({
         method: "GET",
         url: this.serverUrl + "getReportTemplateById?id=" + templateId,
         data: null,
@@ -830,6 +833,9 @@ export default {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then((res) => {
+        if (requestId !== this.dailyReportRequestId) {
+          return
+        }
         if (res.data !== '' && res.data.length > 0) {
           this.reportLists = []
           for (let i = 0; i < res.data.length; i++) {
@@ -846,15 +852,18 @@ export default {
           this.reportLists = this.cloneDefaultReportLists()
         }
         this.syncNewReportList()
-        this.syncReportTemplateMode()
+        return this.syncReportTemplateMode()
       }).catch((err) => {
         console.error('获取打卡模板失败:', err)
+        if (requestId !== this.dailyReportRequestId) {
+          return
+        }
         if (String(this.getStoredTemplateId()) === String(templateId)) {
           this.clearStoredTemplateId()
         }
         this.reportLists = this.cloneDefaultReportLists()
         this.syncNewReportList()
-        this.syncReportTemplateMode()
+        return this.syncReportTemplateMode()
       });
     },
     templateIdStorageKey() {
@@ -1058,10 +1067,9 @@ export default {
       if (templateId === -1 || isNaN(templateId)) {
         this.reportLists = this.cloneDefaultReportLists()
         this.syncNewReportList()
-        this.syncReportTemplateMode()
-      } else {
-        this.getReportTemplate(templateId)
+        return this.syncReportTemplateMode()
       }
+      return this.getReportTemplate(templateId)
     },
     getHalfYearFormat(date) {
       let year = date.getFullYear()
@@ -1278,8 +1286,13 @@ export default {
           this.state = ''
           this.hasExistingReportData = false
           this.editDailyReportMode = false
-          this.initReportTemplateId()
-          this.finishDailyReportLoad(date)
+          // 模板是异步拉取的，套用模板会把各项清空，必须等它结束再恢复草稿
+          Promise.resolve(this.initReportTemplateId()).then(() => {
+            if (requestId !== this.dailyReportRequestId) {
+              return
+            }
+            this.finishDailyReportLoad(date)
+          })
           return
         }
 
@@ -1968,23 +1981,24 @@ export default {
         this.syncNewReportList()
       })
     },
+    // 返回 Promise：模板ID回填后草稿快照才算稳定，调用方需要等它结束再恢复草稿
     syncReportTemplateMode(storeId = false) {
       this.template = {}
       for (let i = 0; i < this.reportLists.length; i++) {
         if (this.reportLists[i].title.trim() === '') {
           this.$message.warning("请输入项目")
-          return
+          return Promise.resolve()
         }
         this.template['template' + (i + 1)] = this.reportLists[i].title.trim() + "_" + this.reportLists[i].unit.trim()
       }
 
       if (this.template['template1'] === undefined) {
         this.$message.warning("至少添加一项功课模板！")
-        return
+        return Promise.resolve()
       }
 
       let data = qs.stringify(this.template)
-      axios({
+      return axios({
         method: "POST",
         url: this.serverUrl + "saveTemplate",
         data: data,
@@ -1996,6 +2010,9 @@ export default {
         if (storeId) {
           this.storeTemplateId(res.data)
         }
+      }).catch((err) => {
+        // 模板ID回填失败不影响已填内容，后续流程照常进行
+        console.error('保存打卡模板失败:', err)
       });
     },
     resetDefaultTemplate() {
