@@ -19,73 +19,7 @@
 <!--      <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{this.getYearsRemaining()}}</span> 天-->
 <!--    </el-card>-->
 
-    <el-collapse v-model="this.planInfoFlag" @change="handlePlanInfoFlagChange" style="float: left; width: 100%;margin-top: 20px;margin-bottom: 15px">
-      <el-collapse-item title="计划和总结" name="1">
-
-        <el-card style="float: left; width: 100%;margin-top: 10px">
-          <div style="float: left; margin-bottom: 10px;font-weight: bold">十年立志</div>
-          <i :class="[editInfoMode ?'el-icon-finished' : 'el-icon-edit']"
-             style="float: right; margin-bottom: 10px" @click="changeInfoMode"></i>
-          <br/>
-          <br/>
-          <el-row :gutter="15">
-            <el-col :span="this.path !== '' ? 20 : 24">
-              <el-input
-                  type="textarea"
-                  :rows="3"
-                  :disabled="!editInfoMode"
-                  placeholder="请输入内容"
-                  v-model="info" />
-            </el-col>
-            <el-col v-if="this.path !== ''" :span="4">
-              <el-image style="width: 40px; height: 80px;margin-top: 5px"
-                        :src="'http://htzchina.org/imgs/tenyears/' + this.path"
-
-                        :preview-src-list="['http://htzchina.org/imgs/tenyears/' + this.path]">
-                <div slot="error">
-                  <el-image style="width: 40px; height: 50px;margin-top: 5px"
-                            :src="require('../assets/img/not_found.jpg')" />
-                </div>
-              </el-image>
-            </el-col>
-          </el-row>
-        </el-card>
-        <el-card style="float: left; width: 100%;margin-top: 10px">
-          <div style="float: left; margin-bottom: 10px;font-weight: bold">{{ getDateFormat(this.calendarValue).split('-')[0] }}年{{ parseInt(getDateFormat(this.calendarValue).split('-')[1]) > 6 || parseInt(getDateFormat(this.calendarValue).split('-')[0]) === 2021 ? '下' : '上' }}半年践行计划</div>
-          <i :class="[editHalfYearInfoMode ?'el-icon-finished' : 'el-icon-edit']"
-             style="float: right; margin-bottom: 10px" @click="changeHalfYearInfoMode"></i>
-          <el-input
-              type="textarea"
-              :rows="3"
-              :disabled="!editHalfYearInfoMode"
-              placeholder="请输入内容"
-              v-model="halfYearInfo" />
-        </el-card>
-        <el-card style="float: left; width: 100%;">
-          <div style="float: left; margin-bottom: 10px;font-weight: bold">{{ getLastMonthDateFormat(this.calendarValue).split('-')[0] }}年{{parseInt(getLastMonthDateFormat(this.calendarValue).split('-')[1])}}月总结</div>
-          <i :class="[editLastMonthInfoMode ?'el-icon-finished' : 'el-icon-edit']"
-             style="float: right; margin-bottom: 10px" @click="changeLastMonthInfoMode"></i>
-          <el-input
-              type="textarea"
-              :rows="3"
-              :disabled="!editLastMonthInfoMode"
-              placeholder="请输入内容"
-              v-model="lastMonthInfo" />
-        </el-card>
-        <el-card style="float: left; width: 100%;">
-          <div style="float: left; margin-bottom: 10px;font-weight: bold">{{ getDateFormat(this.calendarValue).split('-')[0] }}年{{parseInt(getDateFormat(this.calendarValue).split('-')[1])}}月计划</div>
-          <i :class="[editMonthInfoMode ?'el-icon-finished' : 'el-icon-edit']"
-             style="float: right; margin-bottom: 10px" @click="changeMonthInfoMode"></i>
-          <el-input
-              type="textarea"
-              :rows="3"
-              :disabled="!editMonthInfoMode"
-              placeholder="请输入内容"
-              v-model="monthInfo" />
-        </el-card>
-      </el-collapse-item>
-    </el-collapse>
-    <div>
+    <div style="clear: both; width: 100%">
       <el-image style="width: 100%"
                 :src="require('../assets/img/tenyears_tips.jpg')"
                 fit="cover"/>
@@ -294,6 +228,74 @@
         <el-button type="primary" @click="confirmAddTemplate()">确 定</el-button>
       </div>
     </el-dialog>
+
+    <el-collapse v-model="this.planInfoFlag" @change="handlePlanInfoFlagChange" style="float: left; width: 100%;margin-top: 20px;margin-bottom: 15px">
+      <el-collapse-item title="计划和总结" name="1">
+
+        <el-card style="float: left; width: 100%;margin-top: 10px">
+          <div style="float: left; margin-bottom: 10px;font-weight: bold">十年立志</div>
+          <i :class="[editInfoMode ?'el-icon-finished' : 'el-icon-edit']"
+             style="float: right; margin-bottom: 10px" @click="changeInfoMode"></i>
+          <br/>
+          <br/>
+          <el-row :gutter="15">
+            <el-col :span="this.path !== '' ? 20 : 24">
+              <el-input
+                  type="textarea"
+                  :rows="3"
+                  :disabled="!editInfoMode"
+                  placeholder="请输入内容"
+                  v-model="info" />
+            </el-col>
+            <el-col v-if="this.path !== ''" :span="4">
+              <el-image style="width: 40px; height: 80px;margin-top: 5px"
+                        :src="'http://htzchina.org/imgs/tenyears/' + this.path"
+
+                        :preview-src-list="['http://htzchina.org/imgs/tenyears/' + this.path]">
+                <div slot="error">
+                  <el-image style="width: 40px; height: 50px;margin-top: 5px"
+                            :src="require('../assets/img/not_found.jpg')" />
+                </div>
+              </el-image>
+            </el-col>
+          </el-row>
+        </el-card>
+        <el-card style="float: left; width: 100%;margin-top: 10px">
+          <div style="float: left; margin-bottom: 10px;font-weight: bold">{{ getDateFormat(this.calendarValue).split('-')[0] }}年{{ parseInt(getDateFormat(this.calendarValue).split('-')[1]) > 6 || parseInt(getDateFormat(this.calendarValue).split('-')[0]) === 2021 ? '下' : '上' }}半年践行计划</div>
+          <i :class="[editHalfYearInfoMode ?'el-icon-finished' : 'el-icon-edit']"
+             style="float: right; margin-bottom: 10px" @click="changeHalfYearInfoMode"></i>
+          <el-input
+              type="textarea"
+              :rows="3"
+              :disabled="!editHalfYearInfoMode"
+              placeholder="请输入内容"
+              v-model="halfYearInfo" />
+        </el-card>
+        <el-card style="float: left; width: 100%;">
+          <div style="float: left; margin-bottom: 10px;font-weight: bold">{{ getLastMonthDateFormat(this.calendarValue).split('-')[0] }}年{{parseInt(getLastMonthDateFormat(this.calendarValue).split('-')[1])}}月总结</div>
+          <i :class="[editLastMonthInfoMode ?'el-icon-finished' : 'el-icon-edit']"
+             style="float: right; margin-bottom: 10px" @click="changeLastMonthInfoMode"></i>
+          <el-input
+              type="textarea"
+              :rows="3"
+              :disabled="!editLastMonthInfoMode"
+              placeholder="请输入内容"
+              v-model="lastMonthInfo" />
+        </el-card>
+        <el-card style="float: left; width: 100%;">
+          <div style="float: left; margin-bottom: 10px;font-weight: bold">{{ getDateFormat(this.calendarValue).split('-')[0] }}年{{parseInt(getDateFormat(this.calendarValue).split('-')[1])}}月计划</div>
+          <i :class="[editMonthInfoMode ?'el-icon-finished' : 'el-icon-edit']"
+             style="float: right; margin-bottom: 10px" @click="changeMonthInfoMode"></i>
+          <el-input
+              type="textarea"
+              :rows="3"
+              :disabled="!editMonthInfoMode"
+              placeholder="请输入内容"
+              v-model="monthInfo" />
+        </el-card>
+      </el-collapse-item>
+    </el-collapse>
+
     <el-row style="float: left; text-align: left; margin-left: 20px;margin-top: 10px">
       <el-col :span="16" style="float: left; font-weight: bold">
         <span>打卡提醒</span>
