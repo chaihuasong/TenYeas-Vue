@@ -55,7 +55,9 @@
       </div>
 
       <div v-else-if="filteredData.length > 0" class="checkin-list">
-        <div v-for="item in filteredData" :key="item.id" class="checkin-card">
+        <div v-for="item in filteredData" :key="item.id" :id="'checkin-card-' + item.id"
+             class="checkin-card"
+             :class="{ 'checkin-card-highlight': item.id === highlightReportId }">
           <div class="checkin-header">
             <el-avatar :size="44" :src="item.headimgurl" class="checkin-avatar">
               <i class="el-icon-user-solid"></i>
@@ -111,7 +113,10 @@
 
             <!-- 评论列表 -->
             <div v-if="getComments(item.id).length > 0" class="comment-list">
-              <div v-for="comment in getComments(item.id)" :key="comment.id" class="comment-item">
+              <div v-for="comment in getComments(item.id)" :key="comment.id"
+                   :id="'checkin-comment-' + comment.id"
+                   class="comment-item"
+                   :class="{ 'comment-item-highlight': comment.id === highlightCommentId }">
                 <span class="comment-author">{{ comment.nickname }}</span>
                 <span v-if="comment.replyToNickname" class="comment-reply">
                   回复 <span class="reply-to">{{ comment.replyToNickname }}</span>
@@ -192,7 +197,12 @@ export default {
       interactions: {},      // { reportId: { likes, comments, likeCount, commentCount, liked } }
       commentInputs: {},     // { reportId: '输入的评论内容' }
       replyingTo: null,      // { reportId, commentId, userId, nickname }
-      showComments: {}       // { reportId: true/false }
+      showComments: {},      // { reportId: true/false }
+      // 从 App 互动通知跳进来时要定位的目标，定位一次后清空
+      targetReportId: '',
+      targetCommentId: '',
+      highlightReportId: '',
+      highlightCommentId: ''
     }
   },
   computed: {
@@ -207,6 +217,13 @@ export default {
   },
   mounted() {
     document.title = this.$route.meta.title
+    // App 的互动通知会带上 date/reportId/commentId 跳进来，先把日期切过去再拉数据
+    const query = this.$route.query || {}
+    if (query.date) {
+      this.selectedDate = query.date
+    }
+    this.targetReportId = query.reportId || ''
+    this.targetCommentId = query.commentId || ''
     this.getUserInfo()
     this.getData()
 
@@ -288,6 +305,9 @@ export default {
         if (reportIds.length > 0) {
           await this.fetchInteractions(reportIds)
         }
+
+        // 评论要等互动数据回来才渲染得出，定位排在这后面
+        this.locateTarget()
 
       } catch (err) {
         console.error('获取数据失败', err)
@@ -414,6 +434,46 @@ export default {
         console.error('点赞失败', err)
         this.$message.error('操作失败，请重试')
       }
+    },
+
+    /**
+     * 从 App 互动通知跳进来时，滚到那条打卡并高亮，有 commentId 时把评论也高亮出来。
+     * 只认第一次加载，之后用户自己翻日期不再抢滚动位置。
+     */
+    locateTarget() {
+      const reportId = this.targetReportId
+      if (!reportId) {
+        return
+      }
+      const commentId = this.targetCommentId
+      this.targetReportId = ''
+      this.targetCommentId = ''
+
+      // 打卡可能已被删除，或者作者把它改成了不公开
+      if (!this.filteredData.some(item => item.id === reportId)) {
+        this.$message.warning('这条打卡已删除或未公开')
+        return
+      }
+
+      this.$set(this.showComments, reportId, true)
+      this.highlightReportId = reportId
+      this.highlightCommentId = commentId || ''
+
+      this.$nextTick(() => {
+        // 回复类通知直接落到那条评论上，其余落到打卡卡片
+        const el = (commentId && document.getElementById('checkin-comment-' + commentId))
+          || document.getElementById('checkin-card-' + reportId)
+        if (el && el.scrollIntoView) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      })
+
+      setTimeout(() => {
+        if (this.highlightReportId === reportId) {
+          this.highlightReportId = ''
+          this.highlightCommentId = ''
+        }
+      }, 3000)
     },
 
     // 切换评论输入框显示
@@ -695,6 +755,18 @@ export default {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   margin-bottom: 15px;
+  transition: box-shadow 0.4s ease, background-color 0.4s ease;
+}
+
+/* 从 App 互动通知跳进来时，短暂高亮目标打卡 */
+.checkin-card-highlight {
+  box-shadow: 0 0 0 2px #e6a23c, 0 2px 12px rgba(230, 162, 60, 0.35);
+}
+
+.comment-item-highlight {
+  background: #fdf6ec;
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px #f5dab1;
 }
 
 .checkin-header {
