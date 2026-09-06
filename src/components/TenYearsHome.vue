@@ -24,23 +24,6 @@
                 :src="require('../assets/img/tenyears_tips.jpg')"
                 fit="cover"/>
     </div>
-    <el-calendar v-model="calendarValue">
-      <template
-          slot="dateCell"
-          slot-scope="{data}">
-        <el-row
-            @click.native="onCalendarDayClick(data)"
-            :class="[
-              isFutureCalendarDay(data.day) ? 'disabled-color' : '',
-              isSelectedCalendarDay(data.day) ? 'calendar-selected-day' : ''
-            ]">
-          <div class="calendar-day" style="display:inline-block; font-size: 15px; margin-right: 5px">{{ data.day.split('-').slice(2).join('-') }}</div>
-          <span class="calendar-day-state" style="font-size: 18px" :class="getState(data) === '-' ? 'red' : 'green'">{{ getState(data) }}</span><br/>
-          <span class="calendar-day-note" style="font-size: 9px">{{ getDailyNoteFormat(data) }}</span>
-        </el-row>
-      </template>
-    </el-calendar>
-
     <el-card style="float: left; width: 100%;margin-top: 10px">
       <div style="float: left; margin-bottom: 10px;font-weight: bold;text-align: left">每日反省总结，今天精气神是长养的还是消耗的，心量是开阔了还是狭迫了，表述内容不超过日历框。</div>
       <el-radio-group v-model="state" style="margin-bottom: 10px;text-align: left">
@@ -228,6 +211,23 @@
         <el-button type="primary" @click="confirmAddTemplate()">确 定</el-button>
       </div>
     </el-dialog>
+
+    <el-calendar v-model="calendarValue">
+      <template
+          slot="dateCell"
+          slot-scope="{data}">
+        <el-row
+            @click.native="onCalendarDayClick(data)"
+            :class="[
+              isFutureCalendarDay(data.day) ? 'disabled-color' : '',
+              isSelectedCalendarDay(data.day) ? 'calendar-selected-day' : ''
+            ]">
+          <div class="calendar-day" style="display:inline-block; font-size: 15px; margin-right: 5px">{{ data.day.split('-').slice(2).join('-') }}</div>
+          <span class="calendar-day-state" style="font-size: 18px" :class="getState(data) === '-' ? 'red' : 'green'">{{ getState(data) }}</span><br/>
+          <span class="calendar-day-note" style="font-size: 9px">{{ getDailyNoteFormat(data) }}</span>
+        </el-row>
+      </template>
+    </el-calendar>
 
     <el-collapse v-model="this.planInfoFlag" @change="handlePlanInfoFlagChange" style="float: left; width: 100%;margin-top: 20px;margin-bottom: 15px">
       <el-collapse-item title="计划和总结" name="1">
@@ -2674,6 +2674,8 @@ a {
 
 /* 日历样式优化 */
 .tenyears-home-page .el-calendar {
+  /* 打卡卡片是浮动的，日历需清除浮动才会排在其下方 */
+  clear: both;
   background: white;
   border-radius: 10px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
