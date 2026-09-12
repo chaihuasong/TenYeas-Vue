@@ -30,134 +30,136 @@
          style="float: right;" @click="changeDailyReportTemplateMode" v-if="canEditDailyReportTemplate()"></i>
       <br/>
 
-      <div class="daily-report-list" style="margin-top: 20px;margin-bottom: 15px">
-        <el-row :gutter="5" v-for='(list,index) in reportLists' :key="list.title + '-' + index" style="margin-top: 5px">
-          <el-col :span="(zaoQiTimeVisible && list.title === '早起') || ( zaoShuiTimeVisible && list.title === '早睡') ? 5 : 7" v-if="!editDailyReportMode && list.title !== '宽两秒'" style="text-align: right;margin-top: 10px">
-            <span>{{ list.title }}</span>
-          </el-col>
-          <el-col :span="7" v-if="!editDailyReportMode && list.title === '宽两秒'" style="text-align: right;margin-top: 8px">
-            <el-select v-model="kuanLiangMiao" size="medium" class="kuanLiangMiaoStyle">
-              <el-option
-                  v-for="item in kuanLiangMiaoOptions"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value">
-              </el-option>
-            </el-select>
-          </el-col>
-          <el-col v-if="editDailyReportMode" :span="8" style="text-align: right">
-            <el-input v-model="list.title" placeholder="请输入项目" disabled></el-input>
-          </el-col>
-          <el-col :span="(list.title === '站桩' || list.title === '禅坐' || list.title === '静坐' || list.title === '诵读经典' || list.title === '经典学习' || list.title === '宽两秒') ? 4 : 7" v-if="(!editDailyReportMode  && list.title !== '早睡' && list.title !== '早起')">
-            <input class="dailyReportInfoInputStyle" type="text" inputmode="numeric" pattern="[0-9]*" v-model="list.value" placeholder="" @input="onDailyReportResultChange" />
-          </el-col>
-          <el-col :span="1" v-if="!editDailyReportMode && (list.title === '站桩') && zhanZhuangCount === 2" style="margin-top: 10px">
-            <span style="color: #909399">+</span>
-          </el-col>
-          <el-col :span="1" v-if="!editDailyReportMode && (list.title === '禅坐' || list.title === '静坐') && jingZuoCount === 2" style="margin-top: 10px;text-align: center">
-            <span style="color: #909399">+</span>
-          </el-col>
-          <el-col :span="list.title === '站桩' || list.title === '禅坐' || list.title === '静坐' ? 4 : 6" v-if="!editDailyReportMode && list.title === '站桩' && zhanZhuangCount === 2">
-            <input class="dailyReportInfoInputStyle" type="text" inputmode="numeric" pattern="[0-9]*" v-model="zhanZhuangValue2" @input="onDailyReportResultChange" />
-          </el-col>
-          <el-col :span="list.title === '站桩' || list.title === '禅坐' || list.title === '静坐' ? 4 : 6" v-if="!editDailyReportMode && (list.title === '禅坐' || list.title === '静坐') && jingZuoCount === 2">
-            <input class="dailyReportInfoInputStyle" type="text" inputmode="numeric" pattern="[0-9]*" v-model="jingzuoValue2" @input="onDailyReportResultChange" />
-          </el-col>
-          <el-col :span="2" v-if="!editDailyReportMode && (list.title === '站桩') && zhanZhuangCount === 1" style="margin-right: 15px">
-            <el-button icon="el-icon-plus" circle @click="addValue(list.title)"
-                       style="background: lightcyan;margin-top: 6px;" size="mini"></el-button>
-          </el-col>
-          <el-col :span="2" v-if="!editDailyReportMode && (list.title === '禅坐' || list.title === '静坐') && jingZuoCount === 1" style="margin-right: 15px">
-            <el-button icon="el-icon-plus" circle @click="addValue(list.title)"
-                       style="background: lightcyan;margin-top: 6px;" size="mini"></el-button>
-          </el-col>
-          <el-col :span="4" v-if="editDailyReportMode">
-            <el-input disabled/>
-          </el-col>
-          <el-col :span="8" v-if="editDailyReportMode">
-            <el-input v-model="list.unit" disabled></el-input>
-          </el-col>
-          <el-col :span="list.title === '宽两秒' ? 4 : 7" v-if="!editDailyReportMode && list.title !== '诵读经典' && list.title !== '经典学习' && list.title !== '早起' && list.title !== '早睡'" style="margin-top: 10px;text-align: left;padding: 0 0">
-            <span>{{ list.unit }}</span><span v-if="list.title === '宽两秒'">，总</span>
-          </el-col>
-          <el-col :span="6" v-if="!editDailyReportMode && (list.title === '诵读经典' || list.title === '经典学习')" class="sutraUnitCol">
-            <span>{{ list.unit }}</span><span v-if="list.title === '诵读经典'">，诵读</span><span v-if="list.title === '经典学习'">，学习</span>
-          </el-col>
-          <el-col :span="7" v-if="!editDailyReportMode && list.title === '诵读经典'" style="padding: 0 0">
-            <input class="dailyReportInfoInputTextStyle" v-model="sutraRead" @input="onDailyReportResultChange" />
-          </el-col>
-          <el-col :span="7" v-if="!editDailyReportMode && list.title === '经典学习'" style="padding: 0 0">
-            <input class="dailyReportInfoInputTextStyle" v-model="sutraStudy" @input="onDailyReportResultChange" />
-          </el-col>
-          <el-col :span="4" v-if="!editDailyReportMode && list.title === '宽两秒'" style="text-align: left;padding: 0 0">
-            <input class="dailyReportInfoInputStyle dailyReportInfoInputReadonly" type="text" v-model="kuanLiangMiaoCount" readonly />
-          </el-col>
-          <el-col :span="1" v-if="!editDailyReportMode && list.title === '宽两秒'" style="margin-top: 10px;text-align: left;padding: 0 0">
-            <span>次</span>
-          </el-col>
-          <el-col :span="4" v-if="editDailyReportMode">
-            <el-button icon="el-icon-minus" circle @click="del(index)"></el-button>
-          </el-col>
-          <el-col :span="8" v-if="!editDailyReportMode && list.title === '早睡'" class="zaoDoneCol">
-            <el-select v-model="zaoShuiValue" size="medium" class="zaoDoneSelect" @change="onZaoDoneChange(list.title)">
-              <el-option
-                  v-for="item in doneUndoneOptions"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value">
-              </el-option>
-            </el-select>
-            <el-button v-if="!zaoShuiTimeVisible" icon="el-icon-plus" circle @click="addTimeValue(list.title)"
-                       class="zaoDonePlusBtn" size="mini"></el-button>
-          </el-col>
-          <el-col :span="8" v-if="!editDailyReportMode && list.title === '早起'" class="zaoDoneCol">
-            <el-select v-model="zaoQiValue" size="medium" class="zaoDoneSelect" @change="onZaoDoneChange(list.title)">
-              <el-option
-                  v-for="item in doneUndoneOptions"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value">
-              </el-option>
-            </el-select>
-            <el-button v-if="!zaoQiTimeVisible" icon="el-icon-plus" circle @click="addTimeValue(list.title)"
-                       class="zaoDonePlusBtn" size="mini"></el-button>
-          </el-col>
+      <div class="daily-report-list">
+        <!-- 编辑模板模式 -->
+        <template v-if="editDailyReportMode">
+          <el-row :gutter="5" v-for='(list,index) in reportLists' :key="list.title + '-edit-' + index" style="margin-top: 5px">
+            <el-col :span="8" style="text-align: right">
+              <el-input v-model="list.title" placeholder="请输入项目" disabled></el-input>
+            </el-col>
+            <el-col :span="4">
+              <el-input disabled/>
+            </el-col>
+            <el-col :span="8">
+              <el-input v-model="list.unit" disabled></el-input>
+            </el-col>
+            <el-col :span="4">
+              <el-button icon="el-icon-minus" circle @click="del(index)"></el-button>
+            </el-col>
+          </el-row>
+        </template>
 
-          <el-col :span="5" v-if="!editDailyReportMode && list.title === '早起' && zaoQiTimeVisible">
-            <el-time-select
-                v-model="zaoQiTime"
-                class="zaoTimeSelect"
-                :editable="false"
-                size="medium"
-                style="width: 200%"
-                :picker-options="{
-                  start: '03:00',
-                  step: '00:15',
-                  end: '07:00'
-                }"
-                placeholder="选择时间"
-                @change="onDailyReportResultChange">
-            </el-time-select>
-          </el-col>
+        <!-- 打卡填写模式 -->
+        <template v-else>
+          <div class="report-row" v-for='(list,index) in reportLists' :key="list.title + '-' + index">
+            <div class="report-label">
+              <el-select v-if="list.title === '宽两秒'" v-model="kuanLiangMiao" size="medium" class="kuanLiangMiaoStyle">
+                <el-option
+                    v-for="item in kuanLiangMiaoOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value">
+                </el-option>
+              </el-select>
+              <span v-else>{{ list.title }}</span>
+            </div>
 
-          <el-col :span="5" v-if="!editDailyReportMode && list.title === '早睡' && zaoShuiTimeVisible">
-            <el-time-select
-                v-model="zaoShuiTime"
-                class="zaoTimeSelect"
-                :editable="false"
-                size="medium"
-                style="width: 200%"
-                :picker-options="{
-                  start: '19:00',
-                  step: '00:15',
-                  end: '23:00'
-                }"
-                placeholder="选择时间"
-                @change="onDailyReportResultChange">
-            </el-time-select>
-          </el-col>
+            <!-- 早起 / 早睡 -->
+            <div class="report-fields" v-if="list.title === '早起' || list.title === '早睡'">
+              <el-select v-if="list.title === '早起'" v-model="zaoQiValue" size="medium" class="zaoDoneSelect"
+                         @change="onZaoDoneChange(list.title)">
+                <el-option
+                    v-for="item in doneUndoneOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value">
+                </el-option>
+              </el-select>
+              <el-select v-else v-model="zaoShuiValue" size="medium" class="zaoDoneSelect"
+                         @change="onZaoDoneChange(list.title)">
+                <el-option
+                    v-for="item in doneUndoneOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value">
+                </el-option>
+              </el-select>
 
-        </el-row>
+              <el-time-select
+                  v-if="list.title === '早起' && zaoQiTimeVisible"
+                  v-model="zaoQiTime"
+                  class="zaoTimeSelect"
+                  :editable="false"
+                  size="medium"
+                  :picker-options="{
+                    start: '03:00',
+                    step: '00:15',
+                    end: '07:00'
+                  }"
+                  placeholder="选择时间"
+                  @change="onDailyReportResultChange">
+              </el-time-select>
+              <el-time-select
+                  v-if="list.title === '早睡' && zaoShuiTimeVisible"
+                  v-model="zaoShuiTime"
+                  class="zaoTimeSelect"
+                  :editable="false"
+                  size="medium"
+                  :picker-options="{
+                    start: '19:00',
+                    step: '00:15',
+                    end: '23:00'
+                  }"
+                  placeholder="选择时间"
+                  @change="onDailyReportResultChange">
+              </el-time-select>
+
+              <el-button v-if="list.title === '早起' && !zaoQiTimeVisible" icon="el-icon-plus" circle
+                         class="report-add-btn" size="mini" @click="addTimeValue(list.title)"></el-button>
+              <el-button v-if="list.title === '早睡' && !zaoShuiTimeVisible" icon="el-icon-plus" circle
+                         class="report-add-btn" size="mini" @click="addTimeValue(list.title)"></el-button>
+            </div>
+
+            <!-- 其它项目 -->
+            <div class="report-fields" v-else>
+              <input class="report-input report-input-num" type="text" inputmode="numeric" pattern="[0-9]*"
+                     v-model="list.value" @input="onDailyReportResultChange" />
+
+              <template v-if="list.title === '站桩' && zhanZhuangCount === 2">
+                <span class="report-plus">+</span>
+                <input class="report-input report-input-num" type="text" inputmode="numeric" pattern="[0-9]*"
+                       v-model="zhanZhuangValue2" @input="onDailyReportResultChange" />
+              </template>
+              <template v-if="(list.title === '禅坐' || list.title === '静坐') && jingZuoCount === 2">
+                <span class="report-plus">+</span>
+                <input class="report-input report-input-num" type="text" inputmode="numeric" pattern="[0-9]*"
+                       v-model="jingzuoValue2" @input="onDailyReportResultChange" />
+              </template>
+
+              <span class="report-unit">{{ list.unit }}</span>
+
+              <template v-if="list.title === '诵读经典' || list.title === '经典学习'">
+                <input v-if="list.title === '诵读经典'" class="report-input report-input-text"
+                       placeholder="诵读的经典" v-model="sutraRead" @input="onDailyReportResultChange" />
+                <input v-else class="report-input report-input-text"
+                       placeholder="学习的经典" v-model="sutraStudy" @input="onDailyReportResultChange" />
+              </template>
+
+              <template v-if="list.title === '宽两秒'">
+                <span class="report-unit">，总</span>
+                <input class="report-input report-input-num report-input-readonly" type="text"
+                       v-model="kuanLiangMiaoCount" readonly />
+                <span class="report-unit">次</span>
+              </template>
+
+              <el-button v-if="list.title === '站桩' && zhanZhuangCount === 1" icon="el-icon-plus" circle
+                         class="report-add-btn" size="mini" @click="addValue(list.title)"></el-button>
+              <el-button v-if="(list.title === '禅坐' || list.title === '静坐') && jingZuoCount === 1"
+                         icon="el-icon-plus" circle class="report-add-btn" size="mini"
+                         @click="addValue(list.title)"></el-button>
+            </div>
+          </div>
+        </template>
       </div>
       <el-row>
         <el-col :span="12">
@@ -2772,47 +2774,87 @@ a {
   -webkit-appearance: none;
   border-radius: 0;
 }
-.dailyReportInfoInputStyle {
-  border-left-width:0px;
-  border-top-width:0px;
-  border-right-width:0px;
-  border-bottom-width:1px;
-  border-bottom-color:lightgray;
-  width: 100%;
-  height: 100%;
-  font-size: 18px;
-  text-align: center;
-  margin: 10px 0;
-  padding: 0 0;
+.daily-report-list {
+  clear: both;
+  margin-top: 20px;
+  margin-bottom: 15px;
+}
+.report-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 2px 0;
+}
+.report-row + .report-row {
+  border-top: 1px solid #f5f7fa;
+}
+.report-label {
+  flex: none;
+  width: 88px;
+  text-align: left;
+  font-size: 15px;
+  color: #303133;
+  line-height: 1.2;
+}
+.report-fields {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.report-input {
+  border: none;
+  border-bottom: 1px solid #dcdfe6;
+  background: transparent;
+  height: 30px;
+  line-height: 30px;
+  color: #303133;
+  padding: 0;
+  margin: 0;
   -webkit-appearance: none;
   border-radius: 0;
+  outline: none;
 }
-.dailyReportInfoInputReadonly {
-  background: transparent;
+.report-input:focus {
+  border-bottom-color: #409eff;
+}
+.report-input::placeholder {
+  color: #c0c4cc;
+  font-size: 13px;
+}
+.report-input-num {
+  flex: 0 1 52px;
+  min-width: 0;
+  font-size: 16px;
+  text-align: center;
+}
+.report-input-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  text-align: center;
+}
+.report-input-readonly {
   color: #909399;
 }
-.dailyReportInfoInputTextStyle {
-  border-left-width:0px;
-  border-top-width:0px;
-  border-right-width:0px;
-  border-bottom-width:1px;
-  border-bottom-color:lightgray;
-  width: 100%;
-  height: 100%;
+.report-unit {
+  flex: none;
   font-size: 14px;
-  text-align: center;
-  margin: 15px 0;
-  padding: 0 0;
-  -webkit-appearance: none;
-  border-radius: 0;
-  min-width: 0;
-}
-.sutraUnitCol {
-  margin-top: 10px;
-  text-align: center;
-  padding: 0;
+  color: #606266;
   white-space: nowrap;
+}
+.report-plus {
+  flex: none;
+  color: #909399;
   font-size: 14px;
+}
+.report-add-btn {
+  flex: none;
+  margin-left: 2px;
+  background: lightcyan;
 }
 .daily-report-list .el-col {
   min-width: 0;
@@ -2821,26 +2863,20 @@ a {
   padding-left: 8px;
   padding-right: 8px;
 }
-.zaoDoneCol {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.zaoTimeSelect {
+  flex: 0 1 130px;
+  min-width: 0;
 }
 .zaoTimeSelect .el-input__inner {
   padding-left: 30px;
 }
 .zaoDoneSelect {
-  width: 80px;
-  flex-shrink: 0;
+  flex: none;
+  width: 82px;
   font-size: 16px;
 }
-.zaoDonePlusBtn {
-  flex-shrink: 0;
-  background: lightcyan;
-}
 .kuanLiangMiaoStyle {
-  width: auto;
-  min-width: 80px;
+  width: 100%;
   font-size: 16px;
   vertical-align: middle;
 }
@@ -2848,12 +2884,12 @@ a {
   border: none;
   background: transparent;
   padding-left: 0;
-  padding-right: 25px;
-  text-align: right;
+  padding-right: 18px;
+  text-align: left;
   height: 28px;
   line-height: 28px;
-  color: #000000;
-  font-size: 14px;
+  color: #303133;
+  font-size: 15px;
 }
 .kuanLiangMiaoStyle .el-input__suffix {
   right: 0;
@@ -2917,5 +2953,4 @@ a {
   margin: 0;
   transform: translate(-50%, -50%);
 }
-</style>
 </style>
