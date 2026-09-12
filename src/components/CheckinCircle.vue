@@ -55,7 +55,12 @@
       </div>
 
       <div v-else-if="filteredData.length > 0" class="checkin-list">
-        <div v-for="item in filteredData" :key="item.id" :id="'checkin-card-' + item.id"
+        <template v-for="group in groupedData">
+        <div v-if="showDayDivider" :key="'day-' + group.date" class="day-divider">
+          <span class="day-label">{{ formatDayLabel(group.date) }}</span>
+          <span class="day-count">{{ group.items.length }} 条</span>
+        </div>
+        <div v-for="item in group.items" :key="item.id" :id="'checkin-card-' + item.id"
              class="checkin-card"
              :class="{ 'checkin-card-highlight': item.id === highlightReportId }">
           <div class="checkin-header">
@@ -145,24 +150,26 @@
             </div>
           </div>
         </div>
+        </template>
       </div>
 
       <div v-else class="empty-state">
         <el-image :src="require('../assets/img/empty.png')" class="empty-img"/>
         <div class="empty-text">{{ selectedDate === today ? '今天还没有人打卡' : '这一天没有打卡记录' }}</div>
-        <div class="empty-hint">快去打卡成为今天第一个吧</div>
+        <div class="empty-hint">{{ hasMore ? '点下面的「加载更多」，往前看看之前几天' : '快去打卡成为今天第一个吧' }}</div>
         <el-button type="primary" round @click="$router.push('/tenyearsHome')">
           <i class="el-icon-edit"></i> 去打卡
         </el-button>
       </div>
     </div>
 
-    <!-- 加载更多 -->
-    <div v-if="!loading && filteredData.length > 0 && hasMore" class="load-more">
+    <!-- 加载更多：按天往前翻，每点一次往前找一天有打卡的记录 -->
+    <div v-if="!loading && hasMore" class="load-more">
       <el-button type="text" @click="loadMore" :loading="loadingMore">
-        {{ loadingMore ? '加载中...' : '加载更多' }}
+        {{ loadingMore ? '加载中...' : '加载更多（看前一天）' }}
       </el-button>
     </div>
+    <div v-else-if="!loading && filteredData.length > 0" class="list-end">— 已经到底啦 —</div>
 
     <!-- 底部间距 -->
     <div style="height: 80px;"></div>
@@ -173,10 +180,31 @@
 import axios from 'axios'
 import global from '@/components/Common'
 
+// 打卡圈按天翻页：点一次「加载更多」最多往前探这么多天，
+// 中间没人打卡的空白日直接跳过，免得点了一下页面毫无变化。
+const MAX_DAYS_PER_LOAD = 7
+// 十年持志从 2021 年开始，再往前没有数据，翻到这里就收尾
+const EARLIEST_DATE = '2021-01-01'
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
+// 后端有时给的是 2021-1-5 这种没补零的日期，补齐后才能按字符串比较和分组
+function normalizeDate(dateStr) {
+  if (!dateStr) return ''
+  const parts = String(dateStr).trim().split('-')
+  if (parts.length !== 3) return String(dateStr).trim()
+  return `${parts[0]}-${String(parts[1]).padStart(2, '0')}-${String(parts[2]).padStart(2, '0')}`
+}
+
+// 取本地今天：toISOString 是 UTC，东八区早上 8 点前会算成昨天
+function localToday() {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+}
+
 export default {
   name: 'CheckinCircle',
   data() {
-    const today = new Date().toISOString().split('T')[0]
+    const today = localToday()
     return {
       serverUrl: global.httpUrl,
       unionid: '',
@@ -188,8 +216,10 @@ export default {
       loadingMore: false,
       selectedDate: today,
       today: today,
-      page: 1,
-      pageSize: 20,
+      // 已加载的最早一天，「加载更多」从这天继续往前翻
+      earliestDate: today,
+      // 每次换日期自增，切日期时把在途请求的返回作废，避免串日期
+      loadToken: 0,
       hasMore: true,
       todayCount: 0,
       publicCount: 0,
@@ -210,6 +240,24 @@ export default {
       // 只显示公开用户的打卡
       return this.datas.filter(item => item.open === '1')
     },
+    // 按天分组，日期新的在上，便于「加载更多」翻出来的前几天看得出分界
+    groupedData() {
+      const groups = []
+      const byDate = {}
+      this.filteredData.forEach(item => {
+        const date = item.date || this.selectedDate
+        if (!byDate[date]) {
+          byDate[date] = { date, items: [] }
+          groups.push(byDate[date])
+        }
+        byDate[date].items.push(item)
+      })
+      return groups.sort((a, b) => (a.date < b.date ? 1 : -1))
+    },
+    // 只翻了选中那一天时，日期已经写在顶部统计里，不再重复一条分界
+    showDayDivider() {
+      return this.earliestDate !== this.selectedDate
+    },
     displayAvatar() {
       // 优先使用上传的头像，其次使用微信头像
       return this.avatarUrl || this.headimgurl || ''
@@ -219,8 +267,9 @@ export default {
     document.title = this.$route.meta.title
     // App 的互动通知会带上 date/reportId/commentId 跳进来，先把日期切过去再拉数据
     const query = this.$route.query || {}
-    if (query.date) {
-      this.selectedDate = query.date
+    const queryDate = normalizeDate(query.date)
+    if (DATE_PATTERN.test(queryDate)) {
+      this.selectedDate = queryDate
     }
     this.targetReportId = query.reportId || ''
     this.targetCommentId = query.commentId || ''
@@ -265,55 +314,72 @@ export default {
       }
     },
 
+    // 拉某一天的打卡，并把用户、模板、互动数据一并补齐
+    async loadDay(date) {
+      const res = await axios.get(`${this.serverUrl}getReportInfoByDate?date=${date}`)
+      const reports = res.data || []
+      if (reports.length === 0) return []
+
+      // 获取所有用户信息和模板信息
+      const userIds = [...new Set(reports.map(r => r.userId))]
+      const templateIds = [...new Set(reports.map(r => r.templateId).filter(id => id))]
+      const [userMap, templateMap] = await Promise.all([
+        this.fetchUserInfos(userIds),
+        this.fetchTemplates(templateIds)
+      ])
+
+      // 合并用户信息和模板信息
+      const items = reports.map(report => {
+        const templates = templateMap[report.templateId] || []
+        const templateData = {}
+        templates.forEach((t, i) => {
+          templateData['template' + (i + 1)] = t
+        })
+        return {
+          ...report,
+          ...userMap[report.userId],
+          ...templateData,
+          // 分组按日期走，后端个别记录缺 date 时兜底成查询的那天
+          date: normalizeDate(report.date) || date
+        }
+      })
+
+      // 获取互动数据
+      const reportIds = reports.map(r => r.id).filter(id => id)
+      if (reportIds.length > 0) {
+        await this.fetchInteractions(reportIds)
+      }
+
+      return items
+    },
+
     async getData() {
+      const token = ++this.loadToken
       this.loading = true
-      this.page = 1
-      this.hasMore = true
+      this.loadingMore = false
+      this.datas = []
+      this.earliestDate = this.selectedDate
+      this.hasMore = this.selectedDate > EARLIEST_DATE
 
       try {
-        const res = await axios.get(`${this.serverUrl}getReportInfoByDate?date=${this.selectedDate}`)
-        const reports = res.data || []
+        const items = await this.loadDay(this.selectedDate)
+        // 请求返回前用户又换了日期，这批数据已经不属于当前视图
+        if (token !== this.loadToken) return
+        this.datas = items
 
-        // 获取所有用户信息
-        const userIds = [...new Set(reports.map(r => r.userId))]
-        const userMap = await this.fetchUserInfos(userIds)
-
-        // 获取所有模板信息
-        const templateIds = [...new Set(reports.map(r => r.templateId).filter(id => id))]
-        const templateMap = await this.fetchTemplates(templateIds)
-
-        // 合并用户信息和模板信息
-        this.datas = reports.map(report => {
-          const templates = templateMap[report.templateId] || []
-          const templateData = {}
-          templates.forEach((t, i) => {
-            templateData['template' + (i + 1)] = t
-          })
-          return {
-            ...report,
-            ...userMap[report.userId],
-            ...templateData
-          }
-        })
-
-        // 统计
-        this.todayCount = reports.length
-        this.publicCount = this.datas.filter(d => d.open === '1').length
-
-        // 获取互动数据
-        const reportIds = reports.map(r => r.id).filter(id => id)
-        if (reportIds.length > 0) {
-          await this.fetchInteractions(reportIds)
-        }
+        // 统计只反映选中的那天，「加载更多」翻出来的前几天各自有分组标题
+        this.todayCount = items.length
+        this.publicCount = items.filter(d => d.open === '1').length
 
         // 评论要等互动数据回来才渲染得出，定位排在这后面
         this.locateTarget()
 
       } catch (err) {
+        if (token !== this.loadToken) return
         console.error('获取数据失败', err)
         this.$message.error('加载失败，请重试')
       } finally {
-        this.loading = false
+        if (token === this.loadToken) this.loading = false
       }
     },
 
@@ -379,20 +445,57 @@ export default {
       this.getData()
     },
 
+    // 往前推一天，入参和返回都是 yyyy-MM-dd
+    previousDate(date) {
+      const [year, month, day] = date.split('-').map(Number)
+      // 用 UTC 构造，避开本地时区把日期算差一天
+      const d = new Date(Date.UTC(year, month - 1, day - 1))
+      return d.toISOString().split('T')[0]
+    },
+
+    formatDayLabel(date) {
+      const suffix = date === this.today
+        ? ' 今天'
+        : (date === this.previousDate(this.today) ? ' 昨天' : '')
+      const [, month, day] = date.split('-')
+      return `${Number(month)}月${Number(day)}日${suffix}`
+    },
+
+    // 按天往前翻：一次最多探 MAX_DAYS_PER_LOAD 天，跳过没有公开打卡的空白日
     async loadMore() {
       if (this.loadingMore || !this.hasMore) return
 
+      const token = this.loadToken
       this.loadingMore = true
-      this.page++
-
       try {
-        // 目前按日期加载，所以没有更多数据的概念
-        // 如果后续需要分页可以扩展
-        this.hasMore = false
+        let date = this.earliestDate
+        let appended = 0
+
+        for (let i = 0; i < MAX_DAYS_PER_LOAD && appended === 0; i++) {
+          date = this.previousDate(date)
+          const items = await this.loadDay(date)
+          // 翻的过程中用户换了日期，剩下的结果全部丢弃，别混进新那天的列表
+          if (token !== this.loadToken) return
+          this.earliestDate = date
+          if (items.length > 0) {
+            this.datas = this.datas.concat(items)
+            appended = items.filter(item => item.open === '1').length
+          }
+          if (date <= EARLIEST_DATE) {
+            this.hasMore = false
+            break
+          }
+        }
+
+        if (appended === 0 && this.hasMore) {
+          this.$message(`${this.formatDayLabel(this.earliestDate)}之后这几天没有公开打卡，再点一次继续往前看`)
+        }
       } catch (err) {
+        if (token !== this.loadToken) return
         console.error('加载更多失败', err)
+        this.$message.error('加载失败，请重试')
       } finally {
-        this.loadingMore = false
+        if (token === this.loadToken) this.loadingMore = false
       }
     },
 
@@ -748,6 +851,25 @@ export default {
   flex-direction: column;
 }
 
+/* 按天分组的分界线 */
+.day-divider {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px 10px;
+}
+
+.day-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #606266;
+}
+
+.day-count {
+  font-size: 12px;
+  color: #c0c4cc;
+}
+
 /* 打卡卡片 */
 .checkin-card {
   background: white;
@@ -894,6 +1016,13 @@ export default {
 .load-more {
   text-align: center;
   padding: 20px;
+}
+
+.list-end {
+  text-align: center;
+  padding: 20px;
+  font-size: 13px;
+  color: #c0c4cc;
 }
 
 /* 互动区域 */
