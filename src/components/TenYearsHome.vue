@@ -2863,6 +2863,15 @@ a {
   padding-left: 8px;
   padding-right: 8px;
 }
+/* 编辑模板时项目名和单位是固定的，只能增删行，不能改字。
+   全局那条 .el-input.is-disabled 规则把 disabled 输入框改成了黑字白底
+   （十年立志那几个只读 textarea 需要它），这里局部还原成灰色不可编辑的观感。 */
+.daily-report-list .el-input.is-disabled .el-input__inner {
+  color: #909399;
+  background: #f5f7fa;
+  border-color: #e4e7ed;
+  cursor: not-allowed;
+}
 .zaoTimeSelect {
   flex: 0 1 130px;
   min-width: 0;
