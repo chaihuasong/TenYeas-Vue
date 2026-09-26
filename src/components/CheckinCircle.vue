@@ -122,7 +122,7 @@
                    :id="'checkin-comment-' + comment.id"
                    class="comment-item"
                    :class="{ 'comment-item-highlight': comment.id === highlightCommentId }">
-                <span class="comment-author">{{ comment.nickname }}</span>
+                <span class="comment-author">{{ comment.nickname || '匿名用户' }}</span>
                 <span v-if="comment.replyToNickname" class="comment-reply">
                   回复 <span class="reply-to">{{ comment.replyToNickname }}</span>
                 </span>
@@ -399,8 +399,10 @@ export default {
 
         results.forEach(({ id, data }) => {
           if (data) {
+            // 打卡圈展示用昵称。微信昵称没填时，用立志卡姓名，避免显示成匿名用户
+            const nickname = String(data.nickname || '').trim() || String(data.name || '').trim()
             userMap[id] = {
-              nickname: data.nickname,
+              nickname,
               headimgurl: data.avatarUrl || data.headimgurl,
               province: data.province,
               open: data.open,
@@ -508,10 +510,62 @@ export default {
       try {
         const url = `${this.serverUrl}getInteractions?reportIds=${reportIds.join(',')}&userId=${this.unionid || ''}`
         const res = await axios.get(url)
-        this.interactions = { ...this.interactions, ...res.data }
+        const data = res.data || {}
+        // 点赞、评论有时只记下了 userId，昵称是空的，按用户资料补上再渲染
+        await this.fillMissingNicknames(data)
+        this.interactions = { ...this.interactions, ...data }
       } catch (err) {
         console.error('获取互动数据失败', err)
       }
+    },
+
+    // 互动记录里的昵称是发帖当时带上的。页面刚打开时用户资料还没回来，
+    // 这时点赞或评论会把空昵称存进去，之后就只剩 userId。这里用资料里的昵称补上。
+    async fillMissingNicknames(interactions) {
+      const missingIds = new Set()
+      const collect = (entry) => {
+        if (entry && entry.userId && !String(entry.nickname || '').trim()) {
+          missingIds.add(entry.userId)
+        }
+        if (entry && entry.replyToUserId && !String(entry.replyToNickname || '').trim()) {
+          missingIds.add(entry.replyToUserId)
+        }
+      }
+      Object.values(interactions).forEach(item => {
+        if (!item) return
+        ;(item.comments || []).forEach(collect)
+        ;(item.likes || []).forEach(collect)
+      })
+      if (missingIds.size === 0) return
+
+      const userMap = await this.fetchUserInfos([...missingIds])
+      const nameOf = (userId) => {
+        const info = userMap[userId]
+        return (info && info.nickname) || ''
+      }
+      const apply = (entry) => {
+        if (!entry) return
+        if (entry.userId && !String(entry.nickname || '').trim()) {
+          const name = nameOf(entry.userId)
+          if (name) entry.nickname = name
+        }
+        if (entry.replyToUserId && !String(entry.replyToNickname || '').trim()) {
+          const name = nameOf(entry.replyToUserId)
+          if (name) entry.replyToNickname = name
+        }
+      }
+      Object.values(interactions).forEach(item => {
+        if (!item) return
+        ;(item.comments || []).forEach(apply)
+        ;(item.likes || []).forEach(apply)
+      })
+    },
+
+    // 点赞、评论要把昵称一起提交。资料还在请求时先等它回来，避免再存一条空名字。
+    async ensureNickname() {
+      if (this.nickname) return this.nickname
+      await this.getUserInfo()
+      return this.nickname
     },
 
     // 点赞/取消点赞
@@ -520,6 +574,8 @@ export default {
         this.$message.warning('请先登录')
         return
       }
+
+      await this.ensureNickname()
 
       try {
         await axios.post(`${this.serverUrl}toggleLike`, null, {
@@ -599,6 +655,8 @@ export default {
         this.$message.warning('请先登录')
         return
       }
+
+      await this.ensureNickname()
 
       try {
         const comment = {
