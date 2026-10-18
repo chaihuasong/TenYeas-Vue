@@ -672,9 +672,10 @@ export default {
 
         await axios.post(`${this.serverUrl}addComment`, comment)
 
-        // 清空输入和回复状态
+        // 清空输入和回复状态，评论发出去后收起输入框
         this.$set(this.commentInputs, reportId, '')
         this.replyingTo = null
+        this.$set(this.showComments, reportId, false)
 
         // 刷新互动数据
         await this.fetchInteractions([reportId])
