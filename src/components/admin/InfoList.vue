@@ -103,8 +103,8 @@
         <template slot-scope="scope">
           <el-image
               style="width: 60px; height: 120px"
-              :src="'http://htzchina.org/imgs/tenyears/' + scope.row.path"
-              :preview-src-list="['http://htzchina.org/imgs/tenyears/' + scope.row.path]"
+              :src="'http://app.htzchina.org/imgs/tenyears/' + scope.row.path"
+              :preview-src-list="['http://app.htzchina.org/imgs/tenyears/' + scope.row.path]"
               :fit="none" />
         </template>
       </el-table-column>

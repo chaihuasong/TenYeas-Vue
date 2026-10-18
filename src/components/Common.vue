@@ -1,6 +1,6 @@
 <script type="text/javascript">
 // 定义一些公共的属性和方法
-const httpUrl = 'http://htzchina.org:8081/'
+const httpUrl = 'http://app.htzchina.org:8081/'
 // const httpUrl = 'http://localhost:8081/'
 const ossUrl = 'https://htz-storage.oss-cn-shanghai.aliyuncs.com'
 

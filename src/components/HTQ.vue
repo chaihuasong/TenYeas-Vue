@@ -104,7 +104,7 @@ export default {
   methods: {
     getImageUrl(path) {
       if (!path) return ''
-      return `http://htzchina.org/imgs/tenyears/${path}`
+      return `http://app.htzchina.org/imgs/tenyears/${path}`
     },
 
     async getUserInfo() {

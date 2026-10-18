@@ -217,8 +217,8 @@ function getOpenId() {
 // Common.vue
 const wechatConfig = {
   appId: 'wx83aec75c3ca58f0e',
-  shareLink: 'http://htzchina.org/tenyears/#/dailyReport',
-  shareIcon: 'http://htzchina.org/imgs/huangtingshuyuan.png',
+  shareLink: 'http://app.htzchina.org/tenyears/#/dailyReport',
+  shareIcon: 'http://app.htzchina.org/imgs/huangtingshuyuan.png',
 }
 ```
 

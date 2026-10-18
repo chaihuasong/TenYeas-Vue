@@ -204,7 +204,7 @@ export default {
           this.loading = false
         });
       } else {
-        window.location.href = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx83aec75c3ca58f0e&redirect_uri=http://htzchina.org/wc_redirect3&response_type=code&scope=snsapi_base&state=123#wechat_redirect"
+        window.location.href = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx83aec75c3ca58f0e&redirect_uri=http://app.htzchina.org/wc_redirect3&response_type=code&scope=snsapi_base&state=123#wechat_redirect"
       }
     },
     submit() {
@@ -319,8 +319,8 @@ export default {
         wx.onMenuShareAppMessage({
           title: '黄庭书院"养气功课"打卡', // 分享标题
           desc: '让我们一起 抱团成长~', // 分享描述
-          link: "http://htzchina.org/tenyears/#/dailyReport", // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
-          imgUrl: 'http://htzchina.org/imgs/huangtingshuyuan.png', // 分享图标
+          link: "http://app.htzchina.org/tenyears/#/dailyReport", // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
+          imgUrl: 'http://app.htzchina.org/imgs/huangtingshuyuan.png', // 分享图标
           success: function () {
             // 设置成功
             console.log("分享设置成功");
@@ -329,8 +329,8 @@ export default {
         wx.onMenuShareTimeline({
           title: '黄庭书院"养气功课"打卡', // 分享标题
           desc: '让我们一起 抱团成长~', // 分享描述
-          link: "http://htzchina.org/tenyears/#/dailyReport", // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
-          imgUrl: 'http://htzchina.org/imgs/huangtingshuyuan.png', // 分享图标
+          link: "http://app.htzchina.org/tenyears/#/dailyReport", // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
+          imgUrl: 'http://app.htzchina.org/imgs/huangtingshuyuan.png', // 分享图标
           success: function () {
             // 用户点击了分享后执行的回调函数
             console.log("分享到朋友圈设置成功");

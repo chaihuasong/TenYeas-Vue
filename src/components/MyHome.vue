@@ -237,7 +237,7 @@ export default {
     return {
       serverUrl: global.httpUrl,
       ossUrl: global.ossUrl,
-      akskUrl: 'http://htzchina.org/api-proxy/getaksk',
+      akskUrl: 'http://app.htzchina.org/api-proxy/getaksk',
       name: '',
       gender: '1',
       telephone: '',

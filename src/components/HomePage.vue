@@ -9,25 +9,25 @@
 
     <nav style="margin-top: 20px;margin-bottom: 20px">
       <div style="width: 20%;margin-left: 4%">
-        <a href="http://neixinchan.org:9998/#/" style="text-decoration:none;">
+        <a href="http://app.neixinchan.org:9998/#/" style="text-decoration:none;">
           <img src="http://wechatappdev-10011692.picsh.myqcloud.com/image/column_kind/icon_9.png?imageView2/q/80"/>
           <div>经典搜索</div>
         </a>
       </div>
       <div style="width: 20%;margin-left: 4%">
-        <a href="http://htzchina.org/tenyears/#/index" style="text-decoration:none;">
+        <a href="http://app.htzchina.org/tenyears/#/index" style="text-decoration:none;">
           <img src="http://wechatappdev-10011692.picsh.myqcloud.com/image/column_kind/icon_1.png?imageView2/q/80"/>
           <div>十年立志</div>
         </a>
       </div>
       <div style="width: 20%;margin-left: 4%">
-        <a href="http://htzchina.org/tenyears/#/error" style="text-decoration:none;">
+        <a href="http://app.htzchina.org/tenyears/#/error" style="text-decoration:none;">
           <img src="http://wechatappdev-10011692.picsh.myqcloud.com/image/column_kind/icon_8.png?imageView2/q/80"/>
           <div>家长课堂</div>
         </a>
       </div>
       <div style="width: 20%;margin-left: 4%">
-        <a href="http://htzchina.org/tenyears/#/error" style="text-decoration:none;">
+        <a href="http://app.htzchina.org/tenyears/#/error" style="text-decoration:none;">
           <img src="http://wechatappdev-10011692.picsh.myqcloud.com/image/column_kind/icon_15.png?imageView2/q/80"/>
           <div>线下课程</div>
         </a>
@@ -189,7 +189,7 @@ export default {
         console.log("begin axios...")
         axios({
           method: "GET",
-          url: "http://htzchina.org:8081/getUserInfo?openid=" + openid,
+          url: "http://app.htzchina.org:8081/getUserInfo?openid=" + openid,
           data: null,
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -219,13 +219,13 @@ export default {
           }
         });
       } else {
-        window.location.href = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx83aec75c3ca58f0e&redirect_uri=http://htzchina.org/wc_redirect2&response_type=code&scope=snsapi_base&state=123#wechat_redirect"
+        window.location.href = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx83aec75c3ca58f0e&redirect_uri=http://app.htzchina.org/wc_redirect2&response_type=code&scope=snsapi_base&state=123#wechat_redirect"
       }
     },
     getUserInfoByUnionId() {
       axios({
         method: "GET",
-        url: "http://htzchina.org:8081/getById?id=" + this.unionid,
+        url: "http://app.htzchina.org:8081/getById?id=" + this.unionid,
         data: null,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
