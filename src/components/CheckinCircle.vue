@@ -179,6 +179,7 @@
 <script>
 import axios from 'axios'
 import global from '@/components/Common'
+import { signOssUrl } from '@/utils/oss'
 
 // 打卡圈按天翻页：点一次「加载更多」最多往前探这么多天，
 // 中间没人打卡的空白日直接跳过，免得点了一下页面毫无变化。
@@ -307,7 +308,15 @@ export default {
         if (res.data) {
           this.nickname = res.data.nickname || ''
           this.headimgurl = res.data.headimgurl || ''
-          this.avatarUrl = res.data.avatarUrl || ''
+          const rawAvatar = res.data.avatarUrl || ''
+          this.avatarUrl = rawAvatar
+          if (rawAvatar) {
+            signOssUrl(rawAvatar).then(signed => {
+              this.avatarUrl = signed
+            }).catch(err => {
+              console.error('头像签名失败', err)
+            })
+          }
         }
       } catch (err) {
         console.error('获取用户信息失败', err)
@@ -397,19 +406,27 @@ export default {
 
         const results = await Promise.all(promises)
 
-        results.forEach(({ id, data }) => {
-          if (data) {
-            // 打卡圈展示用昵称。微信昵称没填时，用立志卡姓名，避免显示成匿名用户
-            const nickname = String(data.nickname || '').trim() || String(data.name || '').trim()
-            userMap[id] = {
-              nickname,
-              headimgurl: data.avatarUrl || data.headimgurl,
-              province: data.province,
-              open: data.open,
-              info: data.info
+        await Promise.all(results.map(async ({ id, data }) => {
+          if (!data) return
+          // 打卡圈展示用昵称。微信昵称没填时，用立志卡姓名，避免显示成匿名用户
+          const nickname = String(data.nickname || '').trim() || String(data.name || '').trim()
+          const rawAvatar = data.avatarUrl || data.headimgurl || ''
+          let headimgurl = rawAvatar
+          if (rawAvatar && rawAvatar.indexOf('htz-storage') !== -1) {
+            try {
+              headimgurl = await signOssUrl(rawAvatar)
+            } catch (err) {
+              console.error('头像签名失败', err)
             }
           }
-        })
+          userMap[id] = {
+            nickname,
+            headimgurl,
+            province: data.province,
+            open: data.open,
+            info: data.info
+          }
+        }))
       } catch (err) {
         console.error('获取用户信息失败', err)
       }

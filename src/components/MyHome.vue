@@ -177,7 +177,7 @@
           </div>
           <div class="setting-right">
             <span class="setting-status" :class="{ active: open }">
-              {{ open ? '已公开' : '已隐藏' }}
+              {{ open ? '已公开' : '仅组内' }}
             </span>
             <el-switch
               v-model="open"
@@ -229,15 +229,13 @@
 import axios from 'axios'
 import qs from "qs";
 import global from "@/components/Common";
-import OSS from 'ali-oss'
+import { uploadToOss, signOssUrl } from "@/utils/oss";
 
 export default {
   name: 'MyHome',
   data() {
     return {
       serverUrl: global.httpUrl,
-      ossUrl: global.ossUrl,
-      akskUrl: 'http://app.htzchina.org/api-proxy/getaksk',
       name: '',
       gender: '1',
       telephone: '',
@@ -305,49 +303,21 @@ export default {
       })
 
       try {
-        // 1. 获取 AK/SK
-        const akskRes = await axios.get(this.akskUrl, {
-          params: { appName: 'htz-oss' }
-        })
-
-        if (!akskRes.data || !akskRes.data.data) {
-          throw new Error('获取上传凭证失败')
-        }
-
-        const akskData = JSON.parse(akskRes.data.data)
-        const accessKeyId = akskData.accessKey
-        const accessKeySecret = akskData.accessKeySecure
-
-        // 2. 创建 OSS 客户端
-        const client = new OSS({
-          region: 'oss-cn-shanghai',
-          accessKeyId: accessKeyId,
-          accessKeySecret: accessKeySecret,
-          bucket: 'htz-storage'
-        })
-
-        // 3. 生成文件名
         const ext = file.name.split('.').pop() || 'jpg'
         const objectKey = `avatars/${this.unionid}_${Date.now()}.${ext}`
+        const uploaded = await uploadToOss(objectKey, file)
 
-        // 4. 上传到 OSS
-        await client.put(objectKey, file)
-
-        // 5. 生成访问 URL
-        const avatarUrl = `${this.ossUrl}/${objectKey}`
-
-        // 6. 更新用户头像 URL 到后端
         const updateData = qs.stringify({
           id: this.unionid,
           gender: this.gender,
-          avatarUrl: avatarUrl
+          avatarUrl: uploaded.stableUrl
         })
 
         await axios.post(`${this.serverUrl}update`, updateData, {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         })
 
-        this.avatarUrl = avatarUrl
+        this.avatarUrl = uploaded.signedUrl
         this.$message.success('头像更新成功')
       } catch (err) {
         console.error('上传头像失败:', err)
@@ -372,7 +342,15 @@ export default {
             const data = res.data
             this.name = data.name || ''
             this.headimgurl = data.headimgurl || ''
-            this.avatarUrl = data.avatarUrl || ''
+            const rawAvatar = data.avatarUrl || ''
+            this.avatarUrl = rawAvatar
+            if (rawAvatar) {
+              signOssUrl(rawAvatar).then(signed => {
+                this.avatarUrl = signed
+              }).catch(err => {
+                console.error('头像签名失败:', err)
+              })
+            }
             this.gender = data.gender === undefined || data.gender === null || data.gender === '' ? '1' : String(data.gender)
             this.wechatgroup = data.wechatgroup || ''
             this.telephone = data.telephone || ''
@@ -451,7 +429,7 @@ export default {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       })
         .then(() => {
-          this.$quickMessage(this.open ? "内容已公开" : "内容已隐藏")
+          this.$quickMessage(this.open ? "内容已公开" : "打卡圈不展示，仅同组内可见")
         })
     },
 
