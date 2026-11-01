@@ -5,14 +5,12 @@
       <div class="profile-bg"></div>
       <div class="profile-content">
         <div class="avatar-wrapper" @click="triggerAvatarUpload">
-          <el-image
-            class="avatar"
-            :src="displayAvatar"
-            fit="cover">
-            <div slot="error" class="avatar-error">
+          <div class="avatar">
+            <img v-if="shownAvatar" class="avatar-img" :src="shownAvatar" alt="">
+            <div v-else class="avatar-fallback">
               <i class="el-icon-user"></i>
             </div>
-          </el-image>
+          </div>
           <div class="avatar-edit-icon">
             <i class="el-icon-camera"></i>
           </div>
@@ -255,6 +253,7 @@ export default {
       openid: '',
       headimgurl: '',
       avatarUrl: '',
+      shownAvatar: '',
       country: '',
       province: '',
       city: '',
@@ -267,11 +266,6 @@ export default {
       showClearCacheDialog: false
     };
   },
-  computed: {
-    displayAvatar() {
-      return this.avatarUrl || this.headimgurl || ''
-    }
-  },
   mounted() {
     document.title = this.$route.meta.title
     this.getData()
@@ -279,6 +273,62 @@ export default {
   methods: {
     triggerAvatarUpload() {
       this.$refs.avatarInput.click()
+    },
+
+    presentAvatar(url) {
+      if (!url || url === this.shownAvatar) return
+      this._wantedAvatar = url
+      const img = new Image()
+      img.onload = () => {
+        if (this._wantedAvatar !== url) return
+        this.shownAvatar = url
+      }
+      img.src = url
+      if (img.complete && img.naturalWidth > 0) {
+        this.shownAvatar = url
+      }
+    },
+
+    compressAvatar(file) {
+      const maxSide = 640
+      const draw = (source, width, height) => {
+        const scale = Math.min(1, maxSide / Math.max(width, height))
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.max(1, Math.round(width * scale))
+        canvas.height = Math.max(1, Math.round(height * scale))
+        canvas.getContext('2d').drawImage(source, 0, 0, canvas.width, canvas.height)
+        return new Promise((resolve, reject) => {
+          canvas.toBlob(blob => {
+            if (!blob) {
+              reject(new Error('图片处理失败'))
+              return
+            }
+            resolve(new File([blob], 'avatar.jpg', { type: 'image/jpeg' }))
+          }, 'image/jpeg', 0.82)
+        })
+      }
+      if (typeof createImageBitmap === 'function') {
+        return createImageBitmap(file, { imageOrientation: 'from-image' })
+          .then(bitmap => draw(bitmap, bitmap.width, bitmap.height).finally(() => bitmap.close()))
+          .catch(() => this.compressAvatarFromUrl(file, draw))
+      }
+      return this.compressAvatarFromUrl(file, draw)
+    },
+
+    compressAvatarFromUrl(file, draw) {
+      return new Promise((resolve, reject) => {
+        const img = new Image()
+        const objectUrl = URL.createObjectURL(file)
+        img.onload = () => {
+          URL.revokeObjectURL(objectUrl)
+          draw(img, img.naturalWidth, img.naturalHeight).then(resolve, reject)
+        }
+        img.onerror = () => {
+          URL.revokeObjectURL(objectUrl)
+          reject(new Error('这张图片无法处理，请换一张 JPG 照片'))
+        }
+        img.src = objectUrl
+      })
     },
 
     async onAvatarSelected(event) {
@@ -291,7 +341,7 @@ export default {
         return
       }
 
-      // 检查文件大小（限制 5MB）
+      // 原图超过 5MB 先拒绝；通过后再压成边长 640 的 JPG，避免手机解不开大图
       if (file.size > 5 * 1024 * 1024) {
         this.$message.error('图片大小不能超过 5MB')
         return
@@ -305,9 +355,10 @@ export default {
       })
 
       try {
-        const ext = file.name.split('.').pop() || 'jpg'
-        const objectKey = `avatars/${this.unionid}_${Date.now()}.${ext}`
-        const uploaded = await uploadToOss(objectKey, file)
+        const avatarFile = await this.compressAvatar(file)
+        const safeId = String(this.unionid || '').replace(/[^A-Za-z0-9_-]/g, '')
+        const objectKey = `avatars/${safeId}_${Date.now()}.jpg`
+        const uploaded = await uploadToOss(objectKey, avatarFile)
 
         const updateData = qs.stringify({
           id: this.unionid,
@@ -319,7 +370,8 @@ export default {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         })
 
-        this.avatarUrl = uploaded.signedUrl
+        this.avatarUrl = uploaded.stableUrl
+        this.presentAvatar(uploaded.signedUrl)
         this.$message.success('头像更新成功')
       } catch (err) {
         console.error('上传头像失败:', err)
@@ -346,12 +398,18 @@ export default {
             this.headimgurl = data.headimgurl || ''
             const rawAvatar = data.avatarUrl || ''
             this.avatarUrl = rawAvatar
-            if (rawAvatar) {
+            const wechatAvatar = this.headimgurl.indexOf('htz-storage') === -1 ? this.headimgurl : ''
+            if (wechatAvatar) this.presentAvatar(wechatAvatar)
+            if (rawAvatar.indexOf('htz-storage') !== -1) {
               signOssUrl(rawAvatar).then(signed => {
-                this.avatarUrl = signed
+                if (signed && signed.indexOf('OSSAccessKeyId=') !== -1) {
+                  this.presentAvatar(signed)
+                }
               }).catch(err => {
                 console.error('头像签名失败:', err)
               })
+            } else if (rawAvatar) {
+              this.presentAvatar(rawAvatar)
             }
             this.gender = data.gender === undefined || data.gender === null || data.gender === '' ? '1' : String(data.gender)
             this.wechatgroup = data.wechatgroup || ''
@@ -520,26 +578,43 @@ export default {
 }
 
 .avatar {
+  position: relative;
   width: 90px;
   height: 90px;
   border-radius: 50%;
   border: 4px solid white;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  background: white;
+  background: #f5f7fa;
+  overflow: hidden;
   pointer-events: none;
 }
 
-.avatar-error {
+.avatar-img {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
+  object-fit: cover;
+}
+
+.avatar-img.is-pending {
+  opacity: 0;
+}
+
+.avatar-fallback {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #f5f7fa;
-  border-radius: 50%;
 }
 
-.avatar-error i {
+.avatar-fallback i {
   font-size: 40px;
   color: #c0c4cc;
 }

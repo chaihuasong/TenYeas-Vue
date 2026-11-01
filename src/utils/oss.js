@@ -1,46 +1,6 @@
 import axios from 'axios'
-import OSS from 'ali-oss'
-import global from '@/components/Common'
 
-const AKSK_URL = 'http://app.htzchina.org/htz-api-pyservice/api/v1/getaksk'
-const BUCKET = 'htz-storage'
-const REGION = 'oss-cn-shanghai'
-const SIGN_EXPIRES = 12 * 60 * 60
-
-let clientPromise = null
-
-function getClient() {
-  if (!clientPromise) {
-    clientPromise = axios.get(AKSK_URL, {
-      params: { appName: 'htz-oss' }
-    }).then(res => {
-      if (!res.data || !res.data.data) {
-        throw new Error('获取上传凭证失败')
-      }
-      const aksk = JSON.parse(res.data.data)
-      if (!aksk.accessKey || !aksk.accessKeySecure) {
-        throw new Error('上传凭证无效')
-      }
-      // 页面是 http 时，SDK 默认走 http。OSS 重定向到 https 会丢掉 Authorization，
-      // 私有桶会把这次请求当成匿名直链拒绝。这里强制 https，用 AccessKey 签名。
-      return new OSS({
-        region: REGION,
-        accessKeyId: aksk.accessKey,
-        accessKeySecret: aksk.accessKeySecure,
-        bucket: BUCKET,
-        secure: true
-      })
-    }).catch(err => {
-      clientPromise = null
-      const status = err && err.response && err.response.status
-      if (status) {
-        throw new Error('获取上传凭证失败 (' + status + ')')
-      }
-      throw err
-    })
-  }
-  return clientPromise
-}
+const API = 'http://app.htzchina.org/htz-api-pyservice/api/v1'
 
 export function ossObjectKey(url) {
   if (!url || typeof url !== 'string' || url.indexOf('htz-storage') === -1) {
@@ -55,20 +15,42 @@ export function ossObjectKey(url) {
   }
 }
 
+function apiError(err, fallback) {
+  const status = err && err.response && err.response.status
+  const msg = err && err.response && err.response.data && err.response.data.msg
+  if (msg) return new Error(msg)
+  if (status) return new Error(fallback + ' (' + status + ')')
+  return err || new Error(fallback)
+}
+
 export async function uploadToOss(objectKey, file) {
-  const client = await getClient()
-  await client.put(objectKey, file, {
-    mime: (file && file.type) || 'image/jpeg'
-  })
-  return {
-    stableUrl: `${global.ossUrl}/${objectKey}`,
-    signedUrl: client.signatureUrl(objectKey, { expires: SIGN_EXPIRES })
+  const form = new FormData()
+  form.append('file', file)
+  form.append('objectKey', objectKey)
+  try {
+    const res = await axios.post(`${API}/oss/avatar`, form)
+    const data = res.data && res.data.data
+    if (!res.data || res.data.code !== '0' || !data || !data.signedUrl) {
+      throw new Error((res.data && res.data.msg) || '上传失败')
+    }
+    return data
+  } catch (err) {
+    throw apiError(err, '上传失败')
   }
 }
 
 export async function signOssUrl(url) {
   const key = ossObjectKey(url)
   if (!key) return url || ''
-  const client = await getClient()
-  return client.signatureUrl(key, { expires: SIGN_EXPIRES })
+  try {
+    const res = await axios.get(`${API}/oss/sign`, { params: { url } })
+    const signed = res.data && res.data.data
+    if (!res.data || res.data.code !== '0' || !signed) {
+      return url
+    }
+    return signed
+  } catch (err) {
+    console.error('头像签名失败', err)
+    return url
+  }
 }
