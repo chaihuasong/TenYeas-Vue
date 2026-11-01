@@ -2,7 +2,7 @@ import axios from 'axios'
 import OSS from 'ali-oss'
 import global from '@/components/Common'
 
-const AKSK_URL = 'http://app.htzchina.org/api-proxy/getaksk'
+const AKSK_URL = 'http://app.htzchina.org/htz-api-pyservice/api/v1/getaksk'
 const BUCKET = 'htz-storage'
 const REGION = 'oss-cn-shanghai'
 const SIGN_EXPIRES = 12 * 60 * 60
@@ -32,6 +32,10 @@ function getClient() {
       })
     }).catch(err => {
       clientPromise = null
+      const status = err && err.response && err.response.status
+      if (status) {
+        throw new Error('获取上传凭证失败 (' + status + ')')
+      }
       throw err
     })
   }
