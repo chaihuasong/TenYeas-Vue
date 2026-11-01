@@ -198,18 +198,20 @@
       </div>
     </div>
 
-    <!-- 底部间距 -->
-    <div style="height: 165px;"></div>
+    <!-- 底部间距：有未保存修改时给悬浮保存条留位 -->
+    <div :style="{ height: hasChanges ? '165px' : '100px' }"></div>
 
-    <div class="profile-save-bar">
-      <button
-        class="profile-save-btn"
-        :class="{ disabled: !hasChanges || savingProfile }"
-        :disabled="!hasChanges || savingProfile"
-        @click="updateUserInfo">
-        {{ savingProfile ? '保存中...' : '保存资料' }}
-      </button>
-    </div>
+    <transition name="save-bar">
+      <div v-if="hasChanges" class="profile-save-bar">
+        <button
+          class="profile-save-btn"
+          :class="{ disabled: savingProfile }"
+          :disabled="savingProfile"
+          @click="updateUserInfo">
+          {{ savingProfile ? '保存中...' : '保存资料' }}
+        </button>
+      </div>
+    </transition>
 
     <!-- 清空缓存确认弹窗 -->
     <div v-if="showClearCacheDialog" class="confirm-overlay" @click.self="showClearCacheDialog = false">
@@ -814,6 +816,17 @@ export default {
 
 .profile-save-btn:active:not(.disabled) {
   transform: scale(0.99);
+}
+
+.save-bar-enter-active,
+.save-bar-leave-active {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.save-bar-enter,
+.save-bar-leave-to {
+  transform: translateY(12px);
+  opacity: 0;
 }
 
 /* 清空缓存确认弹窗 */
