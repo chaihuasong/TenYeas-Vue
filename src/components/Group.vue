@@ -188,6 +188,12 @@
 
                 <!-- 组操作 -->
                 <div class="card-footer">
+                  <el-button size="small" type="primary" plain @click="openGroupStatus(group.groupId)">
+                    <i class="el-icon-data-analysis"></i> 今日完成
+                  </el-button>
+                  <el-button size="small" plain @click="copyGroupShareLink(group)">
+                    <i class="el-icon-share"></i> 复制链接
+                  </el-button>
                   <el-button size="small" plain @click="modifyGroup(group)">
                     <i class="el-icon-edit"></i> 修改信息
                   </el-button>
@@ -260,6 +266,12 @@
 
                 <!-- 组操作 -->
                 <div class="card-footer">
+                  <el-button size="small" type="primary" plain @click="openGroupStatus(group.groupId)">
+                    <i class="el-icon-data-analysis"></i> 今日完成
+                  </el-button>
+                  <el-button size="small" plain @click="copyGroupShareLink(group)">
+                    <i class="el-icon-share"></i> 复制链接
+                  </el-button>
                   <el-popconfirm title="确定退出该组吗？" @confirm="quitGroup(group)">
                     <el-button size="small" type="warning" plain slot="reference">
                       <i class="el-icon-switch-button"></i> 退出该组
@@ -389,6 +401,7 @@ import qs from 'qs'
 import global from '@/components/Common'
 import GroupReportList from '@/components/group/GroupReportList'
 import { buildReportItems, sortByDateDesc } from '@/components/group/reportItems'
+import { copyToClipboard } from '@/utils/clipboard'
 
 const STATE_PENDING = 0
 const STATE_JOINED = 1
@@ -566,6 +579,31 @@ export default {
       }).catch(() => {
         this.$message.warning('复制失败，请手动长按复制')
       })
+    },
+
+    todayStr() {
+      return global.getDateFormat(new Date())
+    },
+
+    openGroupStatus(groupId) {
+      this.$router.push({
+        name: 'groupStatus',
+        params: { groupId },
+        query: { date: this.todayStr(), from: 'group' }
+      })
+    },
+
+    async copyGroupShareLink(group) {
+      const date = this.todayStr()
+      const base = window.location.href.split('#')[0]
+      const url = `${base}#/groupStatus/${encodeURIComponent(group.groupId)}?date=${date}&from=share`
+      const text = `【${group.groupName || '团队'}】${date} 打卡完成情况\n未打卡的伙伴请尽快完成～\n${url}`
+      const ok = await copyToClipboard(text, this)
+      if (ok) {
+        this.$quickMessage('提醒链接已复制，可粘贴到群里')
+      } else {
+        this.$message.warning('复制失败，请手动长按复制')
+      }
     },
 
     async getData() {
@@ -1272,14 +1310,16 @@ export default {
 /* 卡片底部操作 */
 .card-footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   border-top: 1px solid #f0f0f0;
   padding-top: 12px;
   margin-top: 14px;
+  gap: 8px;
 }
 
-.card-footer > *:not(:last-child) {
-  margin-right: 10px;
+.card-footer > * {
+  margin: 0;
 }
 
 /* 我的打卡卡片 */

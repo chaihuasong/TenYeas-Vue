@@ -23,6 +23,7 @@ import DailyReportTab from "@/components/admin/DailyReportTab";
 import Notification from "@/components/settings/Notification";
 import Statistics from "@/components/Statistics";
 import Group from "@/components/Group";
+import GroupDailyStatus from "@/components/GroupDailyStatus";
 import GroupTab from "@/components/admin/GroupTab";
 import CheckinCircle from "@/components/CheckinCircle";
 
@@ -114,6 +115,15 @@ export default new Router({
       component: Group,
       meta: {
         title: '我的团队',
+        footShow: false,
+      }
+    },
+    {
+      path: '/groupStatus/:groupId',
+      name: 'groupStatus',
+      component: GroupDailyStatus,
+      meta: {
+        title: '团队打卡情况',
         footShow: false,
       }
     },

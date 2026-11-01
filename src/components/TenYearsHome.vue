@@ -19,6 +19,20 @@
 <!--      <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{this.getYearsRemaining()}}</span> 天-->
 <!--    </el-card>-->
 
+    <!-- 有团队时只留一行摘要，点进详情；没团队不占位。复制链接在详情页和团队页 -->
+    <div v-if="myTeamStatuses.length" class="team-status-strip">
+      <div
+        v-for="team in myTeamStatuses"
+        :key="team.groupId"
+        class="team-status-line"
+        @click="openTeamStatus(team.groupId)">
+        <i class="el-icon-s-custom"></i>
+        <span class="team-line-text">{{ team.groupName || '团队' }} 今日 {{ team.checkedIn }}/{{ team.total }}</span>
+        <span class="team-line-go">去看看</span>
+        <i class="el-icon-arrow-right"></i>
+      </div>
+    </div>
+
     <div style="clear: both; width: 100%">
       <el-image style="width: 100%"
                 :src="require('../assets/img/tenyears_tips.jpg')"
@@ -456,6 +470,8 @@ export default {
           }
         }]
       },
+
+      myTeamStatuses: [],
     };
   },
   mounted: function () {
@@ -492,6 +508,7 @@ export default {
     unionid(newValue) {
       if (newValue) {
         this.loadPlanInfo()
+        this.loadMyTeamStatuses()
       }
     },
     dailyDraftSnapshot(newValue) {
@@ -499,6 +516,26 @@ export default {
     }
   },
   methods: {
+    openTeamStatus(groupId) {
+      this.$router.push({
+        name: 'groupStatus',
+        params: { groupId },
+        query: { date: this.getDateFormat(new Date()), from: 'home' }
+      })
+    },
+    async loadMyTeamStatuses() {
+      if (!this.unionid) return
+      try {
+        const date = this.getDateFormat(new Date())
+        const res = await axios.get(
+          `${this.serverUrl}getMyGroupsDailyStatus?unionId=${encodeURIComponent(this.unionid)}&date=${date}`
+        )
+        this.myTeamStatuses = Array.isArray(res.data) ? res.data : []
+      } catch (err) {
+        console.error('加载团队打卡概况失败', err)
+        this.myTeamStatuses = []
+      }
+    },
     addTimeValue(title) {
       if (title === '早起') {
         this.zaoQiTimeVisible = true
@@ -1893,6 +1930,7 @@ export default {
           this.getMonthNotes(false).then(() => {
             if (submittedForToday) {
               this.getDailyReportInfoByDate(this.selectedDate)
+              this.loadMyTeamStatuses()
             }
           })
           if (!submittedForToday) {
@@ -2631,6 +2669,60 @@ a {
 
 .tenyears-home-page .el-card:hover {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* 团队今日打卡：倒计时下方一行摘要 */
+.team-status-strip {
+  float: left;
+  width: 100%;
+  margin-top: 10px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.team-status-line {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.team-status-line + .team-status-line {
+  border-top: 1px solid #f0f2f5;
+}
+
+.team-status-line i {
+  color: #667eea;
+  flex-shrink: 0;
+}
+
+.team-line-text {
+  flex: 1;
+  min-width: 0;
+  margin-left: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-line-go {
+  margin-left: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  color: #667eea;
+  flex-shrink: 0;
+}
+
+.team-status-line .el-icon-arrow-right {
+  margin-left: 2px;
+  color: #c0c4cc;
+  font-size: 14px;
 }
 
 /* 倒计时卡片特殊样式 */
