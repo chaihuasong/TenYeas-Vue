@@ -1,0 +1,18 @@
+---
+description: 用户说发布、上线、发版十年持志网页时，按 deploy.sh 发到 39.105.174.143，不要先清空线上目录。
+alwaysApply: false
+---
+
+# 十年持志网页发版
+
+用户说「发布」「上线」「发版」且指的是这个网页时，在 `TenYeas-Vue` 目录执行 `bash deploy.sh`。需要关闭沙箱（`all` 权限）：沙箱里 `npm run build` 会因 `uv_interface_addresses` 失败。
+
+脚本已经包含这些约束，不要改回旧流程：
+
+- 必须带 `-o IPQoS=none`。不带时 SSH 会在握手阶段 `Broken pipe` 或 `Connection reset`。
+- 用 `for` 立刻重试，最多 40 次，两次之间不要 `sleep`。
+- 先把包传到 `/tmp/tenyears.tgz` 并核对 `dist/index.html` 里的 `js/app.*.js` 存在，再 `rm` 线上目录 `/var/www/html/tenyears/`。上传失败时线上页面保持原样。
+- 远程 `js` 的 md5 必须和本地一致，并且 `index.html` 引用的是这次的 `app.*.js`，看到 `DEPLOY_OK` 才算完成。
+- `tar: Ignoring unknown extended header keyword 'LIBARCHIVE.xattr.com.apple.provenance'` 可以忽略。
+
+这次只发布网页 `http://app.htzchina.org/tenyears/`。黄庭书院 App 的改动不在这个流程里，需要单独发新包。

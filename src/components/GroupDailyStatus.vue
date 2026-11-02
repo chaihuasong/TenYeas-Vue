@@ -43,7 +43,7 @@
         </button>
       </div>
       <div v-if="exportResult" class="export-result">
-        <div class="export-result-title">Excel 已导出</div>
+        <div class="export-result-title">{{ exportResult.saved ? 'Excel 已导出' : '没有保存到手机' }}</div>
         <div class="export-result-line">文件名：{{ exportResult.fileName }}</div>
         <div class="export-result-line">保存位置：{{ exportResult.location }}</div>
       </div>
@@ -230,6 +230,28 @@ export default {
       const monthDate = this.monthPrefix(this.selectedDate).replace(/-/g, '')
       return `${this.groupName || this.groupId}_${monthDate}打卡统计.xlsx`
     },
+    inHtzApp() {
+      const ua = navigator.userAgent || ''
+      if (window.HTZApp && typeof window.HTZApp.saveExcel === 'function') return true
+      if (/HTZApp/.test(ua)) return true
+      if (/MicroMessenger/i.test(ua)) return false
+      // 安卓系统 WebView 的标识。黄庭书院 App 里打开打卡页会带上它
+      if (/\bwv\b/.test(ua)) return true
+      try {
+        return localStorage.getItem('htz_nickname') != null
+      } catch (e) {
+        return false
+      }
+    },
+    bytesToBase64(buffer) {
+      const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer)
+      let binary = ''
+      const chunk = 0x8000
+      for (let i = 0; i < bytes.length; i += chunk) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk))
+      }
+      return btoa(binary)
+    },
     downloadLocationHint() {
       const ua = navigator.userAgent || ''
       const inWechat = /MicroMessenger/i.test(ua)
@@ -253,10 +275,25 @@ export default {
         const writable = await pickedHandle.createWritable()
         await writable.write(blob)
         await writable.close()
-        return '你刚才选择的文件夹'
+        return { location: '你刚才选择的文件夹', saved: true }
+      }
+      const bridge = window.HTZApp
+      if (bridge && typeof bridge.saveExcel === 'function') {
+        const path = bridge.saveExcel(this.bytesToBase64(wbout), fileName) || ''
+        if (!path) {
+          return { location: 'App 写入下载目录失败', saved: false }
+        }
+        return { location: path, saved: true }
+      }
+      // 旧版 App 的网页容器不处理下载，文件不会出现在任何目录
+      if (this.inHtzApp()) {
+        return {
+          location: '当前 App 没有把文件写到手机上，所以没有实际路径。更新 App 后再导出',
+          saved: false
+        }
       }
       FileSaver.saveAs(blob, fileName)
-      return this.downloadLocationHint()
+      return { location: this.downloadLocationHint(), saved: true }
     },
     async exportMonthExcel() {
       if (!this.groupId || this.exporting) return
@@ -331,10 +368,11 @@ export default {
         XLSX.utils.book_append_sheet(wb, wsDaily, this.selectedDate)
         const wbout = XLSX.write(wb, { bookType: 'xlsx', bookSST: true, type: 'array' })
         const savedName = (data.groupName || this.groupName || this.groupId) + '_' + monthDate.replace(/-/g, '') + '打卡统计.xlsx'
-        const location = await this.saveExcelFile(wbout, savedName, pickedHandle)
+        const saved = await this.saveExcelFile(wbout, savedName, pickedHandle)
         this.exportResult = {
           fileName: pickedHandle && pickedHandle.name ? pickedHandle.name : savedName,
-          location
+          location: saved.location,
+          saved: saved.saved
         }
       } catch (err) {
         console.error('导出失败', err)
