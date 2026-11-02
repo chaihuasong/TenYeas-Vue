@@ -42,6 +42,11 @@
           <i class="el-icon-download"></i> {{ exporting ? '导出中...' : '导出本月 Excel' }}
         </button>
       </div>
+      <div v-if="exportResult" class="export-result">
+        <div class="export-result-title">Excel 已导出</div>
+        <div class="export-result-line">文件名：{{ exportResult.fileName }}</div>
+        <div class="export-result-line">保存位置：{{ exportResult.location }}</div>
+      </div>
     </div>
 
     <div class="content">
@@ -128,6 +133,7 @@ export default {
       loading: true,
       loadError: '',
       exporting: false,
+      exportResult: null,
       fromShare: false,
       datePickerOptions: {
         disabledDate(time) {
@@ -220,8 +226,58 @@ export default {
       if (!dateStr || dateStr.length < 7) return ''
       return dateStr.substring(0, 7) + '-'
     },
+    exportFileName() {
+      const monthDate = this.monthPrefix(this.selectedDate).replace(/-/g, '')
+      return `${this.groupName || this.groupId}_${monthDate}打卡统计.xlsx`
+    },
+    downloadLocationHint() {
+      const ua = navigator.userAgent || ''
+      const inWechat = /MicroMessenger/i.test(ua)
+      const isIOS = /iPhone|iPad|iPod/i.test(ua)
+      if (inWechat && isIOS) {
+        return '微信里通常不会出现下载。请点右上角用 Safari 打开后再导出，文件在「文件」App 的「下载」里'
+      }
+      if (isIOS) {
+        return '「文件」App 的「下载」文件夹'
+      }
+      if (/Android/i.test(ua)) {
+        return '手机「下载」文件夹（内部存储 / Download）'
+      }
+      return '浏览器的下载文件夹'
+    },
+    async saveExcelFile(wbout, fileName, pickedHandle) {
+      const blob = new Blob([wbout], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      })
+      if (pickedHandle) {
+        const writable = await pickedHandle.createWritable()
+        await writable.write(blob)
+        await writable.close()
+        return '你刚才选择的文件夹'
+      }
+      FileSaver.saveAs(blob, fileName)
+      return this.downloadLocationHint()
+    },
     async exportMonthExcel() {
       if (!this.groupId || this.exporting) return
+      const fileName = this.exportFileName()
+      let pickedHandle = null
+      if (window.showSaveFilePicker) {
+        try {
+          pickedHandle = await window.showSaveFilePicker({
+            suggestedName: fileName,
+            types: [{
+              description: 'Excel 工作簿',
+              accept: {
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
+              }
+            }]
+          })
+        } catch (err) {
+          if (err && err.name === 'AbortError') return
+          pickedHandle = null
+        }
+      }
       this.exporting = true
       try {
         const monthDate = this.monthPrefix(this.selectedDate)
@@ -274,9 +330,12 @@ export default {
         XLSX.utils.book_append_sheet(wb, wsMonth, '月度统计')
         XLSX.utils.book_append_sheet(wb, wsDaily, this.selectedDate)
         const wbout = XLSX.write(wb, { bookType: 'xlsx', bookSST: true, type: 'array' })
-        const fileName = `${data.groupName || this.groupId}_${monthDate.replace(/-/g, '')}打卡统计.xlsx`
-        FileSaver.saveAs(new Blob([wbout], { type: 'application/octet-stream' }), fileName)
-        this.$quickMessage('Excel 已导出')
+        const savedName = (data.groupName || this.groupName || this.groupId) + '_' + monthDate.replace(/-/g, '') + '打卡统计.xlsx'
+        const location = await this.saveExcelFile(wbout, savedName, pickedHandle)
+        this.exportResult = {
+          fileName: pickedHandle && pickedHandle.name ? pickedHandle.name : savedName,
+          location
+        }
       } catch (err) {
         console.error('导出失败', err)
         this.$message.error('导出失败，请稍后重试')
@@ -378,6 +437,10 @@ export default {
   margin-bottom: 8px;
 }
 
+.date-row /deep/ .el-date-editor {
+  width: 100%;
+}
+
 .date-row /deep/ .el-input__inner {
   background: rgba(255, 255, 255, 0.95);
   border: none;
@@ -410,6 +473,31 @@ export default {
 .action-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.export-result {
+  margin-top: 12px;
+  background: #fff;
+  color: #303133;
+  border-radius: 10px;
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.export-result-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.export-result-line {
+  font-size: 13px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.export-result-line + .export-result-line {
+  margin-top: 2px;
 }
 
 .content {

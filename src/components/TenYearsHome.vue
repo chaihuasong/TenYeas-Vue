@@ -19,19 +19,44 @@
 <!--      <span style="font-weight:bold;font-size: 22px;color: #66b1ff">{{this.getYearsRemaining()}}</span> 天-->
 <!--    </el-card>-->
 
-    <!-- 有团队时只留一行摘要，点进详情；没团队不占位。复制链接在详情页和团队页 -->
-    <div v-if="myTeamStatuses.length" class="team-status-strip">
-      <div
-        v-for="team in myTeamStatuses"
-        :key="team.groupId"
-        class="team-status-line"
-        @click="openTeamStatus(team.groupId)">
-        <i class="el-icon-s-custom"></i>
-        <span class="team-line-text">{{ team.groupName || '团队' }} 今日 {{ team.checkedIn }}/{{ team.total }}</span>
-        <span class="team-line-go">去看看</span>
-        <i class="el-icon-arrow-right"></i>
+    <!-- 有团队才显示今日完成；没团队不占位 -->
+    <el-card v-if="myTeamStatuses.length" class="team-status-card" style="float: left; width: 100%;margin-top: 10px">
+      <div class="team-status-header">
+        <div class="team-status-title">
+          <i class="el-icon-s-custom"></i>
+          <span>团队今日打卡</span>
+        </div>
+        <div class="team-status-actions">
+          <span class="team-link" @click="$router.push('/group')">我的团队</span>
+        </div>
       </div>
-    </div>
+
+      <div class="team-status-list">
+        <div
+          v-for="team in myTeamStatuses"
+          :key="team.groupId"
+          class="team-status-item"
+          @click="openTeamStatus(team.groupId)">
+          <div class="team-status-main">
+            <div class="team-name-row">
+              <span class="team-name">{{ team.groupName || '未命名团队' }}</span>
+              <span v-if="team.isOwner" class="team-owner-tag">我创建的</span>
+            </div>
+            <div class="team-progress-text">
+              今日 {{ team.checkedIn }}/{{ team.total }} 人已打卡
+              <span class="team-rate">{{ teamRate(team) }}%</span>
+            </div>
+            <div class="team-progress-bar">
+              <div class="team-progress-fill" :style="{ width: teamRate(team) + '%' }"></div>
+            </div>
+          </div>
+          <div class="team-status-side" @click.stop>
+            <button class="team-share-btn" @click="copyTeamShareLink(team)">复制链接</button>
+            <i class="el-icon-arrow-right team-arrow" @click="openTeamStatus(team.groupId)"></i>
+          </div>
+        </div>
+      </div>
+    </el-card>
 
     <div style="clear: both; width: 100%">
       <el-image style="width: 100%"
@@ -516,12 +541,29 @@ export default {
     }
   },
   methods: {
+    teamRate(team) {
+      if (!team || !team.total) return 0
+      return Math.round((team.checkedIn / team.total) * 100)
+    },
     openTeamStatus(groupId) {
       this.$router.push({
         name: 'groupStatus',
         params: { groupId },
         query: { date: this.getDateFormat(new Date()), from: 'home' }
       })
+    },
+    async copyTeamShareLink(team) {
+      const date = this.getDateFormat(new Date())
+      const base = window.location.href.split('#')[0]
+      const url = `${base}#/groupStatus/${encodeURIComponent(team.groupId)}?date=${date}&from=share`
+      const rate = this.teamRate(team)
+      const text = `【${team.groupName || '团队'}】${date} 打卡完成 ${team.checkedIn}/${team.total}（${rate}%）\n未打卡的伙伴请尽快完成～\n${url}`
+      const ok = await copyToClipboard(text, this)
+      if (ok) {
+        this.$quickMessage('提醒链接已复制，可粘贴到群里')
+      } else {
+        this.$message.warning('复制失败，请手动长按复制')
+      }
     },
     async loadMyTeamStatuses() {
       if (!this.unionid) return
@@ -2671,38 +2713,73 @@ a {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
-/* 团队今日打卡：倒计时下方一行摘要 */
-.team-status-strip {
-  float: left;
-  width: 100%;
-  margin-top: 10px;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
+/* 团队今日打卡：有团队时显示在倒计时下方 */
+.team-status-card .el-card__body {
+  padding: 14px 16px;
 }
 
-.team-status-line {
+.team-status-header {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
-  cursor: pointer;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.team-status-title {
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: #303133;
+}
+
+.team-status-title i {
+  margin-right: 6px;
+  color: #667eea;
+}
+
+.team-status-actions {
+  font-size: 13px;
+  color: #909399;
   text-align: left;
 }
 
-.team-status-line + .team-status-line {
-  border-top: 1px solid #f0f2f5;
-}
-
-.team-status-line i {
+.team-link {
   color: #667eea;
-  flex-shrink: 0;
+  cursor: pointer;
 }
 
-.team-line-text {
+.team-status-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.team-status-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid #f0f2f5;
+  cursor: pointer;
+}
+
+.team-status-item:first-child {
+  border-top: none;
+  padding-top: 4px;
+}
+
+.team-status-main {
   flex: 1;
   min-width: 0;
-  margin-left: 8px;
+  text-align: left;
+}
+
+.team-name-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.team-name {
   font-size: 14px;
   font-weight: 600;
   color: #303133;
@@ -2711,16 +2788,61 @@ a {
   white-space: nowrap;
 }
 
-.team-line-go {
-  margin-left: 8px;
-  font-size: 13px;
-  font-weight: 400;
+.team-owner-tag {
+  margin-left: 6px;
+  font-size: 11px;
   color: #667eea;
+  background: rgba(102, 126, 234, 0.12);
+  border-radius: 4px;
+  padding: 1px 5px;
   flex-shrink: 0;
 }
 
-.team-status-line .el-icon-arrow-right {
-  margin-left: 2px;
+.team-progress-text {
+  font-size: 12px;
+  color: #606266;
+  margin-bottom: 6px;
+}
+
+.team-rate {
+  margin-left: 6px;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.team-progress-bar {
+  height: 6px;
+  background: #eef0f5;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.team-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.team-status-side {
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+  flex-shrink: 0;
+}
+
+.team-share-btn {
+  border: none;
+  background: rgba(102, 126, 234, 0.12);
+  color: #667eea;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  margin-right: 6px;
+}
+
+.team-arrow {
   color: #c0c4cc;
   font-size: 14px;
 }
