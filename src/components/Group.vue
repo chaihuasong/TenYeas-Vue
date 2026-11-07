@@ -22,6 +22,9 @@
             <el-dropdown-item command="join">
               <i class="el-icon-connection"></i> 申请入组
             </el-dropdown-item>
+            <el-dropdown-item command="invite">
+              <i class="el-icon-s-promotion"></i> 邀请加入
+            </el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
       </div>
@@ -374,6 +377,37 @@
       </div>
     </el-dialog>
 
+    <!-- 邀请加入对话框 -->
+    <el-dialog title="邀请加入" :visible.sync="inviteDialogVisible" width="85%" center>
+      <div class="invite-dialog-content">
+        <div class="invite-hint">选择要邀请伙伴加入的组，复制邀请链接发给对方，对方打开即可申请加入</div>
+        <div class="invite-group-list">
+          <div
+            v-for="group in ownedGroups"
+            :key="group.groupId"
+            class="invite-group-item"
+            :class="{ active: inviteGroupId === group.groupId }"
+            @click="inviteGroupId = group.groupId">
+            <div class="invite-group-info">
+              <div class="invite-group-name">{{ group.groupName }}</div>
+              <div class="invite-group-meta">ID: {{ group.groupId }} · {{ group.members.length }} 人</div>
+            </div>
+            <i :class="inviteGroupId === group.groupId ? 'el-icon-success' : 'el-icon-circle-outline'"></i>
+          </div>
+        </div>
+        <div class="invite-preview">
+          <div class="invite-preview-label">邀请文案预览</div>
+          <div class="invite-preview-text">{{ buildInviteText() }}</div>
+        </div>
+      </div>
+      <div slot="footer">
+        <el-button @click="inviteDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="copyInviteLink">
+          <i class="el-icon-s-promotion"></i> 复制邀请链接
+        </el-button>
+      </div>
+    </el-dialog>
+
     <!-- 编辑组对话框 -->
     <el-dialog title="编辑组信息" :visible.sync="editDialogVisible" width="85%" center>
       <el-form :model="newGroupInfo" label-position="top">
@@ -442,6 +476,7 @@ export default {
       // 对话框
       addGroupFormDialogVisible: false,
       joinGroupFormDialogVisible: false,
+      inviteDialogVisible: false,
       editDialogVisible: false,
 
       // 表单数据
@@ -454,7 +489,8 @@ export default {
         groupName: '',
         note: ''
       },
-      joinGroupId: ''
+      joinGroupId: '',
+      inviteGroupId: ''
     }
   },
   computed: {
@@ -525,6 +561,7 @@ export default {
       return
     }
     this.getData()
+    this.checkInviteParam()
   },
   methods: {
     handleCommand(command) {
@@ -532,6 +569,8 @@ export default {
         this.addGroupFormDialogVisible = true
       } else if (command === 'join') {
         this.joinGroupFormDialogVisible = true
+      } else if (command === 'invite') {
+        this.openInviteDialog()
       }
     },
 
@@ -601,6 +640,48 @@ export default {
       const ok = await copyToClipboard(text, this)
       if (ok) {
         this.$quickMessage('提醒链接已复制，可粘贴到群里')
+      } else {
+        this.$message.warning('复制失败，请手动长按复制')
+      }
+    },
+
+    // 打开邀请链接时，自动把组 ID 填进申请入组对话框
+    checkInviteParam() {
+      const inviteId = this.$route.query.invite
+      if (!inviteId) return
+      this.joinGroupId = String(inviteId)
+      this.joinGroupFormDialogVisible = true
+      this.$quickMessage('收到团队邀请，请确认后申请加入')
+    },
+
+    openInviteDialog() {
+      if (this.ownedGroups.length === 0) {
+        this.$message.warning('你还没有创建的组，请先创建新组')
+        return
+      }
+      this.inviteGroupId = this.ownedGroups[0].groupId
+      this.inviteDialogVisible = true
+    },
+
+    inviteLink() {
+      const base = window.location.href.split('#')[0]
+      return `${base}#/group?invite=${encodeURIComponent(this.inviteGroupId)}`
+    },
+
+    buildInviteText() {
+      const group = this.ownedGroups.find(g => g.groupId === this.inviteGroupId)
+      const name = group ? group.groupName : '团队'
+      return `邀请你加入【${name}】团队\n组ID：${this.inviteGroupId}\n点击链接申请加入：${this.inviteLink()}`
+    },
+
+    async copyInviteLink() {
+      if (!this.inviteGroupId) {
+        this.$message.warning('请先选择一个组')
+        return
+      }
+      const ok = await copyToClipboard(this.buildInviteText(), this)
+      if (ok) {
+        this.$quickMessage('邀请链接已复制，可发给伙伴申请加入')
       } else {
         this.$message.warning('复制失败，请手动长按复制')
       }
@@ -1456,6 +1537,90 @@ export default {
   color: #909399;
   margin-bottom: 15px;
   text-align: left;
+}
+
+/* 邀请加入对话框 */
+.invite-dialog-content {
+  text-align: left;
+}
+
+.invite-hint {
+  font-size: 13px;
+  color: #909399;
+  margin-bottom: 15px;
+}
+
+.invite-group-list {
+  max-height: 40vh;
+  overflow-y: auto;
+  margin-bottom: 15px;
+}
+
+.invite-group-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border: 1px solid #ebeef5;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.invite-group-item.active {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.06);
+}
+
+.invite-group-item > i {
+  flex-shrink: 0;
+  font-size: 20px;
+  color: #c0c4cc;
+  margin-left: 10px;
+}
+
+.invite-group-item.active > i {
+  color: #667eea;
+}
+
+.invite-group-info {
+  min-width: 0;
+}
+
+.invite-group-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #303133;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.invite-group-meta {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+}
+
+.invite-preview {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.invite-preview-label {
+  font-size: 12px;
+  color: #909399;
+  margin-bottom: 8px;
+}
+
+.invite-preview-text {
+  font-size: 13px;
+  color: #606266;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
 /* 通用 */
