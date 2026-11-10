@@ -1,16 +1,9 @@
-// 打卡列表导出的列和单元格文案，与管理后台隐藏表格一致。
-// 只包含列表里已经展示的打卡字段和姓名、昵称、微信号、性别，不追加其它个人资料。
+// 「我的打卡」导出当前用户自己的记录。列只包含打卡内容，不附带手机号等其它资料。
 
-export const REPORT_EXPORT_COLUMNS = [
-  { key: 'id', label: 'id' },
+export const OWN_EXPORT_COLUMNS = [
   { key: 'date', label: '日期' },
-  { key: 'userId', label: '用户ID' },
-  { key: 'wechatid', label: '微信号' },
-  { key: 'name', label: '姓名' },
   { key: 'nickname', label: '昵称' },
-  { key: 'gender', label: '性别' },
   { key: 'note', label: '总结' },
-  { key: 'templateId', label: '模板' },
   { key: 'state', label: '状态' },
   { key: 'value1', label: '项目1' },
   { key: 'value2', label: '项目2' },
@@ -30,11 +23,6 @@ export const REPORT_EXPORT_COLUMNS = [
   { key: 'share', label: '每日分享' }
 ]
 
-export function genderText(row) {
-  if (row && row.gender === 1) return '男'
-  return '女'
-}
-
 export function stateText(row) {
   if (row && row.state === '1') return '+'
   return '-'
@@ -48,44 +36,76 @@ export function valueText(row, index) {
   return String(template).replace('_', value)
 }
 
-export function buildReportExportRow(row) {
+function ownValueText(row, index) {
+  const formatted = valueText(row, index)
+  if (formatted != null) return formatted
+  const value = row && row['value' + index]
+  if (value == null || value === '' || value === '0') return ''
+  return value
+}
+
+export function buildOwnExportRow(row) {
   const source = row || {}
-  return REPORT_EXPORT_COLUMNS.map(column => {
-    if (column.key === 'gender') return genderText(source)
+  return OWN_EXPORT_COLUMNS.map(column => {
     if (column.key === 'state') return stateText(source)
     const valueMatch = /^value(\d+)$/.exec(column.key)
-    if (valueMatch) return valueText(source, Number(valueMatch[1]))
-    return source[column.key]
+    if (valueMatch) return ownValueText(source, Number(valueMatch[1]))
+    const value = source[column.key]
+    return value == null ? '' : value
   })
 }
 
-export function selectPersonRows(rows, userId) {
-  if (!Array.isArray(rows) || userId == null || userId === '') return []
-  const id = String(userId)
-  return rows.filter(row => row && String(row.userId) === id)
+export function buildOwnExportSheet(rows) {
+  return [OWN_EXPORT_COLUMNS.map(column => column.label)]
+    .concat((Array.isArray(rows) ? rows : []).map(buildOwnExportRow))
 }
 
-export function distinctPeople(rows) {
-  const map = new Map()
-  ;(Array.isArray(rows) ? rows : []).forEach(row => {
-    if (!row || row.userId == null || row.userId === '') return
-    const id = String(row.userId)
-    if (map.has(id)) return
-    const name = row.name || ''
-    const nickname = row.nickname || ''
-    const label = [name, nickname].filter(Boolean).join(' / ') || id
-    map.set(id, { userId: id, name, nickname, label })
+function ownerId(row) {
+  if (!row) return ''
+  if (row.userId != null && row.userId !== '') return String(row.userId)
+  if (row.unionId != null && row.unionId !== '') return String(row.unionId)
+  if (row.unionid != null && row.unionid !== '') return String(row.unionid)
+  return ''
+}
+
+function sameId(left, right) {
+  return String(left || '').replace(/"/g, '') === String(right || '').replace(/"/g, '')
+}
+
+// 接口已经按当前用户查询。带了别人的 userId 的行丢掉；没有用户字段的行视为这次查询的本人记录。
+export function keepOwnReports(rows, userId) {
+  const id = String(userId == null ? '' : userId).replace(/"/g, '').trim()
+  if (!id || !Array.isArray(rows)) return []
+  return rows.filter(row => {
+    if (!row || typeof row !== 'object') return false
+    const owner = ownerId(row).replace(/"/g, '')
+    return !owner || sameId(owner, id)
   })
-  return Array.from(map.values())
 }
 
-// 与打卡列表搜索相同的接口和 date=null 约定，姓名做编码，避免特殊字符把查询截断。
-export function buildReportSearchUrl(serverUrl, name, date) {
-  const base = serverUrl.endsWith('/') ? serverUrl : serverUrl + '/'
-  const dateParam = (date === null || date === undefined || date === '')
-    ? 'null'
-    : encodeURIComponent(date)
-  return base + 'getReportInfoByNameOrNickNameLike?name='
-    + encodeURIComponent(name == null ? '' : String(name))
-    + '&date=' + dateParam
+export function sortOwnReports(rows) {
+  return (Array.isArray(rows) ? rows : []).slice().sort((a, b) => {
+    return String((b && b.date) || '').localeCompare(String((a && a.date) || ''))
+  })
+}
+
+// 统计页已经把 getReportInfoListById 的数组当作全部记录。若返回带 total 且多于本次列表，说明被截断。
+export function unwrapReportList(data) {
+  if (Array.isArray(data)) {
+    return { rows: data, total: data.length, truncated: false }
+  }
+  if (!data || typeof data !== 'object') {
+    return { rows: [], total: 0, truncated: false }
+  }
+  const rows = Array.isArray(data.list) ? data.list
+    : Array.isArray(data.records) ? data.records
+    : Array.isArray(data.content) ? data.content
+    : []
+  const total = Number(data.total != null ? data.total : data.totalCount)
+  const knownTotal = Number.isFinite(total) ? total : rows.length
+  return {
+    rows,
+    total: knownTotal,
+    truncated: Number.isFinite(total) && total > rows.length
+  }
 }

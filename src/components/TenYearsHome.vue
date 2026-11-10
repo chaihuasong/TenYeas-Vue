@@ -8,10 +8,36 @@
     </div>
 
     <el-card v-if="createDate" class="countdown-card" style="float: left; width: 100%;margin-top: 10px">
+      <i class="el-icon-edit countdown-edit" @click="openCountdownEditor"></i>
       <span style="font-weight: bold">{{ countdownView.name }}，离{{ countdownView.dateText }}，还有</span>
       <br/>
       <span class="countdown-days">{{ countdownView.days }}</span> 天
     </el-card>
+
+    <el-dialog title="我的倒计时" :visible.sync="countdownDialogVisible" width="86%" center>
+      <el-form label-position="top">
+        <el-form-item label="名称">
+          <el-input v-model="countdownForm.name" maxlength="20" show-word-limit placeholder="例如：每日打卡倒计时"></el-input>
+        </el-form-item>
+        <el-form-item label="截止日期时间（北京时间）">
+          <el-date-picker
+              v-model="countdownForm.deadline"
+              type="datetime"
+              value-format="yyyy-MM-dd HH:mm:ss"
+              format="yyyy-MM-dd HH:mm"
+              placeholder="选择截止时间"
+              :editable="false"
+              style="width: 100%">
+          </el-date-picker>
+        </el-form-item>
+        <div class="countdown-hint">只保存在这台设备的当前账号下。换设备不会自动同步。</div>
+      </el-form>
+      <div slot="footer">
+        <el-button @click="restoreDefaultCountdown">恢复默认</el-button>
+        <el-button @click="countdownDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveCountdownEdit">保存</el-button>
+      </div>
+    </el-dialog>
 
 <!--    <el-card style="float: left; width: 100%;margin-top: 10px">-->
 <!--      <span style="font-weight: bold">生命倒计时，离生命终了 <input class="ageInputStyle" v-model="maxAge" @change="onMaxAgeChange"/> 岁，还有</span>-->
@@ -359,7 +385,13 @@ import qs from "qs";
 import wx from 'weixin-js-sdk'
 import global from './Common.vue'
 import { copyToClipboardSync, copyToClipboard } from '@/utils/clipboard'
-import { resolveCountdown } from '@/utils/countdown'
+import {
+  clearStoredCountdown,
+  readStoredCountdown,
+  resolveCountdown,
+  validateCountdownInput,
+  writeStoredCountdown
+} from '@/utils/countdown'
 import { visibleTeamSummaries, withCacheBust } from '@/utils/groupMembership'
 
 export default {
@@ -501,6 +533,11 @@ export default {
 
       myTeamStatuses: [],
       countdownPayload: null,
+      countdownDialogVisible: false,
+      countdownForm: {
+        name: '',
+        deadline: ''
+      },
     };
   },
   mounted: function () {
@@ -513,7 +550,7 @@ export default {
       this.getData()
     })
     this.configWechat()
-    this.loadCountdown()
+    this.loadUserCountdown()
     // unionid 此时通常还没解析出来，真正的拉取由 unionid 的 watch 触发
     this.loadPlanInfo()
     this.getAllDefaultReportsLists()
@@ -540,6 +577,7 @@ export default {
     // 等 unionid 就绪后必须重新拉一次，否则进来永远显示为空
     unionid(newValue) {
       if (newValue) {
+        this.loadUserCountdown()
         this.loadPlanInfo()
         this.loadMyTeamStatuses()
       }
@@ -625,12 +663,44 @@ export default {
         }
       }
     },
-    loadCountdown() {
-      axios.get(this.serverUrl + 'getCountdown').then(res => {
-        this.countdownPayload = res.data
-      }).catch(() => {
-        this.countdownPayload = null
-      })
+    loadUserCountdown() {
+      this.countdownPayload = readStoredCountdown(this.unionid)
+    },
+    openCountdownEditor() {
+      if (!this.unionid) {
+        this.$message.warning('请先登录后再修改倒计时')
+        return
+      }
+      const view = this.countdownView
+      this.countdownForm = {
+        name: view.name,
+        deadline: view.deadlineText
+      }
+      this.countdownDialogVisible = true
+    },
+    saveCountdownEdit() {
+      const checked = validateCountdownInput(this.countdownForm.name, this.countdownForm.deadline)
+      if (!checked.ok) {
+        this.$message.warning(checked.message)
+        return
+      }
+      if (!writeStoredCountdown(this.unionid, checked.value)) {
+        this.$message.warning('请先登录后再修改倒计时')
+        return
+      }
+      this.countdownPayload = { name: checked.value.name, deadline: checked.value.deadline }
+      this.countdownDialogVisible = false
+      this.$message.success('已保存在本机')
+    },
+    restoreDefaultCountdown() {
+      if (!this.unionid) {
+        this.$message.warning('请先登录后再修改倒计时')
+        return
+      }
+      clearStoredCountdown(this.unionid)
+      this.countdownPayload = null
+      this.countdownDialogVisible = false
+      this.$message.success('已恢复默认十年倒计时')
     },
     addTimeValue(title) {
       if (title === '早起') {
@@ -2899,6 +2969,20 @@ a {
   font-weight: bold;
   color: #ffd700 !important;
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.countdown-edit {
+  float: right;
+  font-size: 18px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.countdown-hint {
+  color: #909399;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: left;
 }
 
 /* 折叠面板优化 */

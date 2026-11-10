@@ -9,23 +9,9 @@
         placeholder="选择日期"
         icon="el-icon-search"
         style="margin-left: 20px; float: left" />
-    <el-select
-        v-model="selectedUserId"
-        filterable
-        clearable
-        placeholder="选择一个人导出"
-        style="margin-left: 20px; float: left; width: 220px">
-      <el-option
-          v-for="person in personOptions"
-          :key="person.userId"
-          :label="person.label"
-          :value="person.userId">
-      </el-option>
-    </el-select>
-    <el-button type="primary" icon="el-icon-download" @click="exportPerson" style="margin-left: 12px; float: left">导出该人员</el-button>
-    <el-button type="primary" icon="el-icon-download" @click="outTab()" style="float: right;margin-right: 20px; text-align: center">导出</el-button>
+    <el-button type="primary" icon="el-icon-download" @click="outTab" style="float: right;margin-right: 20px; text-align: center">导出</el-button>
 
-    <el-table :data="exportTableData" id="out-table" style="height: 0px;width: 0px">
+    <el-table :data="tableData" id="out-table" style="height: 0px;width: 0px">>
       <el-table-column prop="id" label="id" width="80">
       </el-table-column>
       <el-table-column prop="date" label="日期" width="80">
@@ -334,14 +320,6 @@ import qs from "qs"
 import global from '../Common.vue'
 import XLSX from "xlsx";
 import FileSaver from 'file-saver'
-import {
-  buildReportSearchUrl,
-  distinctPeople,
-  genderText,
-  selectPersonRows,
-  stateText,
-  valueText
-} from '@/utils/reportExport'
 
 export default {
   data() {
@@ -356,8 +334,6 @@ export default {
       filterDate: '',
       totalCount: 0,
       loading: false,
-      selectedUserId: '',
-      exportRows: null,
       valueInfo: {
         id : '',
         userId: '',
@@ -419,14 +395,6 @@ export default {
       valueIndex: 0,
     }
   },
-  computed: {
-    personOptions() {
-      return distinctPeople(this.tableData)
-    },
-    exportTableData() {
-      return this.exportRows || this.tableData
-    }
-  },
 
   mounted: function () {
     console.log("login?" + this.checkLogin())
@@ -475,21 +443,66 @@ export default {
         this.loading = false
       })
     },
-    value1Formatter(row) { return valueText(row, 1) },
-    value2Formatter(row) { return valueText(row, 2) },
-    value3Formatter(row) { return valueText(row, 3) },
-    value4Formatter(row) { return valueText(row, 4) },
-    value5Formatter(row) { return valueText(row, 5) },
-    value6Formatter(row) { return valueText(row, 6) },
-    value7Formatter(row) { return valueText(row, 7) },
-    value8Formatter(row) { return valueText(row, 8) },
-    value9Formatter(row) { return valueText(row, 9) },
-    value10Formatter(row) { return valueText(row, 10) },
-    value11Formatter(row) { return valueText(row, 11) },
-    value12Formatter(row) { return valueText(row, 12) },
-    value13Formatter(row) { return valueText(row, 13) },
-    value14Formatter(row) { return valueText(row, 14) },
-    value15Formatter(row) { return valueText(row, 15) },
+    value1Formatter(row) {
+      if(row.value1 == null || row.template1 == null) return null;
+      return row.template1.replace("_", row.value1);
+    },
+    value2Formatter(row) {
+      if(row.value2 == null || row.template2 == null) return null;
+      return row.template2.replace("_", row.value2);
+    },
+    value3Formatter(row) {
+      if(row.value3 == null || row.template3 == null) return null;
+      return row.template3.replace("_", row.value3);
+    },
+    value4Formatter(row) {
+      if(row.value4 == null || row.template4 == null) return null;
+      return row.template4.replace("_", row.value4);
+    },
+    value5Formatter(row) {
+      if(row.value5 == null || row.template5 == null) return null;
+      return row.template5.replace("_", row.value5);
+    },
+    value6Formatter(row) {
+      if(row.value6 == null || row.template6 == null) return null;
+      return row.template6.replace("_", row.value6);
+    },
+    value7Formatter(row) {
+      if(row.value7 == null || row.template7 == null) return null;
+      return row.template7.replace("_", row.value7);
+    },
+    value8Formatter(row) {
+      if(row.value8 == null || row.template8 == null) return null;
+      return row.template8.replace("_", row.value8);
+    },
+    value9Formatter(row) {
+      if(row.value9 == null || row.template9 == null) return null;
+      return row.template9.replace("_", row.value9);
+    },
+    value10Formatter(row) {
+      if(row.value10 == null || row.template10 == null) return null;
+      return row.template10.replace("_", row.value10);
+    },
+    value11Formatter(row) {
+      if(row.value11 == null || row.template11 == null) return null;
+      return row.template11.replace("_", row.value11);
+    },
+    value12Formatter(row) {
+      if(row.value12 == null || row.template12 == null) return null;
+      return row.template12.replace("_", row.value12);
+    },
+    value13Formatter(row) {
+      if(row.value13 == null || row.template13 == null) return null;
+      return row.template13.replace("_", row.value13);
+    },
+    value14Formatter(row) {
+      if(row.value14 == null || row.template14 == null) return null;
+      return row.template14.replace("_", row.value14);
+    },
+    value15Formatter(row) {
+      if(row.value15 == null || row.template15 == null) return null;
+      return row.template15.replace("_", row.value15);
+    },
     value16Formatter(row) {
       if(row.value16 == null || row.template16 == null) return null;
       return row.template16.replace("_", row.value16);
@@ -511,10 +524,17 @@ export default {
       return row.template20.replace("_", row.value20);
     },
     stateFormatter(row) {
-      return stateText(row)
+      if (row.state === '1') {
+        return "+";
+      }
+      return "-";
     },
     genderFormatter(row) {
-      return genderText(row)
+      if (row.gender === 1) {
+        return "男";
+      } else {
+        return "女";
+      }
     },
     getData() {
       this.loading = true
@@ -670,7 +690,7 @@ export default {
       this.loading = true
       axios({
         method: "GET",
-        url: buildReportSearchUrl(this.serverUrl, this.search, formatDate),
+        url: this.serverUrl + "getReportInfoByNameOrNickNameLike?name=" + this.search + "&date=" + formatDate,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -689,12 +709,7 @@ export default {
         this.loading = false
       })
     },
-    outTab (options) {
-      if (!this.checkLogin()) {
-        this.$message.warning('请先登录管理后台')
-        return
-      }
-      const opts = options || {}
+    outTab () {
       let xlsxParam = {raw: true}
       /* generate workbook object from table */
       let wb = XLSX.utils.table_to_book(document.querySelector("#out-table"), xlsxParam)
@@ -705,54 +720,11 @@ export default {
       let day = time.getDate() < 10 ? '0' + time.getDate() : time.getDate()
       let hours = time.getHours() < 10 ? '0' + time.getHours() : time.getHours()
       let minutes = time.getMinutes() < 10 ? '0' + time.getMinutes() : time.getMinutes()
-      const pagePart = opts.pagePart != null ? opts.pagePart : this.currentPage
-      let fileStr = time.getFullYear() + '' + month + '' + day + '' + hours + '' + minutes + '_' + pagePart
-      const prefix = opts.prefix || 'DailyReport_Info_'
+      let fileStr = time.getFullYear() + '' + month + '' + day + '' + hours + '' + minutes + '_' + this.currentPage
       try {
-        FileSaver.saveAs(new Blob([wbout], { type: 'application/octet-stream' }), prefix + fileStr + '.xlsx')
+        FileSaver.saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'DailyReport_Info_' + fileStr + '.xlsx')
       } catch (e) { if (typeof console !== 'undefined') console.log(e, wbout) }
       return wbout
-    },
-    async exportPerson() {
-      if (!this.checkLogin()) {
-        this.$message.warning('请先登录管理后台')
-        return
-      }
-      const person = this.personOptions.find(item => item.userId === this.selectedUserId)
-      if (!person) {
-        this.$message.warning('请选择要导出的人员')
-        return
-      }
-      this.loading = true
-      try {
-        const rows = await this.loadPersonRows(person)
-        if (!rows.length) {
-          this.$message.warning('无数据')
-          return
-        }
-        this.exportRows = rows
-        await this.$nextTick()
-        this.outTab({ prefix: 'DailyReport_Person_', pagePart: 'person' })
-        this.$message.success('已导出 ' + rows.length + ' 条打卡记录')
-      } catch (err) {
-        console.error('导出个人打卡记录失败:', err)
-        this.$message.error('导出失败，请重试')
-      } finally {
-        this.exportRows = null
-        this.loading = false
-      }
-    },
-    async loadPersonRows(person) {
-      const loaded = selectPersonRows(this.tableData, person.userId)
-      const keyword = (person.name || person.nickname || '').trim()
-      if (!keyword) return loaded
-      let formatDate = null
-      if (this.filterDate !== null && this.filterDate !== '') {
-        formatDate = this.getDateFormat(this.filterDate)
-      }
-      const res = await axios.get(buildReportSearchUrl(this.serverUrl, keyword, formatDate))
-      const exact = selectPersonRows(res.data, person.userId)
-      return exact.length ? exact : loaded
     },
     getDateFormat(date) {
       let year = date.getFullYear()

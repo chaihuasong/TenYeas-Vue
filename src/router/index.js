@@ -26,7 +26,6 @@ import Group from "@/components/Group";
 import GroupDailyStatus from "@/components/GroupDailyStatus";
 import GroupTab from "@/components/admin/GroupTab";
 import CheckinCircle from "@/components/CheckinCircle";
-import CountdownSetting from "@/components/settings/CountdownSetting";
 
 Vue.use(Router)
 
@@ -231,15 +230,6 @@ export default new Router({
           path: 'notification',
           name: 'notification',
           component: Notification,
-          meta: {
-            title: '管理后台',
-            footShow: false,
-          },
-        },
-        {
-          path: 'countdown',
-          name: 'countdownSetting',
-          component: CountdownSetting,
           meta: {
             title: '管理后台',
             footShow: false,

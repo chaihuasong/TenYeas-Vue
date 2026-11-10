@@ -371,6 +371,11 @@
 
     <!-- 我的打卡内容 -->
     <div v-show="activeName === 'dailyReport'" class="content-section">
+      <div class="my-report-toolbar">
+        <el-button size="small" type="primary" plain :loading="exportingMine" @click="exportMyReports">
+          <i class="el-icon-download"></i> 导出我的打卡
+        </el-button>
+      </div>
       <div v-if="reportsLoading" class="loading-state">
         <i class="el-icon-loading"></i>
         <span>加载中...</span>
@@ -498,11 +503,14 @@
 <script>
 import axios from 'axios'
 import qs from 'qs'
+import XLSX from 'xlsx'
+import FileSaver from 'file-saver'
 import global from '@/components/Common'
 import GroupReportList from '@/components/group/GroupReportList'
 import { buildReportItems, sortByDateDesc } from '@/components/group/reportItems'
 import { copyToClipboard } from '@/utils/clipboard'
 import { buildGroupView, parseJoinResult, withCacheBust } from '@/utils/groupMembership'
+import { buildOwnExportSheet, keepOwnReports, sortOwnReports, unwrapReportList } from '@/utils/reportExport'
 
 export default {
   name: 'Group',
@@ -523,6 +531,7 @@ export default {
       reportsLoaded: false,
       submitting: false,
       acting: null,
+      exportingMine: false,
 
       // 我创建的组（原始数据）
       rawOwnedGroups: [],
@@ -789,6 +798,45 @@ export default {
 
       await Promise.all(requests)
       this.initExpanded()
+    },
+
+    async exportMyReports() {
+      if (!this.unionid) {
+        this.$message.warning('未获取到用户信息，请重新进入')
+        return
+      }
+      if (this.exportingMine) return
+      this.exportingMine = true
+      try {
+        const res = await axios.get(
+          `${this.serverUrl}getReportInfoListById?userId=${encodeURIComponent(this.unionid)}`
+        )
+        const packed = unwrapReportList(res.data)
+        const rows = sortOwnReports(keepOwnReports(packed.rows, this.unionid))
+        if (!rows.length) {
+          this.$message.warning('暂无打卡记录')
+          return
+        }
+        const sheet = XLSX.utils.aoa_to_sheet(buildOwnExportSheet(rows))
+        const book = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(book, sheet, '我的打卡')
+        const out = XLSX.write(book, { bookType: 'xlsx', bookSST: true, type: 'array' })
+        const now = new Date()
+        const pad = value => String(value).padStart(2, '0')
+        const stamp = now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate())
+          + pad(now.getHours()) + pad(now.getMinutes())
+        FileSaver.saveAs(new Blob([out], { type: 'application/octet-stream' }), '我的打卡_' + stamp + '.xlsx')
+        if (packed.truncated) {
+          this.$message.warning('服务器只返回了部分记录，已导出 ' + rows.length + ' 条')
+        } else {
+          this.$message.success('已导出 ' + rows.length + ' 条打卡记录')
+        }
+      } catch (err) {
+        console.error('导出我的打卡失败', err)
+        this.$message.error('导出失败，请稍后重试')
+      } finally {
+        this.exportingMine = false
+      }
     },
 
     async getMyReports() {
@@ -1144,6 +1192,12 @@ export default {
 /* 内容区域 */
 .content-section {
   padding: 15px;
+}
+
+.my-report-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
 }
 
 .loading-state {

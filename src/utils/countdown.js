@@ -1,10 +1,12 @@
-// 首页倒计时。未保存配置时保持原来的「十年倒计时 / 2031-04-17」展示和天数算法。
-// 自定义截止时间按北京时间（Asia/Shanghai）解释，避免只写日期时被 UTC 解析提前一天。
+// 首页倒计时。每个用户的自定义名称和截止时间存在本机，键是当前用户 id。
+// 未设置或内容无效时回到原来的「十年倒计时 / 2031-04-17」。
+// 截止时间按北京时间解释，避免只写日期时被 UTC 解析提前一天。
 
 export const LEGACY_COUNTDOWN_NAME = '十年倒计时'
 export const LEGACY_COUNTDOWN_DATE_TEXT = '2031年04月17日'
 export const LEGACY_FORM_DEADLINE = '2031-04-17 23:59:59'
 export const COUNTDOWN_NAME_MAX = 20
+const STORAGE_PREFIX = 'tenyears.countdown.'
 const SHANGHAI = 'Asia/Shanghai'
 
 export function legacyRemainingDays(nowMs) {
@@ -77,7 +79,7 @@ function fromShanghaiParts(year, month, day, hour, minute, second) {
   }
 }
 
-// 管理端保存的是「YYYY-MM-DD HH:mm:ss」。旧数据若只有日期，按当天北京时间 23:59:59。
+// 保存值是「YYYY-MM-DD HH:mm:ss」。旧数据若只有日期，按当天北京时间 23:59:59。
 export function parseDeadline(raw) {
   if (raw instanceof Date) {
     if (Number.isNaN(raw.getTime())) return null
@@ -151,6 +153,49 @@ export function countdownFormValues(payload) {
     deadline: view.deadlineText,
     saved: !view.legacy
   }
+}
+
+export function countdownStorageKey(userId) {
+  const id = String(userId == null ? '' : userId).replace(/"/g, '').trim()
+  return id ? STORAGE_PREFIX + id : ''
+}
+
+function storageOf(storage) {
+  if (storage) return storage
+  if (typeof localStorage === 'undefined') return null
+  return localStorage
+}
+
+export function readStoredCountdown(userId, storage) {
+  const key = countdownStorageKey(userId)
+  const store = storageOf(storage)
+  if (!key || !store) return null
+  try {
+    const raw = store.getItem(key)
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch (e) {
+    return null
+  }
+}
+
+export function writeStoredCountdown(userId, value, storage) {
+  const key = countdownStorageKey(userId)
+  const store = storageOf(storage)
+  if (!key || !store || !value) return false
+  store.setItem(key, JSON.stringify({
+    name: value.name,
+    deadline: value.deadline
+  }))
+  return true
+}
+
+export function clearStoredCountdown(userId, storage) {
+  const key = countdownStorageKey(userId)
+  const store = storageOf(storage)
+  if (!key || !store) return false
+  store.removeItem(key)
+  return true
 }
 
 export function validateCountdownInput(name, deadlineText) {

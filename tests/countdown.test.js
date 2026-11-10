@@ -3,10 +3,13 @@ import assert from 'node:assert/strict'
 import {
   LEGACY_COUNTDOWN_DATE_TEXT,
   LEGACY_COUNTDOWN_NAME,
+  clearStoredCountdown,
   countdownFormValues,
   legacyRemainingDays,
+  readStoredCountdown,
   resolveCountdown,
-  validateCountdownInput
+  validateCountdownInput,
+  writeStoredCountdown
 } from '../src/utils/countdown.js'
 
 const NOW = Date.parse('2031-04-16T16:00:00.000Z')
@@ -63,7 +66,7 @@ test('截止时间已过时天数归零', () => {
   assert.equal(view.days, 0)
 })
 
-test('管理端校验名称和截止时间', () => {
+test('首页修改时校验名称和截止时间', () => {
   assert.equal(validateCountdownInput('  ', '2031-04-17 08:00:00').ok, false)
   assert.equal(validateCountdownInput('每日打卡', '').ok, false)
   assert.equal(validateCountdownInput('每日打卡', '2031-04-17').message, '请选择截止时间（含小时和分钟）')
@@ -84,4 +87,39 @@ test('表单在没有保存记录时给出旧配置，保存后回填自定义�
     deadline: '2032-01-02 03:04:05',
     saved: true
   })
+})
+
+function memoryStorage() {
+  const map = new Map()
+  return {
+    getItem(key) { return map.has(key) ? map.get(key) : null },
+    setItem(key, value) { map.set(key, String(value)) },
+    removeItem(key) { map.delete(key) }
+  }
+}
+
+test('倒计时按当前用户存在本机，恢复默认后回到十年倒计时', () => {
+  const storage = memoryStorage()
+  assert.equal(writeStoredCountdown('', { name: '甲', deadline: '2031-05-01 08:00:00' }, storage), false)
+  assert.equal(writeStoredCountdown('user-a', { name: '甲的打卡', deadline: '2031-05-01 08:00:00' }, storage), true)
+  assert.equal(writeStoredCountdown('user-b', { name: '乙的打卡', deadline: '2032-01-01 09:00:00' }, storage), true)
+
+  const mine = resolveCountdown(readStoredCountdown('user-a', storage), NOW)
+  const other = resolveCountdown(readStoredCountdown('user-b', storage), NOW)
+  assert.equal(mine.name, '甲的打卡')
+  assert.equal(mine.legacy, false)
+  assert.equal(other.name, '乙的打卡')
+
+  assert.equal(clearStoredCountdown('user-a', storage), true)
+  const restored = resolveCountdown(readStoredCountdown('user-a', storage), NOW)
+  assert.equal(restored.legacy, true)
+  assert.equal(restored.name, LEGACY_COUNTDOWN_NAME)
+  assert.equal(resolveCountdown(readStoredCountdown('user-b', storage), NOW).name, '乙的打卡')
+})
+
+test('损坏的本机记录回退到默认倒计时', () => {
+  const storage = memoryStorage()
+  storage.setItem('tenyears.countdown.user-a', '{')
+  assert.equal(readStoredCountdown('user-a', storage), null)
+  assert.equal(resolveCountdown(null, NOW).legacy, true)
 })
