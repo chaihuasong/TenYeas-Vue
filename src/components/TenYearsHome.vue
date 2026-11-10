@@ -12,6 +12,7 @@
       <span style="font-weight: bold">{{ countdownView.name }}，离{{ countdownView.dateText }}，还有</span>
       <br/>
       <span class="countdown-days">{{ countdownView.days }}</span> 天
+      <div v-if="countdownNotice" class="countdown-notice">{{ countdownNotice }}</div>
     </el-card>
 
     <el-dialog title="我的倒计时" :visible.sync="countdownDialogVisible" width="86%" center>
@@ -30,12 +31,12 @@
               style="width: 100%">
           </el-date-picker>
         </el-form-item>
-        <div class="countdown-hint">只保存在这台设备的当前账号下。换设备不会自动同步。</div>
+        <div class="countdown-hint">保存后写入服务器。读取失败时不会把本机旧记录自动上传。</div>
       </el-form>
       <div slot="footer">
         <el-button @click="restoreDefaultCountdown">恢复默认</el-button>
         <el-button @click="countdownDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="saveCountdownEdit">保存</el-button>
+        <el-button type="primary" :loading="countdownSaving" @click="saveCountdownEdit">保存</el-button>
       </div>
     </el-dialog>
 
@@ -386,9 +387,13 @@ import wx from 'weixin-js-sdk'
 import global from './Common.vue'
 import { copyToClipboardSync, copyToClipboard } from '@/utils/clipboard'
 import {
+  chooseCountdown,
   clearStoredCountdown,
+  parseCountdownResponse,
+  parseWriteResponse,
   readStoredCountdown,
   resolveCountdown,
+  sameAccount,
   validateCountdownInput,
   writeStoredCountdown
 } from '@/utils/countdown'
@@ -538,6 +543,8 @@ export default {
         name: '',
         deadline: ''
       },
+      countdownStatus: 'default',
+      countdownSaving: false,
     };
   },
   mounted: function () {
@@ -567,6 +574,15 @@ export default {
     },
     countdownView() {
       return resolveCountdown(this.countdownPayload, Date.now())
+    },
+    countdownNotice() {
+      if (this.countdownStatus === 'local-unconfirmed') {
+        return '服务器读取失败，这是本机记录，尚未与服务器核对'
+      }
+      if (this.countdownStatus === 'error') {
+        return '服务器读取失败，当前显示默认倒计时'
+      }
+      return ''
     }
   },
   watch: {
@@ -663,8 +679,27 @@ export default {
         }
       }
     },
-    loadUserCountdown() {
-      this.countdownPayload = readStoredCountdown(this.unionid)
+    async loadUserCountdown() {
+      const userId = this.unionid
+      this.countdownPayload = null
+      this.countdownStatus = userId ? 'loading' : 'default'
+      if (!userId) return
+      const local = readStoredCountdown(userId)
+      try {
+        const res = await axios.get(this.serverUrl + 'getUserCountdown?userId=' + encodeURIComponent(userId))
+        if (!sameAccount(this.unionid, userId)) return
+        this.applyCountdownChoice(userId, chooseCountdown(parseCountdownResponse(res.data), local))
+      } catch (err) {
+        if (!sameAccount(this.unionid, userId)) return
+        this.applyCountdownChoice(userId, chooseCountdown({ status: 'error', message: '读取失败' }, local))
+      }
+    },
+    applyCountdownChoice(userId, chosen) {
+      if (!sameAccount(this.unionid, userId)) return
+      this.countdownPayload = chosen.payload
+      this.countdownStatus = chosen.status
+      if (chosen.clearLocal) clearStoredCountdown(userId)
+      else if (chosen.writeLocal) writeStoredCountdown(userId, chosen.writeLocal)
     },
     openCountdownEditor() {
       if (!this.unionid) {
@@ -678,29 +713,76 @@ export default {
       }
       this.countdownDialogVisible = true
     },
-    saveCountdownEdit() {
+    async saveCountdownEdit() {
+      const userId = this.unionid
       const checked = validateCountdownInput(this.countdownForm.name, this.countdownForm.deadline)
       if (!checked.ok) {
         this.$message.warning(checked.message)
         return
       }
-      if (!writeStoredCountdown(this.unionid, checked.value)) {
+      if (!userId) {
         this.$message.warning('请先登录后再修改倒计时')
         return
       }
-      this.countdownPayload = { name: checked.value.name, deadline: checked.value.deadline }
-      this.countdownDialogVisible = false
-      this.$message.success('已保存在本机')
+      this.countdownSaving = true
+      try {
+        const res = await axios.post(this.serverUrl + 'saveUserCountdown', qs.stringify({
+          userId,
+          name: checked.value.name,
+          deadline: checked.value.deadline
+        }), {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        })
+        const result = parseWriteResponse(res.data)
+        if (!sameAccount(this.unionid, userId)) return
+        if (!result.ok) {
+          this.$message.error(result.message || '保存失败，服务器上的倒计时没有改变')
+          return
+        }
+        this.countdownPayload = { name: checked.value.name, deadline: checked.value.deadline }
+        this.countdownStatus = 'server'
+        writeStoredCountdown(userId, checked.value)
+        this.countdownDialogVisible = false
+        this.$message.success('已保存到服务器')
+      } catch (err) {
+        if (sameAccount(this.unionid, userId)) {
+          this.$message.error('保存失败，服务器上的倒计时没有改变')
+        }
+      } finally {
+        this.countdownSaving = false
+      }
     },
-    restoreDefaultCountdown() {
-      if (!this.unionid) {
+    async restoreDefaultCountdown() {
+      const userId = this.unionid
+      if (!userId) {
         this.$message.warning('请先登录后再修改倒计时')
         return
       }
-      clearStoredCountdown(this.unionid)
-      this.countdownPayload = null
-      this.countdownDialogVisible = false
-      this.$message.success('已恢复默认十年倒计时')
+      this.countdownSaving = true
+      try {
+        const res = await axios.post(this.serverUrl + 'clearUserCountdown', qs.stringify({
+          userId
+        }), {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        })
+        const result = parseWriteResponse(res.data)
+        if (!sameAccount(this.unionid, userId)) return
+        if (!result.ok) {
+          this.$message.error(result.message || '恢复默认失败，服务器上的倒计时没有改变')
+          return
+        }
+        clearStoredCountdown(userId)
+        this.countdownPayload = null
+        this.countdownStatus = 'default'
+        this.countdownDialogVisible = false
+        this.$message.success('已恢复默认十年倒计时')
+      } catch (err) {
+        if (sameAccount(this.unionid, userId)) {
+          this.$message.error('恢复默认失败，服务器上的倒计时没有改变')
+        }
+      } finally {
+        this.countdownSaving = false
+      }
     },
     addTimeValue(title) {
       if (title === '早起') {
@@ -2983,6 +3065,13 @@ a {
   font-size: 12px;
   line-height: 1.5;
   text-align: left;
+}
+
+.countdown-notice {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #fff7d6;
 }
 
 /* 折叠面板优化 */

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {
   buildGroupView,
   parseJoinResult,
+  readReviewResult,
   visibleTeamSummaries,
   withCacheBust
 } from '../src/utils/groupMembership.js'
@@ -12,23 +13,35 @@ const ownerGroups = [
   { id: 2, groupId: 'HTZ-0000002', groupName: '晚课组' }
 ]
 
-test('二维成员记录没有 groupId 时仍按组下标出现在待审核里', () => {
+test('二维成员按 groupId 归组，顺序打乱也不会串组，没有 groupId 时不按下标硬挂', () => {
   const view = buildGroupView({
     ownedGroups: ownerGroups,
     ownedMemberRows: [
-      [{ id: 11, unionId: 'user-b', nickname: '乙', state: 0, owner: 'user-a' }],
-      [{ id: 12, unionId: 'user-c', nickname: '丙', state: '1', owner: 'user-a' }]
+      [
+        { id: 12, groupId: 'HTZ-0000002', unionId: 'user-c', nickname: '丙', state: '1', owner: 'user-a' },
+        { id: 11, groupId: 'HTZ-0000001', unionId: 'user-b', nickname: '乙', state: 0, owner: 'user-a' }
+      ],
+      [{ id: 13, unionId: 'user-d', nickname: '无组号', state: 0, owner: 'user-a' }]
     ],
     joinedRaw: [],
     unionId: 'user-a'
   })
-  assert.equal(view.pendingCount, 1)
   assert.equal(view.owned[0].pending.length, 1)
-  assert.equal(view.owned[0].pending[0].groupId, 'HTZ-0000001')
   assert.equal(view.owned[0].pending[0].nickname, '乙')
-  assert.equal(view.owned[1].members.length, 1)
   assert.equal(view.owned[1].members[0].nickname, '丙')
-  assert.equal(view.owned[0].members.length, 0)
+  assert.equal(view.pendingCount, 1)
+  assert.equal(view.owned[0].members.length + view.owned[1].pending.length, 0)
+})
+
+test('findGroupByOwner 返回 null 时小组列表为空而不是报错', () => {
+  const view = buildGroupView({
+    ownedGroups: null,
+    ownedMemberRows: [[{ groupId: 'HTZ-0000001', unionId: 'user-b', state: 0 }]],
+    joinedRaw: null,
+    unionId: 'user-a'
+  })
+  assert.equal(view.owned.length, 0)
+  assert.equal(view.joined.length, 0)
 })
 
 test('扁平成员不会因为下标被串到别的组', () => {
@@ -48,9 +61,9 @@ test('state 缺失的旧记录仍显示为组员，明确的 0 和 2 不会被�
   const view = buildGroupView({
     ownedGroups: [ownerGroups[0]],
     ownedMemberRows: [[
-      { id: 1, unionId: 'old', nickname: '旧数据' },
-      { id: 2, unionId: 'wait', nickname: '待审', state: '0' },
-      { id: 3, unionId: 'no', nickname: '拒绝', state: 2 }
+      { id: 1, groupId: 'HTZ-0000001', unionId: 'old', nickname: '旧数据' },
+      { id: 2, groupId: 'HTZ-0000001', unionId: 'wait', nickname: '待审', state: '0' },
+      { id: 3, groupId: 'HTZ-0000001', unionId: 'no', nickname: '拒绝', state: 2 }
     ]],
     joinedRaw: [],
     unionId: 'user-a'
@@ -133,6 +146,15 @@ test('自己创建的组不会在我加入的里再出现一次', () => {
     joinedRaw: [[{ groupId: 'HTZ-0000001', groupName: '晨练组', unionId: 'user-a', state: 1 }]]
   })
   assert.equal(view.joined.length, 0)
+})
+
+test('审核接口 HTTP 200 且正文为 error! 时不算成功', () => {
+  assert.equal(readReviewResult('error!').ok, false)
+  assert.equal(readReviewResult(' error! ').ok, false)
+  assert.equal(readReviewResult({ success: false, message: '状态未更新' }).ok, false)
+  assert.equal(readReviewResult('success').ok, true)
+  assert.equal(readReviewResult({ success: true }).ok, true)
+  assert.equal(readReviewResult(null).ok, false)
 })
 
 test('入组返回码只接受约定的 0 到 5', () => {

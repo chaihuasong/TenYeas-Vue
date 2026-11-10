@@ -30,19 +30,14 @@ function pushMember(map, member, fallbackGroupId) {
   map[groupId].push(decorateMember(member, groupId))
 }
 
-// 组长看到的申请：二维数组按下标对齐到 findGroupByOwner，缺 groupId 时仍能挂到对应组。
-// 扁平记录必须自带 groupId，不能按数组下标硬套，避免把不同组的人串到第一组。
+// findJoinGroups 是二维数组，顺序不稳定，每条记录自带 groupId。只按 groupId 归组，不按下标猜测。
 export function indexOwnedMembers(ownedGroups, ownedMemberRows) {
+  void ownedGroups
   const map = {}
-  const groups = Array.isArray(ownedGroups) ? ownedGroups : []
   if (Array.isArray(ownedMemberRows)) {
-    ownedMemberRows.forEach((entry, index) => {
-      if (Array.isArray(entry)) {
-        const fallback = groups[index] && groups[index].groupId
-        entry.forEach(member => pushMember(map, member, fallback))
-      } else {
-        pushMember(map, entry, '')
-      }
+    ownedMemberRows.forEach(entry => {
+      const list = Array.isArray(entry) ? entry : [entry]
+      list.forEach(member => pushMember(map, member, ''))
     })
     return map
   }
@@ -184,4 +179,15 @@ export function parseJoinResult(data) {
   if (typeof data === 'number' && data >= 1 && data <= 5) return data
   if (typeof data === 'string' && /^[1-5]$/.test(data.trim())) return Number(data.trim())
   return null
+}
+
+// agreeGroup / rejectGroup 在 HTTP 200 时仍可能用正文 error! 表示失败。
+export function readReviewResult(data) {
+  if (data == null) return { ok: false, message: '服务器没有返回审核结果' }
+  const text = typeof data === 'string' ? data.trim() : ''
+  if (text === 'error!' || text === 'error') return { ok: false, message: '审核没有成功' }
+  if (data && typeof data === 'object' && data.success === false) {
+    return { ok: false, message: data.message || '审核没有成功' }
+  }
+  return { ok: true, message: '' }
 }

@@ -6,8 +6,12 @@ import {
   clearStoredCountdown,
   countdownFormValues,
   legacyRemainingDays,
+  chooseCountdown,
+  parseCountdownResponse,
+  parseWriteResponse,
   readStoredCountdown,
   resolveCountdown,
+  sameAccount,
   validateCountdownInput,
   writeStoredCountdown
 } from '../src/utils/countdown.js'
@@ -115,6 +119,33 @@ test('倒计时按当前用户存在本机，恢复默认后回到十年倒计�
   assert.equal(restored.legacy, true)
   assert.equal(restored.name, LEGACY_COUNTDOWN_NAME)
   assert.equal(resolveCountdown(readStoredCountdown('user-b', storage), NOW).name, '乙的打卡')
+})
+
+test('服务器倒计时优先，空配置不会让旧本机值写回，读取失败不算同步成功', () => {
+  const server = parseCountdownResponse({ name: '服务器', deadline: '2031-06-01 08:30:00' })
+  const chosen = chooseCountdown(server, { name: '旧本机', deadline: '2030-01-01 00:00:00' })
+  assert.equal(chosen.status, 'server')
+  assert.equal(chosen.payload.name, '服务器')
+  assert.equal(chosen.writeLocal.name, '服务器')
+  assert.equal(chosen.clearLocal, false)
+
+  const empty = chooseCountdown(parseCountdownResponse(''), { name: '旧本机', deadline: '2030-01-01 00:00:00' })
+  assert.equal(empty.status, 'default')
+  assert.equal(empty.payload, null)
+  assert.equal(empty.clearLocal, true)
+  assert.equal(empty.writeLocal, null)
+
+  const failed = chooseCountdown(parseCountdownResponse({ success: false, message: '读取失败' }), {
+    name: '旧本机', deadline: '2030-01-01 00:00:00'
+  })
+  assert.equal(failed.status, 'local-unconfirmed')
+  assert.equal(failed.payload.name, '旧本机')
+  assert.equal(failed.writeLocal, null)
+  assert.equal(parseWriteResponse({ success: false, message: '没有写入' }).ok, false)
+  assert.equal(parseWriteResponse({ success: true }).ok, true)
+  assert.equal(parseWriteResponse('success').ok, false)
+  assert.equal(sameAccount('user-a', 'user-b'), false)
+  assert.equal(sameAccount(' "user-a" ', 'user-a'), true)
 })
 
 test('损坏的本机记录回退到默认倒计时', () => {

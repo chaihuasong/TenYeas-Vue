@@ -372,6 +372,7 @@
     <!-- 我的打卡内容 -->
     <div v-show="activeName === 'dailyReport'" class="content-section">
       <div class="my-report-toolbar">
+        <div class="export-scope-note">导出当前资料里仍能唯一归属的打卡记录。已删除的旧身份无法追溯，因此不是终身全部历史。</div>
         <el-button size="small" type="primary" plain :loading="exportingMine" @click="exportMyReports">
           <i class="el-icon-download"></i> 导出我的打卡
         </el-button>
@@ -509,8 +510,8 @@ import global from '@/components/Common'
 import GroupReportList from '@/components/group/GroupReportList'
 import { buildReportItems, sortByDateDesc } from '@/components/group/reportItems'
 import { copyToClipboard } from '@/utils/clipboard'
-import { buildGroupView, parseJoinResult, withCacheBust } from '@/utils/groupMembership'
-import { buildOwnExportSheet, keepOwnReports, sortOwnReports, unwrapReportList } from '@/utils/reportExport'
+import { buildGroupView, parseJoinResult, readReviewResult, withCacheBust } from '@/utils/groupMembership'
+import { buildExportNoteSheet, buildOwnExportSheet, prepareExportMyReports, sheetMatchesRecords } from '@/utils/reportExport'
 
 export default {
   name: 'Group',
@@ -806,34 +807,53 @@ export default {
         return
       }
       if (this.exportingMine) return
+      const loginId = this.unionid
       this.exportingMine = true
       try {
+        let profile = null
+        try {
+          const profileRes = await axios.get(`${this.serverUrl}getById?id=${encodeURIComponent(loginId)}`)
+          if (profileRes.data && typeof profileRes.data === 'object') profile = profileRes.data
+        } catch (profileErr) {
+          profile = null
+        }
+        if (this.unionid !== loginId) return
         const res = await axios.get(
-          `${this.serverUrl}getReportInfoListById?userId=${encodeURIComponent(this.unionid)}`
+          `${this.serverUrl}exportMyReports?userId=${encodeURIComponent(loginId)}`
         )
-        const packed = unwrapReportList(res.data)
-        const rows = sortOwnReports(keepOwnReports(packed.rows, this.unionid))
-        if (!rows.length) {
-          this.$message.warning('暂无打卡记录')
+        if (this.unionid !== loginId) return
+        const prepared = prepareExportMyReports(res.data, profile)
+        if (!prepared.download) {
+          const detail = [prepared.reason, prepared.message].filter(Boolean).join('；')
+            + (prepared.warnings.length ? '；' + prepared.warnings.join('；') : '')
+          if (prepared.status === 'complete') this.$message.warning(detail || '当前资料下没有可归属的打卡记录')
+          else this.$message.error(detail || '导出没有成功，没有生成文件')
           return
         }
-        const sheet = XLSX.utils.aoa_to_sheet(buildOwnExportSheet(rows))
+        const records = buildOwnExportSheet(prepared.rows)
+        if (!sheetMatchesRecords(records, prepared.rows)) {
+          this.$message.error('导出校验失败，文件行数与接口名单不一致，没有保存文件')
+          return
+        }
         const book = XLSX.utils.book_new()
-        XLSX.utils.book_append_sheet(book, sheet, '我的打卡')
+        XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(buildExportNoteSheet(prepared)), '说明')
+        XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(records), '我的打卡')
         const out = XLSX.write(book, { bookType: 'xlsx', bookSST: true, type: 'array' })
         const now = new Date()
         const pad = value => String(value).padStart(2, '0')
         const stamp = now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate())
           + pad(now.getHours()) + pad(now.getMinutes())
         FileSaver.saveAs(new Blob([out], { type: 'application/octet-stream' }), '我的打卡_' + stamp + '.xlsx')
-        if (packed.truncated) {
-          this.$message.warning('服务器只返回了部分记录，已导出 ' + rows.length + ' 条')
+        const scope = prepared.scopeNote
+        if (prepared.status === 'complete') {
+          this.$message.success('已导出当前资料可归属的 ' + prepared.rows.length + ' 条。' + scope)
         } else {
-          this.$message.success('已导出 ' + rows.length + ' 条打卡记录')
+          const extra = [prepared.reason, prepared.message].concat(prepared.warnings).filter(Boolean).join('；')
+          this.$message.warning('部分导出：已写入本次名单中的 ' + prepared.rows.length + ' 条，不是已知的终身总数。' + extra)
         }
       } catch (err) {
         console.error('导出我的打卡失败', err)
-        this.$message.error('导出失败，请稍后重试')
+        this.$message.error('导出失败，没有生成文件')
       } finally {
         this.exportingMine = false
       }
@@ -992,13 +1012,15 @@ export default {
       }
       this.acting = member.id
       try {
-        await axios.post(`${this.serverUrl}agreeGroup?${query}`)
-        this.$message.success('已同意入组！')
-        await this.getData()
+        const res = await axios.post(`${this.serverUrl}agreeGroup?${query}`)
+        const result = readReviewResult(res.data)
+        if (result.ok) this.$message.success('已同意入组！')
+        else this.$message.error(result.message || '同意没有成功')
       } catch (err) {
         this.$message.error('操作失败，请重试')
       } finally {
         this.acting = null
+        await this.getData()
       }
     },
 
@@ -1010,13 +1032,15 @@ export default {
       }
       this.acting = member.id
       try {
-        await axios.post(`${this.serverUrl}rejectGroup?${query}`)
-        this.$message.warning('已拒绝入组')
-        await this.getData()
+        const res = await axios.post(`${this.serverUrl}rejectGroup?${query}`)
+        const result = readReviewResult(res.data)
+        if (result.ok) this.$message.warning('已拒绝入组')
+        else this.$message.error(result.message || '拒绝没有成功')
       } catch (err) {
         this.$message.error('操作失败，请重试')
       } finally {
         this.acting = null
+        await this.getData()
       }
     },
 
@@ -1196,8 +1220,18 @@ export default {
 
 .my-report-toolbar {
   display: flex;
-  justify-content: flex-end;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 12px;
+}
+
+.export-scope-note {
+  flex: 1;
+  color: #909399;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: left;
 }
 
 .loading-state {

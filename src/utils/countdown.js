@@ -198,6 +198,69 @@ export function clearStoredCountdown(userId, storage) {
   return true
 }
 
+export function normalizeAccountId(userId) {
+  return String(userId == null ? '' : userId).replace(/"/g, '').trim()
+}
+
+export function sameAccount(left, right) {
+  const a = normalizeAccountId(left)
+  const b = normalizeAccountId(right)
+  return a !== '' && a === b
+}
+
+// GET /getUserCountdown：空正文表示服务器没有自定义倒计时；success:false 不是空配置。
+export function parseCountdownResponse(data) {
+  if (data == null) return { status: 'empty' }
+  if (typeof data === 'string') {
+    const text = data.trim()
+    if (!text || text === 'null') return { status: 'empty' }
+    try {
+      return parseCountdownResponse(JSON.parse(text))
+    } catch (e) {
+      return { status: 'invalid', message: '倒计时数据无法识别' }
+    }
+  }
+  if (typeof data !== 'object' || Array.isArray(data)) {
+    return { status: 'invalid', message: '倒计时数据无法识别' }
+  }
+  if (data.success === false) {
+    return { status: 'error', message: data.message || '读取倒计时失败' }
+  }
+  const view = resolveCountdown(data, Date.now())
+  if (view.legacy) return { status: 'invalid', message: '倒计时数据无法识别' }
+  return { status: 'ready', value: { name: view.name, deadline: view.deadlineText } }
+}
+
+// 服务器读成功时以服务器为准。空配置会清掉本机旧值，避免之后把旧值写回去。
+// 读取失败时可以暂时显示本机记录，但 writeLocal 为空，表示没有同步成功。
+export function chooseCountdown(parsed, localPayload) {
+  if (parsed && parsed.status === 'ready' && parsed.value) {
+    return { payload: parsed.value, status: 'server', clearLocal: false, writeLocal: parsed.value }
+  }
+  if (parsed && parsed.status === 'empty') {
+    return { payload: null, status: 'default', clearLocal: true, writeLocal: null }
+  }
+  const localView = resolveCountdown(localPayload, Date.now())
+  if (!localView.legacy) {
+    return {
+      payload: { name: localView.name, deadline: localView.deadlineText },
+      status: 'local-unconfirmed',
+      clearLocal: false,
+      writeLocal: null
+    }
+  }
+  return { payload: null, status: 'error', clearLocal: false, writeLocal: null }
+}
+
+// POST 保存/恢复：HTTP 200 不够，必须看到 success === true。
+export function parseWriteResponse(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data) || data.success !== true) {
+    const message = data && typeof data === 'object' && data.message ? data.message : '服务器没有确认操作成功'
+    return { ok: false, message }
+  }
+  return { ok: true, message: data.message || '' }
+}
+
 export function validateCountdownInput(name, deadlineText) {
   const trimmed = String(name || '').trim()
   if (!trimmed) return { ok: false, message: '请填写倒计时名称' }
