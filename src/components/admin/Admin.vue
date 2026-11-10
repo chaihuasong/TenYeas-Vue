@@ -36,6 +36,9 @@
             <el-menu-item-group>
               <el-menu-item index="/home/tenYearsHtmlTab">页面修改</el-menu-item>
             </el-menu-item-group>
+            <el-menu-item-group>
+              <el-menu-item index="/home/countdown">倒计时</el-menu-item>
+            </el-menu-item-group>
           </el-submenu>
         </el-menu>
       </el-aside>

@@ -8,9 +8,9 @@
     </div>
 
     <el-card v-if="createDate" class="countdown-card" style="float: left; width: 100%;margin-top: 10px">
-      <span style="font-weight: bold">十年倒计时，离{{this.getTenYearsDate()}}，还有</span>
+      <span style="font-weight: bold">{{ countdownView.name }}，离{{ countdownView.dateText }}，还有</span>
       <br/>
-      <span class="countdown-days">{{this.getTenYearsRemaining()}}</span> 天
+      <span class="countdown-days">{{ countdownView.days }}</span> 天
     </el-card>
 
 <!--    <el-card style="float: left; width: 100%;margin-top: 10px">-->
@@ -42,11 +42,12 @@
               <span class="team-name">{{ team.groupName || '未命名团队' }}</span>
               <span v-if="team.isOwner" class="team-owner-tag">我创建的</span>
             </div>
-            <div class="team-progress-text">
+            <div class="team-progress-text" v-if="team.statusReady !== false">
               今日 {{ team.checkedIn }}/{{ team.total }} 人已打卡
               <span class="team-rate">{{ teamRate(team) }}%</span>
             </div>
-            <div class="team-progress-bar">
+            <div class="team-progress-text" v-else>今日完成情况暂未加载</div>
+            <div class="team-progress-bar" v-if="team.statusReady !== false">
               <div class="team-progress-fill" :style="{ width: teamRate(team) + '%' }"></div>
             </div>
           </div>
@@ -358,6 +359,8 @@ import qs from "qs";
 import wx from 'weixin-js-sdk'
 import global from './Common.vue'
 import { copyToClipboardSync, copyToClipboard } from '@/utils/clipboard'
+import { resolveCountdown } from '@/utils/countdown'
+import { visibleTeamSummaries, withCacheBust } from '@/utils/groupMembership'
 
 export default {
   name: 'TenYears',
@@ -497,6 +500,7 @@ export default {
       },
 
       myTeamStatuses: [],
+      countdownPayload: null,
     };
   },
   mounted: function () {
@@ -509,6 +513,7 @@ export default {
       this.getData()
     })
     this.configWechat()
+    this.loadCountdown()
     // unionid 此时通常还没解析出来，真正的拉取由 unionid 的 watch 触发
     this.loadPlanInfo()
     this.getAllDefaultReportsLists()
@@ -522,6 +527,9 @@ export default {
     // 当前表单中所有可编辑内容的快照，用于判断是否有未提交的改动
     dailyDraftSnapshot() {
       return JSON.stringify(this.buildDailyDraftPayload())
+    },
+    countdownView() {
+      return resolveCountdown(this.countdownPayload, Date.now())
     }
   },
   watch: {
@@ -567,16 +575,62 @@ export default {
     },
     async loadMyTeamStatuses() {
       if (!this.unionid) return
+      const date = this.getDateFormat(new Date())
+      const unionId = encodeURIComponent(this.unionid)
       try {
-        const date = this.getDateFormat(new Date())
-        const res = await axios.get(
-          `${this.serverUrl}getMyGroupsDailyStatus?unionId=${encodeURIComponent(this.unionid)}&date=${date}`
-        )
-        this.myTeamStatuses = Array.isArray(res.data) ? res.data : []
+        const [ownedRes, joinedRes] = await Promise.all([
+          axios.get(withCacheBust(`${this.serverUrl}findGroupByOwner?unionId=${unionId}`)),
+          axios.get(withCacheBust(`${this.serverUrl}findAllJoinGroups?unionId=${unionId}`))
+        ])
+        const teams = visibleTeamSummaries({
+          ownedGroups: ownedRes.data,
+          joinedRaw: joinedRes.data,
+          unionId: this.unionid
+        })
+        if (!teams.length) {
+          this.myTeamStatuses = []
+          return
+        }
+        this.myTeamStatuses = await Promise.all(teams.map(async team => {
+          try {
+            const res = await axios.get(withCacheBust(
+              `${this.serverUrl}getGroupDailyStatus?groupId=${encodeURIComponent(team.groupId)}&date=${date}`
+            ))
+            const data = res.data || {}
+            if (data.error === 'group_not_found') {
+              return Object.assign({}, team, { checkedIn: 0, total: 0, statusReady: false })
+            }
+            return {
+              groupId: team.groupId,
+              groupName: data.groupName || team.groupName,
+              isOwner: team.isOwner,
+              checkedIn: data.checkedIn || 0,
+              total: data.total || 0,
+              statusReady: true
+            }
+          } catch (err) {
+            return Object.assign({}, team, { checkedIn: 0, total: 0, statusReady: false })
+          }
+        }))
       } catch (err) {
-        console.error('加载团队打卡概况失败', err)
-        this.myTeamStatuses = []
+        console.error('按成员关系加载团队失败，改用汇总接口', err)
+        try {
+          const res = await axios.get(withCacheBust(
+            `${this.serverUrl}getMyGroupsDailyStatus?unionId=${unionId}&date=${date}`
+          ))
+          this.myTeamStatuses = Array.isArray(res.data) ? res.data : []
+        } catch (fallbackErr) {
+          console.error('加载团队打卡概况失败', fallbackErr)
+          this.myTeamStatuses = []
+        }
       }
+    },
+    loadCountdown() {
+      axios.get(this.serverUrl + 'getCountdown').then(res => {
+        this.countdownPayload = res.data
+      }).catch(() => {
+        this.countdownPayload = null
+      })
     },
     addTimeValue(title) {
       if (title === '早起') {
@@ -2342,27 +2396,10 @@ export default {
       });
     },
     getTenYearsDate() {
-      //let createdDate = new Date(this.createDate)
-      //let tenYearsLater = new Date((createdDate.getFullYear() + 10) + this.createDate.substr(4))
-      let tenYearsLater = new Date('2031-04-17')
-      let year = tenYearsLater.getFullYear()
-      let month = tenYearsLater.getMonth() + 1
-      if (month < 10) month = "0" + month
-      let dates = tenYearsLater.getDate()
-      if (dates < 10) dates = "0" + dates
-      return year + "年" + month + "月" + dates + "日"
+      return this.countdownView.dateText
     },
     getTenYearsRemaining() {
-      // if (this.createDate !== '') {
-      //   let createdDate = new Date(this.createDate)
-      //   let tenYearsLater = new Date((createdDate.getFullYear() + 10) + this.createDate.substr(4))
-      //   let remaining = tenYearsLater.getTime() - Date.now()
-      //   return parseInt(remaining / (24 * 3600 * 1000)+"")
-      // }
-      let tenYearsLater = new Date('2031-04-18')
-      let remaining = tenYearsLater.getTime() - Date.now()
-      if (remaining < 0) remaining = 0
-      return parseInt(remaining / (24 * 3600 * 1000)+"")
+      return this.countdownView.days
     },
     getYearsRemaining() {
       if (this.birthday !== '') {
