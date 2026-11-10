@@ -211,6 +211,72 @@
           </div>
         </div>
 
+        <!-- 我发出的、还没通过的申请。批准前也要看得到小组 -->
+        <div v-if="pendingApplications.length > 0" class="group-section">
+          <div class="section-header">
+            <div class="section-icon joined">
+              <i class="el-icon-time"></i>
+            </div>
+            <span>我的申请</span>
+            <span class="section-count">{{ pendingApplications.length }}个</span>
+          </div>
+          <div class="group-list">
+            <div v-for="(group, index) in pendingApplications" :key="group.groupId || ('pending-' + index)" class="group-card">
+              <div class="group-card-header">
+                <div class="group-avatar joined">
+                  <i class="el-icon-s-custom"></i>
+                </div>
+                <div class="group-info">
+                  <div class="group-name-row">
+                    <span class="group-name">{{ group.groupName || '未命名团队' }}</span>
+                    <span class="pending-badge">待审核</span>
+                  </div>
+                  <div class="group-meta">
+                    <span v-if="group.groupId" class="group-id" @click.stop="copyGroupId(group.groupId)">
+                      ID: {{ group.groupId }} <i class="el-icon-document-copy"></i>
+                    </span>
+                    <span class="ellipsis">组长: {{ group.ownerName || '—' }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="group-card-body">
+                <div class="empty-inline">
+                  <i class="el-icon-time"></i>
+                  <span>已提交入组申请，组长同意后会出现在「我加入的」</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="rejectedApplications.length > 0" class="group-section">
+          <div class="section-header">
+            <div class="section-icon joined">
+              <i class="el-icon-circle-close"></i>
+            </div>
+            <span>未通过的申请</span>
+            <span class="section-count">{{ rejectedApplications.length }}个</span>
+          </div>
+          <div class="group-list">
+            <div v-for="(group, index) in rejectedApplications" :key="group.groupId || ('rejected-' + index)" class="group-card">
+              <div class="group-card-header">
+                <div class="group-avatar joined">
+                  <i class="el-icon-s-custom"></i>
+                </div>
+                <div class="group-info">
+                  <div class="group-name-row">
+                    <span class="group-name">{{ group.groupName || '未命名团队' }}</span>
+                    <span class="pending-badge">已拒绝</span>
+                  </div>
+                  <div class="group-meta">
+                    <span class="ellipsis">组长: {{ group.ownerName || '—' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- 我加入的组 -->
         <div v-if="joinedGroups.length > 0" class="group-section">
           <div class="section-header">
@@ -305,6 +371,12 @@
 
     <!-- 我的打卡内容 -->
     <div v-show="activeName === 'dailyReport'" class="content-section">
+      <div class="my-report-toolbar">
+        <div class="export-scope-note">导出当前资料里仍能唯一归属的打卡记录。已删除的旧身份无法追溯，因此不是终身全部历史。</div>
+        <el-button size="small" type="primary" plain :loading="exportingMine" @click="exportMyReports">
+          <i class="el-icon-download"></i> 导出我的打卡
+        </el-button>
+      </div>
       <div v-if="reportsLoading" class="loading-state">
         <i class="el-icon-loading"></i>
         <span>加载中...</span>
@@ -432,14 +504,14 @@
 <script>
 import axios from 'axios'
 import qs from 'qs'
+import XLSX from 'xlsx'
+import FileSaver from 'file-saver'
 import global from '@/components/Common'
 import GroupReportList from '@/components/group/GroupReportList'
 import { buildReportItems, sortByDateDesc } from '@/components/group/reportItems'
 import { copyToClipboard } from '@/utils/clipboard'
-
-const STATE_PENDING = 0
-const STATE_JOINED = 1
-const STATE_REJECTED = 2
+import { buildGroupView, parseJoinResult, readReviewResult, withCacheBust } from '@/utils/groupMembership'
+import { buildExportNoteSheet, buildOwnExportSheet, prepareExportMyReports, sheetMatchesRecords } from '@/utils/reportExport'
 
 export default {
   name: 'Group',
@@ -460,6 +532,7 @@ export default {
       reportsLoaded: false,
       submitting: false,
       acting: null,
+      exportingMine: false,
 
       // 我创建的组（原始数据）
       rawOwnedGroups: [],
@@ -494,56 +567,43 @@ export default {
     }
   },
   computed: {
-    // 按 groupId 归并成员，避免依赖两个接口的返回顺序一致
-    membersByGroupId() {
-      const map = {}
-      this.ownedMembers.forEach(rows => {
-        const list = Array.isArray(rows) ? rows : [rows]
-        list.forEach(member => {
-          if (!member || !member.groupId) return
-          if (!map[member.groupId]) map[member.groupId] = []
-          map[member.groupId].push(member)
-        })
+    groupView() {
+      return buildGroupView({
+        ownedGroups: this.rawOwnedGroups,
+        ownedMemberRows: this.ownedMembers,
+        joinedRaw: this.rawJoinedGroups,
+        unionId: this.unionid,
+        ownedReports: this.ownedReports,
+        joinedReports: this.joinedReports
       })
-      return map
     },
 
     ownedGroups() {
-      return this.rawOwnedGroups.map(group => {
-        const all = this.membersByGroupId[group.groupId] || []
-        return {
-          ...group,
-          members: all.filter(m => Number(m.state) === STATE_JOINED),
-          pending: all.filter(m => Number(m.state) === STATE_PENDING),
-          rejected: all.filter(m => Number(m.state) === STATE_REJECTED),
-          reports: this.ownedReports[group.groupId] || []
-        }
-      })
+      return this.groupView.owned
     },
 
     joinedGroups() {
-      return this.rawJoinedGroups
-        .filter(rows => Array.isArray(rows) && rows.length > 0)
-        .map(rows => {
-          const first = rows[0]
-          const mine = rows.find(m => m.unionId === this.unionid)
-          return {
-            groupId: first.groupId,
-            groupName: first.groupName,
-            ownerName: first.ownerName || first.ownerNickName,
-            members: rows.filter(m => Number(m.state) === STATE_JOINED),
-            myRecordId: mine ? mine.id : null,
-            reports: this.joinedReports[first.groupId] || []
-          }
-        })
+      return this.groupView.joined
+    },
+
+    pendingApplications() {
+      return this.groupView.pendingApplications
+    },
+
+    rejectedApplications() {
+      return this.groupView.rejectedApplications
     },
 
     pendingCount() {
-      return this.ownedGroups.reduce((sum, group) => sum + group.pending.length, 0)
+      return this.groupView.pendingCount
     },
 
     isEmpty() {
-      return !this.loading && this.ownedGroups.length === 0 && this.joinedGroups.length === 0
+      return !this.loading
+        && this.ownedGroups.length === 0
+        && this.joinedGroups.length === 0
+        && this.pendingApplications.length === 0
+        && this.rejectedApplications.length === 0
     },
 
     visibleMyReports() {
@@ -687,15 +747,19 @@ export default {
       }
     },
 
+    groupGet(path) {
+      return axios.get(withCacheBust(`${this.serverUrl}${path}${encodeURIComponent(this.unionid)}`))
+    },
+
     async getData() {
       this.loading = true
       try {
         const [owned, joined] = await Promise.all([
-          axios.get(`${this.serverUrl}findGroupByOwner?unionId=${this.unionid}`),
-          axios.get(`${this.serverUrl}findAllJoinGroups?unionId=${this.unionid}`)
+          this.groupGet('findGroupByOwner?unionId='),
+          this.groupGet('findAllJoinGroups?unionId=')
         ])
-        this.rawOwnedGroups = owned.data || []
-        this.rawJoinedGroups = joined.data || []
+        this.rawOwnedGroups = Array.isArray(owned.data) ? owned.data : []
+        this.rawJoinedGroups = (joined.data == null || joined.data === '') ? [] : joined.data
       } catch (err) {
         console.error('获取分组失败', err)
         this.$message.error('加载失败，请下拉刷新重试')
@@ -706,10 +770,10 @@ export default {
       const requests = []
       if (this.rawOwnedGroups.length > 0) {
         requests.push(
-          axios.get(`${this.serverUrl}findJoinGroups?unionId=${this.unionid}`)
-            .then(res => { this.ownedMembers = res.data || [] })
+          this.groupGet('findJoinGroups?unionId=')
+            .then(res => { this.ownedMembers = (res.data == null || res.data === '') ? [] : res.data })
             .catch(err => console.error('获取组员失败', err)),
-          axios.get(`${this.serverUrl}findReportsInGroupByOwner?unionId=${this.unionid}`)
+          this.groupGet('findReportsInGroupByOwner?unionId=')
             .then(res => { this.ownedReports = res.data || {} })
             .catch(err => console.error('获取组员打卡记录失败', err))
         )
@@ -718,9 +782,14 @@ export default {
         this.ownedReports = {}
       }
 
-      if (this.rawJoinedGroups.length > 0) {
+      const joinedCount = Array.isArray(this.rawJoinedGroups)
+        ? this.rawJoinedGroups.length
+        : (this.rawJoinedGroups && typeof this.rawJoinedGroups === 'object'
+          ? Object.keys(this.rawJoinedGroups).length
+          : 0)
+      if (joinedCount > 0) {
         requests.push(
-          axios.get(`${this.serverUrl}findReportsJoinGroupByOwner?unionId=${this.unionid}`)
+          this.groupGet('findReportsJoinGroupByOwner?unionId=')
             .then(res => { this.joinedReports = res.data || {} })
             .catch(err => console.error('获取加入组打卡记录失败', err))
         )
@@ -730,6 +799,64 @@ export default {
 
       await Promise.all(requests)
       this.initExpanded()
+    },
+
+    async exportMyReports() {
+      if (!this.unionid) {
+        this.$message.warning('未获取到用户信息，请重新进入')
+        return
+      }
+      if (this.exportingMine) return
+      const loginId = this.unionid
+      this.exportingMine = true
+      try {
+        let profile = null
+        try {
+          const profileRes = await axios.get(`${this.serverUrl}getById?id=${encodeURIComponent(loginId)}`)
+          if (profileRes.data && typeof profileRes.data === 'object') profile = profileRes.data
+        } catch (profileErr) {
+          profile = null
+        }
+        if (this.unionid !== loginId) return
+        const res = await axios.get(
+          `${this.serverUrl}exportMyReports?userId=${encodeURIComponent(loginId)}`
+        )
+        if (this.unionid !== loginId) return
+        const prepared = prepareExportMyReports(res.data, profile)
+        if (!prepared.download) {
+          const detail = [prepared.reason, prepared.message].filter(Boolean).join('；')
+            + (prepared.warnings.length ? '；' + prepared.warnings.join('；') : '')
+          if (prepared.status === 'complete') this.$message.warning(detail || '当前资料下没有可归属的打卡记录')
+          else this.$message.error(detail || '导出没有成功，没有生成文件')
+          return
+        }
+        const records = buildOwnExportSheet(prepared.rows)
+        if (!sheetMatchesRecords(records, prepared.rows)) {
+          this.$message.error('导出校验失败，文件行数与接口名单不一致，没有保存文件')
+          return
+        }
+        const book = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(buildExportNoteSheet(prepared)), '说明')
+        XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(records), '我的打卡')
+        const out = XLSX.write(book, { bookType: 'xlsx', bookSST: true, type: 'array' })
+        const now = new Date()
+        const pad = value => String(value).padStart(2, '0')
+        const stamp = now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate())
+          + pad(now.getHours()) + pad(now.getMinutes())
+        FileSaver.saveAs(new Blob([out], { type: 'application/octet-stream' }), '我的打卡_' + stamp + '.xlsx')
+        const scope = prepared.scopeNote
+        if (prepared.status === 'complete') {
+          this.$message.success('已导出当前资料可归属的 ' + prepared.rows.length + ' 条。' + scope)
+        } else {
+          const extra = [prepared.reason, prepared.message].concat(prepared.warnings).filter(Boolean).join('；')
+          this.$message.warning('部分导出：已写入本次名单中的 ' + prepared.rows.length + ' 条，不是已知的终身总数。' + extra)
+        }
+      } catch (err) {
+        console.error('导出我的打卡失败', err)
+        this.$message.error('导出失败，没有生成文件')
+      } finally {
+        this.exportingMine = false
+      }
     },
 
     async getMyReports() {
@@ -790,7 +917,7 @@ export default {
           unionId: this.unionid
         }))
 
-        const result = res.data
+        const result = parseJoinResult(res.data)
         const messages = {
           0: '申请已发出，请等待组长审批',
           1: '申请的组不存在',
@@ -804,6 +931,7 @@ export default {
           this.$message.success(messages[result])
           this.joinGroupFormDialogVisible = false
           this.joinGroupId = ''
+          await this.getData()
         } else if (messages[result]) {
           this.$message.warning(messages[result])
         } else {
@@ -868,29 +996,51 @@ export default {
       }
     },
 
+    reviewQuery(member) {
+      const owner = member.owner || member.ownerId || ''
+      const groupId = member.groupId || ''
+      const unionId = member.unionId || member.unionid || ''
+      if (!owner || !groupId || !unionId) return ''
+      return `owner=${encodeURIComponent(owner)}&groupId=${encodeURIComponent(groupId)}&unionId=${encodeURIComponent(unionId)}`
+    },
+
     async agreeJoinGroup(member) {
+      const query = this.reviewQuery(member)
+      if (!query) {
+        this.$message.error('申请记录缺少组长或组员信息，无法审核')
+        return
+      }
       this.acting = member.id
       try {
-        await axios.post(`${this.serverUrl}agreeGroup?owner=${member.owner}&groupId=${member.groupId}&unionId=${member.unionId}`)
-        this.$message.success('已同意入组！')
-        await this.getData()
+        const res = await axios.post(`${this.serverUrl}agreeGroup?${query}`)
+        const result = readReviewResult(res.data)
+        if (result.ok) this.$message.success('已同意入组！')
+        else this.$message.error(result.message || '同意没有成功')
       } catch (err) {
         this.$message.error('操作失败，请重试')
       } finally {
         this.acting = null
+        await this.getData()
       }
     },
 
     async rejectJoinGroup(member) {
+      const query = this.reviewQuery(member)
+      if (!query) {
+        this.$message.error('申请记录缺少组长或组员信息，无法审核')
+        return
+      }
       this.acting = member.id
       try {
-        await axios.post(`${this.serverUrl}rejectGroup?owner=${member.owner}&groupId=${member.groupId}&unionId=${member.unionId}`)
-        this.$message.warning('已拒绝入组')
-        await this.getData()
+        const res = await axios.post(`${this.serverUrl}rejectGroup?${query}`)
+        const result = readReviewResult(res.data)
+        if (result.ok) this.$message.warning('已拒绝入组')
+        else this.$message.error(result.message || '拒绝没有成功')
       } catch (err) {
         this.$message.error('操作失败，请重试')
       } finally {
         this.acting = null
+        await this.getData()
       }
     },
 
@@ -1066,6 +1216,22 @@ export default {
 /* 内容区域 */
 .content-section {
   padding: 15px;
+}
+
+.my-report-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.export-scope-note {
+  flex: 1;
+  color: #909399;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: left;
 }
 
 .loading-state {

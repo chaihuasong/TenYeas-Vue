@@ -8,10 +8,37 @@
     </div>
 
     <el-card v-if="createDate" class="countdown-card" style="float: left; width: 100%;margin-top: 10px">
-      <span style="font-weight: bold">十年倒计时，离{{this.getTenYearsDate()}}，还有</span>
+      <i class="el-icon-edit countdown-edit" @click="openCountdownEditor"></i>
+      <span style="font-weight: bold">{{ countdownView.name }}，离{{ countdownView.dateText }}，还有</span>
       <br/>
-      <span class="countdown-days">{{this.getTenYearsRemaining()}}</span> 天
+      <span class="countdown-days">{{ countdownView.days }}</span> 天
+      <div v-if="countdownNotice" class="countdown-notice">{{ countdownNotice }}</div>
     </el-card>
+
+    <el-dialog title="我的倒计时" :visible.sync="countdownDialogVisible" width="86%" center>
+      <el-form label-position="top">
+        <el-form-item label="名称">
+          <el-input v-model="countdownForm.name" maxlength="20" show-word-limit placeholder="例如：每日打卡倒计时"></el-input>
+        </el-form-item>
+        <el-form-item label="截止日期时间（北京时间）">
+          <el-date-picker
+              v-model="countdownForm.deadline"
+              type="datetime"
+              value-format="yyyy-MM-dd HH:mm:ss"
+              format="yyyy-MM-dd HH:mm"
+              placeholder="选择截止时间"
+              :editable="false"
+              style="width: 100%">
+          </el-date-picker>
+        </el-form-item>
+        <div class="countdown-hint">保存后写入服务器。读取失败时不会把本机旧记录自动上传。</div>
+      </el-form>
+      <div slot="footer">
+        <el-button @click="restoreDefaultCountdown">恢复默认</el-button>
+        <el-button @click="countdownDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="countdownSaving" @click="saveCountdownEdit">保存</el-button>
+      </div>
+    </el-dialog>
 
 <!--    <el-card style="float: left; width: 100%;margin-top: 10px">-->
 <!--      <span style="font-weight: bold">生命倒计时，离生命终了 <input class="ageInputStyle" v-model="maxAge" @change="onMaxAgeChange"/> 岁，还有</span>-->
@@ -42,11 +69,12 @@
               <span class="team-name">{{ team.groupName || '未命名团队' }}</span>
               <span v-if="team.isOwner" class="team-owner-tag">我创建的</span>
             </div>
-            <div class="team-progress-text">
+            <div class="team-progress-text" v-if="team.statusReady !== false">
               今日 {{ team.checkedIn }}/{{ team.total }} 人已打卡
               <span class="team-rate">{{ teamRate(team) }}%</span>
             </div>
-            <div class="team-progress-bar">
+            <div class="team-progress-text" v-else>今日完成情况暂未加载</div>
+            <div class="team-progress-bar" v-if="team.statusReady !== false">
               <div class="team-progress-fill" :style="{ width: teamRate(team) + '%' }"></div>
             </div>
           </div>
@@ -358,6 +386,18 @@ import qs from "qs";
 import wx from 'weixin-js-sdk'
 import global from './Common.vue'
 import { copyToClipboardSync, copyToClipboard } from '@/utils/clipboard'
+import {
+  chooseCountdown,
+  clearStoredCountdown,
+  parseCountdownResponse,
+  parseWriteResponse,
+  readStoredCountdown,
+  resolveCountdown,
+  sameAccount,
+  validateCountdownInput,
+  writeStoredCountdown
+} from '@/utils/countdown'
+import { visibleTeamSummaries, withCacheBust } from '@/utils/groupMembership'
 
 export default {
   name: 'TenYears',
@@ -497,6 +537,14 @@ export default {
       },
 
       myTeamStatuses: [],
+      countdownPayload: null,
+      countdownDialogVisible: false,
+      countdownForm: {
+        name: '',
+        deadline: ''
+      },
+      countdownStatus: 'default',
+      countdownSaving: false,
     };
   },
   mounted: function () {
@@ -509,6 +557,7 @@ export default {
       this.getData()
     })
     this.configWechat()
+    this.loadUserCountdown()
     // unionid 此时通常还没解析出来，真正的拉取由 unionid 的 watch 触发
     this.loadPlanInfo()
     this.getAllDefaultReportsLists()
@@ -522,6 +571,18 @@ export default {
     // 当前表单中所有可编辑内容的快照，用于判断是否有未提交的改动
     dailyDraftSnapshot() {
       return JSON.stringify(this.buildDailyDraftPayload())
+    },
+    countdownView() {
+      return resolveCountdown(this.countdownPayload, Date.now())
+    },
+    countdownNotice() {
+      if (this.countdownStatus === 'local-unconfirmed') {
+        return '服务器读取失败，这是本机记录，尚未与服务器核对'
+      }
+      if (this.countdownStatus === 'error') {
+        return '服务器读取失败，当前显示默认倒计时'
+      }
+      return ''
     }
   },
   watch: {
@@ -532,6 +593,7 @@ export default {
     // 等 unionid 就绪后必须重新拉一次，否则进来永远显示为空
     unionid(newValue) {
       if (newValue) {
+        this.loadUserCountdown()
         this.loadPlanInfo()
         this.loadMyTeamStatuses()
       }
@@ -567,15 +629,159 @@ export default {
     },
     async loadMyTeamStatuses() {
       if (!this.unionid) return
+      const date = this.getDateFormat(new Date())
+      const unionId = encodeURIComponent(this.unionid)
       try {
-        const date = this.getDateFormat(new Date())
-        const res = await axios.get(
-          `${this.serverUrl}getMyGroupsDailyStatus?unionId=${encodeURIComponent(this.unionid)}&date=${date}`
-        )
-        this.myTeamStatuses = Array.isArray(res.data) ? res.data : []
+        const [ownedRes, joinedRes] = await Promise.all([
+          axios.get(withCacheBust(`${this.serverUrl}findGroupByOwner?unionId=${unionId}`)),
+          axios.get(withCacheBust(`${this.serverUrl}findAllJoinGroups?unionId=${unionId}`))
+        ])
+        const teams = visibleTeamSummaries({
+          ownedGroups: ownedRes.data,
+          joinedRaw: joinedRes.data,
+          unionId: this.unionid
+        })
+        if (!teams.length) {
+          this.myTeamStatuses = []
+          return
+        }
+        this.myTeamStatuses = await Promise.all(teams.map(async team => {
+          try {
+            const res = await axios.get(withCacheBust(
+              `${this.serverUrl}getGroupDailyStatus?groupId=${encodeURIComponent(team.groupId)}&date=${date}`
+            ))
+            const data = res.data || {}
+            if (data.error === 'group_not_found') {
+              return Object.assign({}, team, { checkedIn: 0, total: 0, statusReady: false })
+            }
+            return {
+              groupId: team.groupId,
+              groupName: data.groupName || team.groupName,
+              isOwner: team.isOwner,
+              checkedIn: data.checkedIn || 0,
+              total: data.total || 0,
+              statusReady: true
+            }
+          } catch (err) {
+            return Object.assign({}, team, { checkedIn: 0, total: 0, statusReady: false })
+          }
+        }))
       } catch (err) {
-        console.error('加载团队打卡概况失败', err)
-        this.myTeamStatuses = []
+        console.error('按成员关系加载团队失败，改用汇总接口', err)
+        try {
+          const res = await axios.get(withCacheBust(
+            `${this.serverUrl}getMyGroupsDailyStatus?unionId=${unionId}&date=${date}`
+          ))
+          this.myTeamStatuses = Array.isArray(res.data) ? res.data : []
+        } catch (fallbackErr) {
+          console.error('加载团队打卡概况失败', fallbackErr)
+          this.myTeamStatuses = []
+        }
+      }
+    },
+    async loadUserCountdown() {
+      const userId = this.unionid
+      this.countdownPayload = null
+      this.countdownStatus = userId ? 'loading' : 'default'
+      if (!userId) return
+      const local = readStoredCountdown(userId)
+      try {
+        const res = await axios.get(this.serverUrl + 'getUserCountdown?userId=' + encodeURIComponent(userId))
+        if (!sameAccount(this.unionid, userId)) return
+        this.applyCountdownChoice(userId, chooseCountdown(parseCountdownResponse(res.data), local))
+      } catch (err) {
+        if (!sameAccount(this.unionid, userId)) return
+        this.applyCountdownChoice(userId, chooseCountdown({ status: 'error', message: '读取失败' }, local))
+      }
+    },
+    applyCountdownChoice(userId, chosen) {
+      if (!sameAccount(this.unionid, userId)) return
+      this.countdownPayload = chosen.payload
+      this.countdownStatus = chosen.status
+      if (chosen.clearLocal) clearStoredCountdown(userId)
+      else if (chosen.writeLocal) writeStoredCountdown(userId, chosen.writeLocal)
+    },
+    openCountdownEditor() {
+      if (!this.unionid) {
+        this.$message.warning('请先登录后再修改倒计时')
+        return
+      }
+      const view = this.countdownView
+      this.countdownForm = {
+        name: view.name,
+        deadline: view.deadlineText
+      }
+      this.countdownDialogVisible = true
+    },
+    async saveCountdownEdit() {
+      const userId = this.unionid
+      const checked = validateCountdownInput(this.countdownForm.name, this.countdownForm.deadline)
+      if (!checked.ok) {
+        this.$message.warning(checked.message)
+        return
+      }
+      if (!userId) {
+        this.$message.warning('请先登录后再修改倒计时')
+        return
+      }
+      this.countdownSaving = true
+      try {
+        const res = await axios.post(this.serverUrl + 'saveUserCountdown', qs.stringify({
+          userId,
+          name: checked.value.name,
+          deadline: checked.value.deadline
+        }), {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        })
+        const result = parseWriteResponse(res.data)
+        if (!sameAccount(this.unionid, userId)) return
+        if (!result.ok) {
+          this.$message.error(result.message || '保存失败，服务器上的倒计时没有改变')
+          return
+        }
+        this.countdownPayload = { name: checked.value.name, deadline: checked.value.deadline }
+        this.countdownStatus = 'server'
+        writeStoredCountdown(userId, checked.value)
+        this.countdownDialogVisible = false
+        this.$message.success('已保存到服务器')
+      } catch (err) {
+        if (sameAccount(this.unionid, userId)) {
+          this.$message.error('保存失败，服务器上的倒计时没有改变')
+        }
+      } finally {
+        this.countdownSaving = false
+      }
+    },
+    async restoreDefaultCountdown() {
+      const userId = this.unionid
+      if (!userId) {
+        this.$message.warning('请先登录后再修改倒计时')
+        return
+      }
+      this.countdownSaving = true
+      try {
+        const res = await axios.post(this.serverUrl + 'clearUserCountdown', qs.stringify({
+          userId
+        }), {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        })
+        const result = parseWriteResponse(res.data)
+        if (!sameAccount(this.unionid, userId)) return
+        if (!result.ok) {
+          this.$message.error(result.message || '恢复默认失败，服务器上的倒计时没有改变')
+          return
+        }
+        clearStoredCountdown(userId)
+        this.countdownPayload = null
+        this.countdownStatus = 'default'
+        this.countdownDialogVisible = false
+        this.$message.success('已恢复默认十年倒计时')
+      } catch (err) {
+        if (sameAccount(this.unionid, userId)) {
+          this.$message.error('恢复默认失败，服务器上的倒计时没有改变')
+        }
+      } finally {
+        this.countdownSaving = false
       }
     },
     addTimeValue(title) {
@@ -2342,27 +2548,10 @@ export default {
       });
     },
     getTenYearsDate() {
-      //let createdDate = new Date(this.createDate)
-      //let tenYearsLater = new Date((createdDate.getFullYear() + 10) + this.createDate.substr(4))
-      let tenYearsLater = new Date('2031-04-17')
-      let year = tenYearsLater.getFullYear()
-      let month = tenYearsLater.getMonth() + 1
-      if (month < 10) month = "0" + month
-      let dates = tenYearsLater.getDate()
-      if (dates < 10) dates = "0" + dates
-      return year + "年" + month + "月" + dates + "日"
+      return this.countdownView.dateText
     },
     getTenYearsRemaining() {
-      // if (this.createDate !== '') {
-      //   let createdDate = new Date(this.createDate)
-      //   let tenYearsLater = new Date((createdDate.getFullYear() + 10) + this.createDate.substr(4))
-      //   let remaining = tenYearsLater.getTime() - Date.now()
-      //   return parseInt(remaining / (24 * 3600 * 1000)+"")
-      // }
-      let tenYearsLater = new Date('2031-04-18')
-      let remaining = tenYearsLater.getTime() - Date.now()
-      if (remaining < 0) remaining = 0
-      return parseInt(remaining / (24 * 3600 * 1000)+"")
+      return this.countdownView.days
     },
     getYearsRemaining() {
       if (this.birthday !== '') {
@@ -2862,6 +3051,27 @@ a {
   font-weight: bold;
   color: #ffd700 !important;
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.countdown-edit {
+  float: right;
+  font-size: 18px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.countdown-hint {
+  color: #909399;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.countdown-notice {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #fff7d6;
 }
 
 /* 折叠面板优化 */
