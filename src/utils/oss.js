@@ -1,6 +1,7 @@
 import axios from 'axios'
 
-const API = 'http://app.htzchina.org/htz-api-pyservice/api/v1'
+// 使用相对路径，随当前站点（app.htzchina.org 或 htzclass.com）同源反代，避免 HTTPS 页面里 HTTP 请求被浏览器拦截（mixed content）以及跨域 CORS 报错
+const API = '/htz-api-pyservice/api/v1'
 
 export function ossObjectKey(url) {
   if (!url || typeof url !== 'string' || url.indexOf('htz-storage') === -1) {
