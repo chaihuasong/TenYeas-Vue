@@ -120,7 +120,7 @@ export function sortOwnReports(rows) {
 }
 
 export const EXPORT_SCOPE = 'profile-identifiers'
-export const EXPORT_SCOPE_FALLBACK = '仅包含当前资料里仍然存在、且能唯一归属到该资料 _id、unionid 或 openid 的打卡记录。已经从资料中删除的旧身份无法追溯，所以这不是终身全部历史。total 只是本次名单条数。'
+export const EXPORT_SCOPE_FALLBACK = '导出的是系统目前还能确认属于你的打卡记录。如果你换过登录方式、合并或删除过账号，早期的部分记录可能无法找回，所以这份导出不一定包含你的全部历史。'
 
 function textList(value) {
   if (!Array.isArray(value)) return []
@@ -140,7 +140,7 @@ export function prepareExportMyReports(data, profile) {
   const empty = {
     status: 'failed',
     download: false,
-    reason: '导出接口没有返回可识别的结果',
+    reason: '导出没有返回可用的结果',
     message: '',
     warnings: [],
     scope: EXPORT_SCOPE,
@@ -194,23 +194,23 @@ export function prepareExportMyReports(data, profile) {
   }
   if (data.truncated === true) {
     status = 'partial'
-    reasons.push('接口标记这次结果被截断')
+    reasons.push('记录太多，这次只取了一部分')
   }
   if (accepted.size === 0 && data.list.some(row => ownerId(row))) {
     status = 'partial'
-    reasons.push('响应没有给出 acceptedUserIds，不能核对历史身份')
+    reasons.push('系统没返回可核对的身份信息，无法确认导出是否完整')
   }
   if (outsideAccepted > 0) {
     status = 'partial'
-    reasons.push('有 ' + outsideAccepted + ' 条记录的用户标识不在 acceptedUserIds 中，未写入')
+    reasons.push('有 ' + outsideAccepted + ' 条记录无法确认属于你，已跳过')
   }
   if (ownIds.some(id => !id)) {
     status = 'partial'
-    reasons.push('有记录缺少文档编号')
+    reasons.push('有记录缺少编号')
   }
   if (data.total != null && Number(data.total) !== data.list.length) {
     status = 'partial'
-    reasons.push('total 与本次 list 条数不一致，不能当作历史总数')
+    reasons.push('本次条数与系统计数不一致，不能当作完整历史')
   }
   return {
     status,
@@ -234,14 +234,14 @@ export function buildExportNoteSheet(prepared) {
   const source = prepared || {}
   return [
     ['说明', source.scopeNote || EXPORT_SCOPE_FALLBACK],
-    ['范围', source.scope || EXPORT_SCOPE],
-    ['正式用户编号', source.canonicalUserId || ''],
-    ['本次写入条数', String((source.rows || []).length)],
-    ['接口 total', '只表示本次 list 的条数，不是终身历史总数'],
-    ['可归属身份', (source.acceptedUserIds || []).join(', ')],
+    ['导出范围', source.scope || EXPORT_SCOPE],
+    ['用户编号', source.canonicalUserId || ''],
+    ['本次导出条数', String((source.rows || []).length)],
+    ['历史总数', '这里只是本次拿到的条数，不代表你历史上一共打过多少卡'],
+    ['已确认身份', (source.acceptedUserIds || []).join(', ')],
     ['已排除身份', (source.excludedUserIds || []).join(', ')],
-    ['接口说明', source.message || ''],
-    ['警告', (source.warnings || []).join('；')]
+    ['系统说明', source.message || ''],
+    ['提醒', (source.warnings || []).join('；')]
   ]
 }
 

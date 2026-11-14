@@ -372,7 +372,7 @@
     <!-- 我的打卡内容 -->
     <div v-show="activeName === 'dailyReport'" class="content-section">
       <div class="my-report-toolbar">
-        <div class="export-scope-note">导出当前资料里仍能唯一归属的打卡记录。已删除的旧身份无法追溯，因此不是终身全部历史。</div>
+        <div class="export-scope-note">只导出系统目前还能确认属于你的打卡记录。如果换过登录方式、合并或删除过账号，早期记录可能无法找回，导出不一定包含全部历史。</div>
         <el-button size="small" type="primary" plain :loading="exportingMine" @click="exportMyReports">
           <i class="el-icon-download"></i> 导出我的打卡
         </el-button>
@@ -826,13 +826,13 @@ export default {
         if (!prepared.download) {
           const detail = [prepared.reason, prepared.message].filter(Boolean).join('；')
             + (prepared.warnings.length ? '；' + prepared.warnings.join('；') : '')
-          if (prepared.status === 'complete') this.$message.warning(detail || '当前资料下没有可归属的打卡记录')
+          if (prepared.status === 'complete') this.$message.warning(detail || '没有找到可导出的打卡记录')
           else this.$message.error(detail || '导出没有成功，没有生成文件')
           return
         }
         const records = buildOwnExportSheet(prepared.rows)
         if (!sheetMatchesRecords(records, prepared.rows)) {
-          this.$message.error('导出校验失败，文件行数与接口名单不一致，没有保存文件')
+          this.$message.error('导出校验失败，文件内容与系统记录不一致，没有保存文件')
           return
         }
         const book = XLSX.utils.book_new()
@@ -846,10 +846,10 @@ export default {
         FileSaver.saveAs(new Blob([out], { type: 'application/octet-stream' }), '我的打卡_' + stamp + '.xlsx')
         const scope = prepared.scopeNote
         if (prepared.status === 'complete') {
-          this.$message.success('已导出当前资料可归属的 ' + prepared.rows.length + ' 条。' + scope)
+          this.$message.success('已导出 ' + prepared.rows.length + ' 条打卡记录。' + scope)
         } else {
           const extra = [prepared.reason, prepared.message].concat(prepared.warnings).filter(Boolean).join('；')
-          this.$message.warning('部分导出：已写入本次名单中的 ' + prepared.rows.length + ' 条，不是已知的终身总数。' + extra)
+          this.$message.warning('导出不完整：已写入 ' + prepared.rows.length + ' 条，可能还缺早期记录。' + extra)
         }
       } catch (err) {
         console.error('导出我的打卡失败', err)

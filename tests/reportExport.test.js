@@ -59,7 +59,7 @@ test('别名身份、空字段和同日不同 id 都保留，昵称空则用资�
   assert.equal(records.flat().includes('不在 acceptedUserIds'), false)
   assert.equal(records.filter(line => line[1] === '2026-11-01').length, 2)
   const note = buildExportNoteSheet(prepared).flat().join('\n')
-  assert.equal(note.includes('终身'), true)
+  assert.equal(note.includes('不代表你历史上一共打过多少卡'), true)
   assert.equal(note.includes('canonical-a'), true)
 })
 
@@ -128,7 +128,7 @@ test('total 与 list 条数不一致或结果被截断时不能当成查全', ()
   ], { total: 9999 }))
   assert.equal(mismatched.status, 'partial')
   assert.equal(mismatched.rows.length, 1)
-  assert.equal(mismatched.reason.includes('不能当作历史总数'), true)
+  assert.equal(mismatched.reason.includes('不能当作完整历史'), true)
 
   const truncated = prepareExportMyReports(payload([
     row(2, 'openid-a', '2026-11-02')
