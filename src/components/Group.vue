@@ -110,7 +110,7 @@
                     <span class="group-id" @click.stop="copyGroupId(group.groupId)">
                       ID: {{ group.groupId }} <i class="el-icon-document-copy"></i>
                     </span>
-                    <span>{{ group.members.length }} 人</span>
+                    <span>{{ displayMembers(group).length }} 人</span>
                   </div>
                 </div>
                 <div class="group-arrow">
@@ -146,14 +146,17 @@
                 <div class="member-section">
                   <div class="block-header">
                     <span><i class="el-icon-user"></i> 组员</span>
-                    <span class="block-count">{{ group.members.length }} 人</span>
+                    <span class="block-count">{{ displayMembers(group).length }} 人</span>
                   </div>
-                  <div v-if="group.members.length > 0" class="member-list simple">
-                    <div v-for="member in group.members" :key="member.id" class="member-chip">
+                  <div v-if="displayMembers(group).length > 0" class="member-list simple">
+                    <div v-for="member in displayMembers(group)" :key="member.key || member.unionId || member.id" class="member-chip">
                       <el-avatar :size="22" :src="member.headimgurl">
                         <i class="el-icon-user-solid"></i>
                       </el-avatar>
-                      <span class="chip-name">{{ member.nickname || '匿名用户' }}</span>
+                      <span class="chip-name">{{ member.nickname || member.name || '匿名用户' }}</span>
+                      <span v-if="member.isOwner" class="chip-role">组长</span>
+                      <span v-if="member.checkedIn === true" class="chip-status on">已打卡</span>
+                      <span v-else-if="member.checkedIn === false" class="chip-status off">未打卡</span>
                     </div>
                   </div>
                   <div v-else class="empty-inline">
@@ -314,14 +317,17 @@
                 <div class="member-section">
                   <div class="block-header">
                     <span><i class="el-icon-user"></i> 组员</span>
-                    <span class="block-count">{{ group.members.length }} 人</span>
+                    <span class="block-count">{{ displayMembers(group).length }} 人</span>
                   </div>
-                  <div v-if="group.members.length > 0" class="member-list simple">
-                    <div v-for="member in group.members" :key="member.id" class="member-chip">
+                  <div v-if="displayMembers(group).length > 0" class="member-list simple">
+                    <div v-for="member in displayMembers(group)" :key="member.key || member.unionId || member.id" class="member-chip">
                       <el-avatar :size="22" :src="member.headimgurl">
                         <i class="el-icon-user-solid"></i>
                       </el-avatar>
-                      <span class="chip-name">{{ member.nickname || '匿名用户' }}</span>
+                      <span class="chip-name">{{ member.nickname || member.name || '匿名用户' }}</span>
+                      <span v-if="member.isOwner" class="chip-role">组长</span>
+                      <span v-if="member.checkedIn === true" class="chip-status on">已打卡</span>
+                      <span v-else-if="member.checkedIn === false" class="chip-status off">未打卡</span>
                     </div>
                   </div>
                   <div v-else class="empty-inline">
@@ -462,7 +468,7 @@
             @click="inviteGroupId = group.groupId">
             <div class="invite-group-info">
               <div class="invite-group-name">{{ group.groupName }}</div>
-              <div class="invite-group-meta">ID: {{ group.groupId }} · {{ group.members.length }} 人</div>
+              <div class="invite-group-meta">ID: {{ group.groupId }} · {{ displayMembers(group).length }} 人</div>
             </div>
             <i :class="inviteGroupId === group.groupId ? 'el-icon-success' : 'el-icon-circle-outline'"></i>
           </div>
@@ -511,6 +517,7 @@ import GroupReportList from '@/components/group/GroupReportList'
 import { buildReportItems, sortByDateDesc } from '@/components/group/reportItems'
 import { copyToClipboard } from '@/utils/clipboard'
 import { buildGroupView, parseJoinResult, readReviewResult, withCacheBust } from '@/utils/groupMembership'
+import { assembleTeamDailyBoard, buildApprovedRoster } from '@/utils/groupDailyBoard'
 import { buildExportNoteSheet, buildOwnExportSheet, prepareExportMyReports, sheetMatchesRecords } from '@/utils/reportExport'
 
 export default {
@@ -545,6 +552,7 @@ export default {
 
       myReports: [],
       myReportsLimit: 10,
+      todayBoards: {},
 
       // 对话框
       addGroupFormDialogVisible: false,
@@ -751,8 +759,66 @@ export default {
       return axios.get(withCacheBust(`${this.serverUrl}${path}${encodeURIComponent(this.unionid)}`))
     },
 
+    displayMembers(group) {
+      const roster = buildApprovedRoster({
+        ownerId: group.owner || group.ownerId,
+        ownerName: group.ownerName,
+        ownerNickname: group.ownerNickName,
+        members: group.members
+      })
+      const board = this.todayBoards[group.groupId]
+      if (board && Array.isArray(board.members) && board.members.length >= roster.length && board.members.length) {
+        return board.members
+      }
+      if (roster.length) return roster
+      return (group && group.members) || []
+    },
+
+    async loadTodayBoards() {
+      const token = (this.boardToken = (this.boardToken || 0) + 1)
+      const date = this.todayStr()
+      const groups = this.ownedGroups.concat(this.joinedGroups)
+      await Promise.all(groups.map(async group => {
+        const roster = buildApprovedRoster({
+          ownerId: group.owner || group.ownerId,
+          ownerName: group.ownerName,
+          ownerNickname: group.ownerNickName,
+          members: group.members
+        })
+        let statusMembers = []
+        try {
+          const res = await axios.get(
+            `${this.serverUrl}getGroupDailyStatus?groupId=${encodeURIComponent(group.groupId)}&date=${date}`
+          )
+          const data = res.data || {}
+          if (data.error !== 'group_not_found') {
+            statusMembers = Array.isArray(data.members) ? data.members : []
+          }
+        } catch (err) {
+          statusMembers = []
+        }
+        try {
+          const board = await assembleTeamDailyBoard({
+            roster,
+            statusMembers,
+            fetchReport: person => axios.get(
+              `${this.serverUrl}getReportInfoByUserIdAndDate?userId=${encodeURIComponent(person.unionId)}&date=${date}`
+            ).then(res => res.data),
+            fetchProfile: person => axios.get(
+              `${this.serverUrl}getById?id=${encodeURIComponent(person.unionId)}`
+            ).then(res => res.data)
+          })
+          if (token !== this.boardToken) return
+          if (board.members.length) this.$set(this.todayBoards, group.groupId, board)
+        } catch (err) {
+          console.error('加载团队今日打卡失败', err)
+        }
+      }))
+    },
+
     async getData() {
       this.loading = true
+      this.todayBoards = {}
       try {
         const [owned, joined] = await Promise.all([
           this.groupGet('findGroupByOwner?unionId='),
@@ -799,6 +865,7 @@ export default {
 
       await Promise.all(requests)
       this.initExpanded()
+      this.loadTodayBoards()
     },
 
     async exportMyReports() {
@@ -1541,6 +1608,27 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.chip-role {
+  margin-left: 4px;
+  font-size: 11px;
+  color: #667eea;
+  flex-shrink: 0;
+}
+
+.chip-status {
+  margin-left: 6px;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.chip-status.on {
+  color: #67c23a;
+}
+
+.chip-status.off {
+  color: #f56c6c;
 }
 
 .empty-inline {

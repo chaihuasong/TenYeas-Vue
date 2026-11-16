@@ -69,7 +69,7 @@
             已打卡 {{ doneMembers.length }}
           </div>
           <div v-if="doneMembers.length === 0" class="empty-line">还没有人打卡</div>
-          <div v-for="m in doneMembers" :key="'d-' + m.unionId" class="member-row">
+          <div v-for="m in doneMembers" :key="'d-' + (m.key || m.unionId)" class="member-row">
             <el-avatar :size="40" :src="m.headimgurl">
               <i class="el-icon-user-solid"></i>
             </el-avatar>
@@ -90,7 +90,7 @@
             未打卡 {{ pendingMembers.length }}
           </div>
           <div v-if="pendingMembers.length === 0" class="empty-line">全员已打卡</div>
-          <div v-for="m in pendingMembers" :key="'p-' + m.unionId" class="member-row">
+          <div v-for="m in pendingMembers" :key="'p-' + (m.key || m.unionId)" class="member-row">
             <el-avatar :size="40" :src="m.headimgurl">
               <i class="el-icon-user-solid"></i>
             </el-avatar>
@@ -118,6 +118,8 @@ import XLSX from 'xlsx'
 import FileSaver from 'file-saver'
 import global from '@/components/Common'
 import { copyToClipboard } from '@/utils/clipboard'
+import { buildGroupView, withCacheBust } from '@/utils/groupMembership'
+import { assembleTeamDailyBoard, buildApprovedRoster, buildMonthExportMembers } from '@/utils/groupDailyBoard'
 
 export default {
   name: 'GroupDailyStatus',
@@ -194,32 +196,89 @@ export default {
         this.$message.warning('复制失败，请手动长按链接复制')
       }
     },
+    viewerId() {
+      const raw = this.$store && this.$store.getters && this.$store.getters.getUnionid
+      return String(raw || '').replace(/"/g, '')
+    },
+    async loadRoster() {
+      const unionId = this.viewerId()
+      if (!unionId) return []
+      const get = path => axios.get(withCacheBust(`${this.serverUrl}${path}${encodeURIComponent(unionId)}`))
+      const [owned, joined, ownedMembers] = await Promise.all([
+        get('findGroupByOwner?unionId=').catch(() => ({ data: [] })),
+        get('findAllJoinGroups?unionId=').catch(() => ({ data: [] })),
+        get('findJoinGroups?unionId=').catch(() => ({ data: [] }))
+      ])
+      const view = buildGroupView({
+        ownedGroups: Array.isArray(owned.data) ? owned.data : [],
+        ownedMemberRows: (ownedMembers.data == null || ownedMembers.data === '') ? [] : ownedMembers.data,
+        joinedRaw: (joined.data == null || joined.data === '') ? [] : joined.data,
+        unionId
+      })
+      const ownedGroup = view.owned.find(group => group.groupId === this.groupId)
+      if (ownedGroup) {
+        return buildApprovedRoster({
+          ownerId: ownedGroup.owner || unionId,
+          members: ownedGroup.members
+        })
+      }
+      const joinedGroup = view.joined.find(group => group.groupId === this.groupId)
+      if (!joinedGroup) return []
+      return buildApprovedRoster({
+        ownerId: joinedGroup.ownerId,
+        ownerName: joinedGroup.ownerName,
+        ownerNickname: joinedGroup.ownerNickName,
+        members: joinedGroup.members
+      })
+    },
     async loadDailyStatus() {
       if (!this.groupId || !this.selectedDate) return
+      const seq = (this.statusSeq = (this.statusSeq || 0) + 1)
       this.loading = true
       this.loadError = ''
+      const date = this.selectedDate
       try {
-        const res = await axios.get(
-          `${this.serverUrl}getGroupDailyStatus?groupId=${encodeURIComponent(this.groupId)}&date=${this.selectedDate}`
-        )
-        const data = res.data || {}
-        if (data.error === 'group_not_found') {
+        const roster = await this.loadRoster()
+        let data = {}
+        try {
+          const res = await axios.get(
+            `${this.serverUrl}getGroupDailyStatus?groupId=${encodeURIComponent(this.groupId)}&date=${date}`
+          )
+          data = res.data || {}
+        } catch (err) {
+          if (!roster.length) throw err
+          data = {}
+        }
+        if (seq !== this.statusSeq) return
+        if (data.error === 'group_not_found' && !roster.length) {
           this.loadError = '未找到该团队'
           this.members = []
           this.total = 0
           this.checkedIn = 0
           return
         }
-        this.groupName = data.groupName || ''
-        this.total = data.total || 0
-        this.checkedIn = data.checkedIn || 0
-        this.members = data.members || []
+        this.groupName = data.groupName || this.groupName || ''
+        const board = await assembleTeamDailyBoard({
+          roster,
+          statusMembers: Array.isArray(data.members) ? data.members : [],
+          fetchReport: person => axios.get(
+            `${this.serverUrl}getReportInfoByUserIdAndDate?userId=${encodeURIComponent(person.unionId)}&date=${date}`
+          ).then(res => res.data),
+          fetchProfile: person => axios.get(
+            `${this.serverUrl}getById?id=${encodeURIComponent(person.unionId)}`
+          ).then(res => res.data)
+        })
+        if (seq !== this.statusSeq || this.selectedDate !== date) return
+        this.members = board.members
+        this.total = board.total
+        this.checkedIn = board.checkedIn
         document.title = `${this.groupName || '团队'} · 打卡情况`
       } catch (err) {
+        if (seq !== this.statusSeq) return
         console.error('加载团队打卡情况失败', err)
         this.loadError = '加载失败，请稍后重试'
       } finally {
-        this.loading = false
+        if (seq === this.statusSeq) this.loading = false
       }
     },
     monthPrefix(dateStr) {
@@ -327,7 +386,27 @@ export default {
           return
         }
         const days = data.days || []
-        const members = data.members || []
+        const statMembers = Array.isArray(data.members) ? data.members : []
+        const people = this.members.length ? this.members : statMembers
+        const reportsByUnionId = {}
+        await Promise.all(people.map(async person => {
+          const unionId = person && person.unionId
+          if (!unionId) return
+          try {
+            const reportRes = await axios.get(
+              `${this.serverUrl}getReportInfoListByIdAndMonth?userId=${encodeURIComponent(unionId)}&monthDate=${monthDate}`
+            )
+            if (Array.isArray(reportRes.data)) reportsByUnionId[unionId] = reportRes.data
+          } catch (reportErr) {
+            reportsByUnionId[unionId] = []
+          }
+        }))
+        const members = buildMonthExportMembers({
+          people,
+          statMembers,
+          monthDays: days,
+          reportsByUnionId
+        })
         if (members.length === 0) {
           this.$message.warning('暂无成员数据可导出')
           return

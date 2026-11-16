@@ -97,10 +97,13 @@ function summarizeJoined(rows, unionId) {
   const first = rows.find(row => row && (row.groupId || row.groupName)) || rows[0] || {}
   const mine = rows.find(row => sameUser(row.unionId || row.unionid, unionId))
   const state = mine ? classifyState(mine.state) : STATE_JOINED
+  const ownerRow = rows.find(row => row && (row.owner || row.ownerId)) || {}
   return {
     groupId: first.groupId || '',
     groupName: first.groupName || first.groupname || '',
+    ownerId: ownerRow.owner || ownerRow.ownerId || '',
     ownerName: first.ownerName || first.ownerNickName || '',
+    ownerNickName: first.ownerNickName || first.ownerNickname || '',
     members: rows.filter(row => classifyState(row.state) === STATE_JOINED),
     myRecordId: mine && mine.id != null ? mine.id : null,
     state
