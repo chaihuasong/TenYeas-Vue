@@ -139,6 +139,20 @@ test('首页小组只显示自己创建的和已批准加入的，待审核不�
   assert.deepEqual(teams.map(team => team.isOwner), [true, false])
 })
 
+test('我加入的小组保留组长标识，打卡名单才能把组长算进成员', () => {
+  const view = buildGroupView({
+    ownedGroups: [],
+    unionId: 'user-b',
+    joinedRaw: [[
+      { id: 1, groupId: 'HTZ-0000001', groupName: '晨练组', unionId: 'user-b', state: 1, owner: 'user-a', ownerNickName: '甲' },
+      { id: 2, groupId: 'HTZ-0000001', groupName: '晨练组', unionId: 'user-c', state: 1, owner: 'user-a', nickname: '丙' }
+    ]]
+  })
+  assert.equal(view.joined[0].ownerId, 'user-a')
+  assert.equal(view.joined[0].ownerNickName, '甲')
+  assert.equal(view.joined[0].members.length, 2)
+})
+
 test('自己创建的组不会在我加入的里再出现一次', () => {
   const view = buildGroupView({
     ownedGroups: [{ groupId: 'HTZ-0000001', groupName: '晨练组' }],

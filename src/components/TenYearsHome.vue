@@ -397,7 +397,8 @@ import {
   validateCountdownInput,
   writeStoredCountdown
 } from '@/utils/countdown'
-import { visibleTeamSummaries, withCacheBust } from '@/utils/groupMembership'
+import { buildGroupView, visibleTeamSummaries, withCacheBust } from '@/utils/groupMembership'
+import { assembleTeamDailyBoard, rosterFromGroupView } from '@/utils/groupDailyBoard'
 
 export default {
   name: 'TenYears',
@@ -632,20 +633,27 @@ export default {
       const date = this.getDateFormat(new Date())
       const unionId = encodeURIComponent(this.unionid)
       try {
-        const [ownedRes, joinedRes] = await Promise.all([
+        const [ownedRes, joinedRes, ownedMembersRes] = await Promise.all([
           axios.get(withCacheBust(`${this.serverUrl}findGroupByOwner?unionId=${unionId}`)),
-          axios.get(withCacheBust(`${this.serverUrl}findAllJoinGroups?unionId=${unionId}`))
+          axios.get(withCacheBust(`${this.serverUrl}findAllJoinGroups?unionId=${unionId}`)),
+          axios.get(withCacheBust(`${this.serverUrl}findJoinGroups?unionId=${unionId}`)).catch(() => ({ data: [] }))
         ])
-        const teams = visibleTeamSummaries({
+        const membership = {
           ownedGroups: ownedRes.data,
+          ownedMemberRows: (ownedMembersRes.data == null || ownedMembersRes.data === '') ? [] : ownedMembersRes.data,
           joinedRaw: joinedRes.data,
           unionId: this.unionid
-        })
+        }
+        const teams = visibleTeamSummaries(membership)
+        const view = buildGroupView(membership)
         if (!teams.length) {
           this.myTeamStatuses = []
           return
         }
         this.myTeamStatuses = await Promise.all(teams.map(async team => {
+          const roster = rosterFromGroupView(view, team, this.unionid)
+          let statusMembers = []
+          let groupName = team.groupName
           try {
             const res = await axios.get(withCacheBust(
               `${this.serverUrl}getGroupDailyStatus?groupId=${encodeURIComponent(team.groupId)}&date=${date}`
@@ -654,13 +662,31 @@ export default {
             if (data.error === 'group_not_found') {
               return Object.assign({}, team, { checkedIn: 0, total: 0, statusReady: false })
             }
+            groupName = data.groupName || team.groupName
+            statusMembers = Array.isArray(data.members) ? data.members : []
+          } catch (err) {
+            if (!roster.length) {
+              return Object.assign({}, team, { checkedIn: 0, total: 0, statusReady: false })
+            }
+          }
+          try {
+            const board = await assembleTeamDailyBoard({
+              roster,
+              statusMembers,
+              fetchReport: person => axios.get(
+                `${this.serverUrl}getReportInfoByUserIdAndDate?userId=${encodeURIComponent(person.unionId)}&date=${date}`
+              ).then(res => res.data),
+              fetchProfile: person => axios.get(
+                `${this.serverUrl}getById?id=${encodeURIComponent(person.unionId)}`
+              ).then(res => res.data)
+            })
             return {
               groupId: team.groupId,
-              groupName: data.groupName || team.groupName,
+              groupName,
               isOwner: team.isOwner,
-              checkedIn: data.checkedIn || 0,
-              total: data.total || 0,
-              statusReady: true
+              checkedIn: board.checkedIn,
+              total: board.total,
+              statusReady: board.total > 0
             }
           } catch (err) {
             return Object.assign({}, team, { checkedIn: 0, total: 0, statusReady: false })
