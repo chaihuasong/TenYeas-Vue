@@ -16,8 +16,33 @@
     </el-card>
 
     <el-dialog title="我的倒计时" :visible.sync="countdownDialogVisible" width="86%" center>
-      <el-form label-position="top">
-        <el-form-item label="名称">
+      <div class="countdown-list">
+        <div class="countdown-row" :class="{ active: !countdownState.activeId }" @click="selectCountdown('')">
+          <i :class="!countdownState.activeId ? 'el-icon-success' : 'el-icon-circle-check'"></i>
+          <div class="countdown-row-main">
+            <div class="countdown-row-name">十年倒计时</div>
+            <div class="countdown-row-time">2031-04-17 23:59:59 · 默认</div>
+          </div>
+        </div>
+        <div
+            v-for="item in countdownState.items"
+            :key="item.id"
+            class="countdown-row"
+            :class="{ active: countdownState.activeId === item.id }"
+            @click="selectCountdown(item.id)">
+          <i :class="countdownState.activeId === item.id ? 'el-icon-success' : 'el-icon-circle-check'"></i>
+          <div class="countdown-row-main">
+            <div class="countdown-row-name">{{ item.name }}</div>
+            <div class="countdown-row-time">{{ item.deadline }}</div>
+          </div>
+          <i class="el-icon-edit countdown-row-action" @click.stop="startEditCountdown(item)"></i>
+          <el-popconfirm title="删除后首页回到默认十年倒计时，并从服务器移除这个倒计时。" @confirm="removeCountdown(item)">
+            <i slot="reference" class="el-icon-delete countdown-row-action" @click.stop></i>
+          </el-popconfirm>
+        </div>
+      </div>
+      <el-form v-if="countdownEditor" label-position="top" class="countdown-editor">
+        <el-form-item :label="countdownEditor.mode === 'edit' ? '编辑倒计时' : '新增倒计时'">
           <el-input v-model="countdownForm.name" maxlength="20" show-word-limit placeholder="例如：每日打卡倒计时"></el-input>
         </el-form-item>
         <el-form-item label="截止日期时间（北京时间）">
@@ -31,12 +56,12 @@
               style="width: 100%">
           </el-date-picker>
         </el-form-item>
-        <div class="countdown-hint">保存后写入服务器。读取失败时不会把本机旧记录自动上传。</div>
       </el-form>
+      <el-button v-else size="small" @click="startAddCountdown">新增倒计时</el-button>
+      <div class="countdown-hint">保存后写入服务器，服务器确认成功才会更新。当前服务器每个用户只保存一个倒计时，不能在保留已有项的同时再新增或改成只显示默认。</div>
       <div slot="footer">
-        <el-button @click="restoreDefaultCountdown">恢复默认</el-button>
         <el-button @click="countdownDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="countdownSaving" @click="saveCountdownEdit">保存</el-button>
+        <el-button v-if="countdownEditor" type="primary" :loading="countdownSaving" @click="saveCountdownEdit">保存</el-button>
       </div>
     </el-dialog>
 
@@ -390,12 +415,14 @@ import { copyToClipboardSync, copyToClipboard } from '@/utils/clipboard'
 import {
   chooseCountdown,
   clearStoredCountdown,
+  confirmCountdownWrite,
+  countdownStateFromPayload,
+  displayedCountdown,
+  emptyCountdownState,
   parseCountdownResponse,
-  parseWriteResponse,
+  planCountdownChange,
   readStoredCountdown,
-  resolveCountdown,
   sameAccount,
-  validateCountdownInput,
   writeStoredCountdown
 } from '@/utils/countdown'
 import { buildGroupView, visibleTeamSummaries, withCacheBust } from '@/utils/groupMembership'
@@ -540,7 +567,9 @@ export default {
 
       myTeamStatuses: [],
       countdownPayload: null,
+      countdownState: emptyCountdownState(),
       countdownDialogVisible: false,
+      countdownEditor: null,
       countdownForm: {
         name: '',
         deadline: ''
@@ -575,7 +604,7 @@ export default {
       return JSON.stringify(this.buildDailyDraftPayload())
     },
     countdownView() {
-      return resolveCountdown(this.countdownPayload, Date.now())
+      return displayedCountdown(this.countdownState, Date.now())
     },
     countdownNotice() {
       if (this.countdownStatus === 'local-unconfirmed') {
@@ -724,6 +753,7 @@ export default {
     applyCountdownChoice(userId, chosen) {
       if (!sameAccount(this.unionid, userId)) return
       this.countdownPayload = chosen.payload
+      this.countdownState = chosen.state || countdownStateFromPayload(chosen.payload)
       this.countdownStatus = chosen.status
       if (chosen.clearLocal) clearStoredCountdown(userId)
       else if (chosen.writeLocal) writeStoredCountdown(userId, chosen.writeLocal)
@@ -733,43 +763,58 @@ export default {
         this.$message.warning('请先登录后再修改倒计时')
         return
       }
-      const view = this.countdownView
-      this.countdownForm = {
-        name: view.name,
-        deadline: view.deadlineText
-      }
+      this.countdownEditor = null
       this.countdownDialogVisible = true
+    },
+    startAddCountdown() {
+      const plan = planCountdownChange(this.countdownState, {
+        type: 'add',
+        name: '占位',
+        deadline: '2031-04-17 23:59:59'
+      })
+      if (!plan.supported) {
+        this.$message.warning(plan.message)
+        return
+      }
+      this.countdownEditor = { mode: 'add', id: '' }
+      this.countdownForm = { name: '', deadline: '' }
+    },
+    startEditCountdown(item) {
+      this.countdownEditor = { mode: 'edit', id: item.id }
+      this.countdownForm = { name: item.name, deadline: item.deadline }
+    },
+    selectCountdown(id) {
+      const plan = planCountdownChange(this.countdownState, { type: 'select', id })
+      if (!plan.ok) this.$message.warning(plan.message)
     },
     async saveCountdownEdit() {
       const userId = this.unionid
-      const checked = validateCountdownInput(this.countdownForm.name, this.countdownForm.deadline)
-      if (!checked.ok) {
-        this.$message.warning(checked.message)
-        return
-      }
       if (!userId) {
         this.$message.warning('请先登录后再修改倒计时')
         return
       }
+      const editor = this.countdownEditor || { mode: 'add', id: '' }
+      const plan = planCountdownChange(this.countdownState, {
+        type: editor.mode === 'edit' ? 'edit' : 'add',
+        id: editor.id,
+        name: this.countdownForm.name,
+        deadline: this.countdownForm.deadline
+      })
+      if (!plan.ok || !plan.request) {
+        this.$message.warning(plan.message || '没有要保存的内容')
+        return
+      }
       this.countdownSaving = true
       try {
-        const res = await axios.post(this.serverUrl + 'saveUserCountdown', qs.stringify({
-          userId,
-          name: checked.value.name,
-          deadline: checked.value.deadline
-        }), {
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-        })
-        const result = parseWriteResponse(res.data)
-        if (!sameAccount(this.unionid, userId)) return
-        if (!result.ok) {
-          this.$message.error(result.message || '保存失败，服务器上的倒计时没有改变')
-          return
-        }
-        this.countdownPayload = { name: checked.value.name, deadline: checked.value.deadline }
+        const confirmed = await this.postCountdownRequest(userId, plan.request)
+        if (!sameAccount(this.unionid, userId) || !confirmed) return
+        this.countdownState = plan.nextState
+        this.countdownPayload = plan.request.type === 'save'
+          ? { name: plan.request.name, deadline: plan.request.deadline }
+          : null
         this.countdownStatus = 'server'
-        writeStoredCountdown(userId, checked.value)
-        this.countdownDialogVisible = false
+        writeStoredCountdown(userId, { name: plan.request.name, deadline: plan.request.deadline })
+        this.countdownEditor = null
         this.$message.success('已保存到服务器')
       } catch (err) {
         if (sameAccount(this.unionid, userId)) {
@@ -779,37 +824,49 @@ export default {
         this.countdownSaving = false
       }
     },
-    async restoreDefaultCountdown() {
+    async removeCountdown(item) {
       const userId = this.unionid
       if (!userId) {
         this.$message.warning('请先登录后再修改倒计时')
         return
       }
+      const plan = planCountdownChange(this.countdownState, { type: 'remove', id: item.id })
+      if (!plan.ok || !plan.request) {
+        this.$message.warning(plan.message || '没有删除')
+        return
+      }
       this.countdownSaving = true
       try {
-        const res = await axios.post(this.serverUrl + 'clearUserCountdown', qs.stringify({
-          userId
-        }), {
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-        })
-        const result = parseWriteResponse(res.data)
-        if (!sameAccount(this.unionid, userId)) return
-        if (!result.ok) {
-          this.$message.error(result.message || '恢复默认失败，服务器上的倒计时没有改变')
-          return
-        }
-        clearStoredCountdown(userId)
+        const confirmed = await this.postCountdownRequest(userId, plan.request)
+        if (!sameAccount(this.unionid, userId) || !confirmed) return
+        this.countdownState = plan.nextState
         this.countdownPayload = null
         this.countdownStatus = 'default'
-        this.countdownDialogVisible = false
-        this.$message.success('已恢复默认十年倒计时')
+        clearStoredCountdown(userId)
+        this.countdownEditor = null
+        this.$message.success('已从服务器删除，首页回到默认十年倒计时')
       } catch (err) {
         if (sameAccount(this.unionid, userId)) {
-          this.$message.error('恢复默认失败，服务器上的倒计时没有改变')
+          this.$message.error('删除失败，服务器上的倒计时没有改变')
         }
       } finally {
         this.countdownSaving = false
       }
+    },
+    async postCountdownRequest(userId, request) {
+      const url = request.type === 'clear' ? 'clearUserCountdown' : 'saveUserCountdown'
+      const body = request.type === 'clear'
+        ? { userId }
+        : { userId, name: request.name, deadline: request.deadline }
+      const res = await axios.post(this.serverUrl + url, qs.stringify(body), {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      })
+      const result = confirmCountdownWrite(res.data, request)
+      if (!result.ok) {
+        this.$message.error(result.message || '保存失败，服务器上的倒计时没有改变')
+        return false
+      }
+      return true
     },
     addTimeValue(title) {
       if (title === '早起') {
@@ -3091,6 +3148,60 @@ a {
   color: #909399;
   font-size: 12px;
   line-height: 1.5;
+  text-align: left;
+  margin-top: 10px;
+}
+
+.countdown-list {
+  text-align: left;
+}
+
+.countdown-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f2f5;
+  cursor: pointer;
+}
+
+.countdown-row.active .countdown-row-name {
+  color: #667eea;
+}
+
+.countdown-row > i {
+  color: #c0c4cc;
+  margin-right: 8px;
+}
+
+.countdown-row.active > i {
+  color: #667eea;
+}
+
+.countdown-row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.countdown-row-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.countdown-row-time {
+  margin-top: 2px;
+  font-size: 12px;
+  color: #909399;
+}
+
+.countdown-row-action {
+  margin-left: 8px;
+  color: #909399;
+  font-size: 16px;
+}
+
+.countdown-editor {
+  margin-top: 12px;
   text-align: left;
 }
 
