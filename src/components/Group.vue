@@ -377,12 +377,6 @@
 
     <!-- 我的打卡内容 -->
     <div v-show="activeName === 'dailyReport'" class="content-section">
-      <div class="my-report-toolbar">
-        <div class="export-scope-note">只导出系统目前还能确认属于你的打卡记录。如果换过登录方式、合并或删除过账号，早期记录可能无法找回，导出不一定包含全部历史。</div>
-        <el-button size="small" type="primary" plain :loading="exportingMine" @click="exportMyReports">
-          <i class="el-icon-download"></i> 导出我的打卡
-        </el-button>
-      </div>
       <div v-if="reportsLoading" class="loading-state">
         <i class="el-icon-loading"></i>
         <span>加载中...</span>
@@ -510,15 +504,12 @@
 <script>
 import axios from 'axios'
 import qs from 'qs'
-import XLSX from 'xlsx'
-import FileSaver from 'file-saver'
 import global from '@/components/Common'
 import GroupReportList from '@/components/group/GroupReportList'
 import { buildReportItems, sortByDateDesc } from '@/components/group/reportItems'
 import { copyToClipboard } from '@/utils/clipboard'
 import { buildGroupView, parseJoinResult, readReviewResult, withCacheBust } from '@/utils/groupMembership'
 import { assembleTeamDailyBoard, buildApprovedRoster } from '@/utils/groupDailyBoard'
-import { buildExportNoteSheet, buildOwnExportSheet, prepareExportMyReports, sheetMatchesRecords } from '@/utils/reportExport'
 
 export default {
   name: 'Group',
@@ -539,7 +530,6 @@ export default {
       reportsLoaded: false,
       submitting: false,
       acting: null,
-      exportingMine: false,
 
       // 我创建的组（原始数据）
       rawOwnedGroups: [],
@@ -866,64 +856,6 @@ export default {
       await Promise.all(requests)
       this.initExpanded()
       this.loadTodayBoards()
-    },
-
-    async exportMyReports() {
-      if (!this.unionid) {
-        this.$message.warning('未获取到用户信息，请重新进入')
-        return
-      }
-      if (this.exportingMine) return
-      const loginId = this.unionid
-      this.exportingMine = true
-      try {
-        let profile = null
-        try {
-          const profileRes = await axios.get(`${this.serverUrl}getById?id=${encodeURIComponent(loginId)}`)
-          if (profileRes.data && typeof profileRes.data === 'object') profile = profileRes.data
-        } catch (profileErr) {
-          profile = null
-        }
-        if (this.unionid !== loginId) return
-        const res = await axios.get(
-          `${this.serverUrl}exportMyReports?userId=${encodeURIComponent(loginId)}`
-        )
-        if (this.unionid !== loginId) return
-        const prepared = prepareExportMyReports(res.data, profile)
-        if (!prepared.download) {
-          const detail = [prepared.reason, prepared.message].filter(Boolean).join('；')
-            + (prepared.warnings.length ? '；' + prepared.warnings.join('；') : '')
-          if (prepared.status === 'complete') this.$message.warning(detail || '没有找到可导出的打卡记录')
-          else this.$message.error(detail || '导出没有成功，没有生成文件')
-          return
-        }
-        const records = buildOwnExportSheet(prepared.rows)
-        if (!sheetMatchesRecords(records, prepared.rows)) {
-          this.$message.error('导出校验失败，文件内容与系统记录不一致，没有保存文件')
-          return
-        }
-        const book = XLSX.utils.book_new()
-        XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(buildExportNoteSheet(prepared)), '说明')
-        XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(records), '我的打卡')
-        const out = XLSX.write(book, { bookType: 'xlsx', bookSST: true, type: 'array' })
-        const now = new Date()
-        const pad = value => String(value).padStart(2, '0')
-        const stamp = now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate())
-          + pad(now.getHours()) + pad(now.getMinutes())
-        FileSaver.saveAs(new Blob([out], { type: 'application/octet-stream' }), '我的打卡_' + stamp + '.xlsx')
-        const scope = prepared.scopeNote
-        if (prepared.status === 'complete') {
-          this.$message.success('已导出 ' + prepared.rows.length + ' 条打卡记录。' + scope)
-        } else {
-          const extra = [prepared.reason, prepared.message].concat(prepared.warnings).filter(Boolean).join('；')
-          this.$message.warning('导出不完整：已写入 ' + prepared.rows.length + ' 条，可能还缺早期记录。' + extra)
-        }
-      } catch (err) {
-        console.error('导出我的打卡失败', err)
-        this.$message.error('导出失败，没有生成文件')
-      } finally {
-        this.exportingMine = false
-      }
     },
 
     async getMyReports() {
@@ -1283,22 +1215,6 @@ export default {
 /* 内容区域 */
 .content-section {
   padding: 15px;
-}
-
-.my-report-toolbar {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.export-scope-note {
-  flex: 1;
-  color: #909399;
-  font-size: 12px;
-  line-height: 1.5;
-  text-align: left;
 }
 
 .loading-state {
