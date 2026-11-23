@@ -235,6 +235,7 @@ export function buildExportNoteSheet(prepared) {
   return [
     ['说明', source.scopeNote || EXPORT_SCOPE_FALLBACK],
     ['导出范围', source.scope || EXPORT_SCOPE],
+    ['日期范围', source.rangeLabel || '全部记录（不按日期筛选）'],
     ['用户编号', source.canonicalUserId || ''],
     ['本次导出条数', String((source.rows || []).length)],
     ['历史总数', '这里只是本次拿到的条数，不代表你历史上一共打过多少卡'],
@@ -243,6 +244,229 @@ export function buildExportNoteSheet(prepared) {
     ['系统说明', source.message || ''],
     ['提醒', (source.warnings || []).join('；')]
   ]
+}
+
+const EXPORT_DATE = /^(\d{4})-(\d{2})-(\d{2})$/
+
+// 当前 GET /exportMyReports?userId= 只按身份返回一份名单，没有开始/结束日期参数。
+// 日期筛选只能加在「success、complete、未截断、total 等于 list 条数」的完整结果上。
+export function ownExportRequestUrl(serverUrl, userId) {
+  return String(serverUrl || '') + 'exportMyReports?userId=' + encodeURIComponent(userId || '')
+}
+
+export function parseExportDate(value) {
+  if (typeof value !== 'string' || !EXPORT_DATE.test(value)) return ''
+  const match = value.match(EXPORT_DATE)
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const day = Number(match[3])
+  const date = new Date(Date.UTC(year, month - 1, day))
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return ''
+  return value
+}
+
+export function validateOwnExportRequest(input) {
+  const source = input || {}
+  if (source.mode !== 'range') {
+    return {
+      ok: true,
+      mode: 'all',
+      startDate: '',
+      endDate: '',
+      rangeLabel: '全部记录（不按日期筛选）'
+    }
+  }
+  if (source.startDate == null || source.startDate === '' || source.endDate == null || source.endDate === '') {
+    return { ok: false, mode: 'range', reason: '请选择开始日期和结束日期' }
+  }
+  const startDate = parseExportDate(String(source.startDate))
+  const endDate = parseExportDate(String(source.endDate))
+  if (!startDate || !endDate) {
+    return { ok: false, mode: 'range', reason: '日期格式应为 YYYY-MM-DD，并且是真实存在的日期' }
+  }
+  if (startDate > endDate) {
+    return { ok: false, mode: 'range', reason: '开始日期不能晚于结束日期' }
+  }
+  const rangeLabel = startDate === endDate
+    ? startDate + '（当天，含这一天）'
+    : startDate + ' 至 ' + endDate + '（含开始和结束两天）'
+  return { ok: true, mode: 'range', startDate, endDate, rangeLabel }
+}
+
+export function sourceListIsComplete(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return false
+  if (data.success !== true || data.complete !== true || data.truncated === true) return false
+  if (!Array.isArray(data.list)) return false
+  return data.total != null && Number(data.total) === data.list.length
+}
+
+function datedShell(checked, extra) {
+  return Object.assign({
+    status: 'failed',
+    download: false,
+    reason: '',
+    message: '',
+    warnings: [],
+    scope: EXPORT_SCOPE,
+    scopeNote: EXPORT_SCOPE_FALLBACK,
+    canonicalUserId: '',
+    acceptedUserIds: [],
+    excludedUserIds: [],
+    rows: [],
+    ownIds: [],
+    listCount: 0,
+    outsideAccepted: 0,
+    rangeMode: checked && checked.mode ? checked.mode : '',
+    rangeStart: checked && checked.startDate ? checked.startDate : '',
+    rangeEnd: checked && checked.endDate ? checked.endDate : '',
+    rangeLabel: checked && checked.rangeLabel ? checked.rangeLabel : ''
+  }, extra || {})
+}
+
+function reportDay(row) {
+  const value = row && row.date
+  if (typeof value !== 'string') return ''
+  return parseExportDate(value.slice(0, 10))
+}
+
+function inClosedRange(row, startDate, endDate) {
+  const day = reportDay(row)
+  return day !== '' && day >= startDate && day <= endDate
+}
+
+// mode 为 all 时原样沿用 exportMyReports 的结果，不按日期删空字段旧记录。
+// mode 为 range 时，只有完整名单才能筛选；不完整、被截断或条数对不上时不生成文件。
+export function prepareDatedExport(data, profile, request) {
+  const checked = validateOwnExportRequest(request)
+  if (!checked.ok) {
+    return datedShell(checked, { status: 'invalid', reason: checked.reason })
+  }
+  const prepared = prepareExportMyReports(data, profile)
+  const base = datedShell(checked, prepared)
+  if (checked.mode === 'all') return base
+  if (prepared.status === 'failed' || !data || data.success !== true) {
+    return Object.assign({}, base, {
+      status: 'failed',
+      download: false,
+      rows: [],
+      ownIds: [],
+      reason: prepared.reason || '导出没有成功'
+    })
+  }
+  if (!sourceListIsComplete(data)) {
+    return Object.assign({}, base, {
+      status: 'incomplete',
+      download: false,
+      rows: [],
+      ownIds: [],
+      reason: '服务器没有返回完整记录，按日期导出无法保证这个范围内没有遗漏，没有生成文件'
+    })
+  }
+  const rows = prepared.rows.filter(row => inClosedRange(row, checked.startDate, checked.endDate))
+  const ownIds = rows.map(exportRecordId)
+  if (rows.length === 0) {
+    return Object.assign({}, base, {
+      status: 'empty',
+      download: false,
+      rows: [],
+      ownIds: [],
+      reason: '所选日期范围内没有打卡记录'
+    })
+  }
+  const reasons = []
+  let status = 'complete'
+  if (ownIds.some(id => !id)) {
+    status = 'partial'
+    reasons.push('有记录缺少编号，不能把这份文件当成无缺漏的完整档案')
+  }
+  if (prepared.outsideAccepted > 0) {
+    reasons.push('另有 ' + prepared.outsideAccepted + ' 条无法确认属于你，未写入')
+  }
+  return Object.assign({}, base, {
+    status,
+    download: true,
+    rows,
+    ownIds,
+    reason: reasons.join('；')
+  })
+}
+
+export function describeOwnExportOutcome(prepared) {
+  const source = prepared || {}
+  const range = source.rangeLabel || '全部记录（不按日期筛选）'
+  const count = Array.isArray(source.rows) ? source.rows.length : 0
+  if (source.status === 'invalid') {
+    return { saved: false, title: '没有导出', detail: source.reason || '日期不正确' }
+  }
+  if (source.status === 'empty' || (source.download !== true && source.status === 'complete')) {
+    return {
+      saved: false,
+      title: '没有可导出的记录',
+      detail: range + '。' + (source.reason || '没有找到可导出的打卡记录')
+    }
+  }
+  if (source.download !== true) {
+    return {
+      saved: false,
+      title: '没有生成文件',
+      detail: [range, source.reason, source.message].concat(source.warnings || []).filter(Boolean).join('。')
+    }
+  }
+  if (source.status === 'complete') {
+    return {
+      saved: true,
+      title: '已导出 ' + count + ' 条',
+      detail: [range, source.scopeNote || EXPORT_SCOPE_FALLBACK, source.reason].filter(Boolean).join('。')
+    }
+  }
+  return {
+    saved: true,
+    title: '导出不完整：已写入 ' + count + ' 条',
+    detail: [range, source.reason, source.message].concat(source.warnings || []).filter(Boolean).join('。')
+  }
+}
+
+export function ownExportFileName(prepared, now) {
+  const clock = now instanceof Date ? now : new Date()
+  const pad = value => String(value).padStart(2, '0')
+  const stamp = clock.getFullYear() + pad(clock.getMonth() + 1) + pad(clock.getDate())
+    + pad(clock.getHours()) + pad(clock.getMinutes())
+  const source = prepared || {}
+  const range = source.rangeMode === 'range' && source.rangeStart && source.rangeEnd
+    ? source.rangeStart.replace(/-/g, '') + '-' + source.rangeEnd.replace(/-/g, '')
+    : '全部'
+  return '我的打卡_' + range + '_' + stamp + '.xlsx'
+}
+
+export async function runOwnExport(input) {
+  const source = input || {}
+  const checked = validateOwnExportRequest(source)
+  if (!checked.ok) return prepareDatedExport(null, null, source)
+  if (!source.userId) {
+    return datedShell(checked, { status: 'failed', reason: '未获取到用户信息，请重新进入' })
+  }
+  let profile = null
+  if (typeof source.getProfile === 'function') {
+    try {
+      profile = await source.getProfile(source.userId)
+    } catch (err) {
+      profile = null
+    }
+  }
+  if (typeof source.getExport !== 'function') {
+    return datedShell(checked, { status: 'failed', reason: '导出失败，没有生成文件' })
+  }
+  let data
+  try {
+    data = await source.getExport(source.userId)
+  } catch (err) {
+    return datedShell(checked, {
+      status: 'failed',
+      reason: '导出失败，没有生成文件',
+      rangeLabel: checked.rangeLabel
+    })
+  }
+  return prepareDatedExport(data, profile, source)
 }
 
 export function sheetRecordIds(sheet) {

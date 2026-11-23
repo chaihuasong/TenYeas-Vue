@@ -5,6 +5,7 @@ import {
   assembleTeamDailyBoard,
   buildApprovedRoster,
   buildMonthExportMembers,
+  collectTeamMonthExport,
   reconcileTeamDailyBoard,
   rosterFromGroupView
 } from '../src/utils/groupDailyBoard.js'
@@ -155,4 +156,60 @@ test('月度导出缺某几个人的统计行时仍保留全部成员，没打�
   assert.deepEqual(byName['丙'], ['2026-11-02'])
   assert.deepEqual(byName['丁'], [])
   assert.equal(rows.find(person => person.nickname === '丁').checkedCount, 0)
+})
+
+test('团队月报导出保留零打卡的已通过成员，待审核的人不在名册里', async () => {
+  const view = buildGroupView({
+    ownedGroups: [{ groupId, groupName: '晨练组', owner: 'union-a' }],
+    ownedMemberRows: [[
+      { groupId, unionId: 'union-b', nickname: '乙', state: 1 },
+      { groupId, unionId: 'union-c', nickname: '丙', state: 1 },
+      { groupId, unionId: 'union-e', nickname: '戊', state: 0 }
+    ]],
+    unionId: 'union-a'
+  })
+  const roster = rosterFromGroupView(view, { groupId, isOwner: true }, 'union-a')
+  assert.deepEqual(roster.map(person => person.unionId).sort(), ['union-a', 'union-b', 'union-c'].sort())
+  assert.equal(roster.some(person => person.unionId === 'union-e'), false)
+  const asked = []
+  const collected = await collectTeamMonthExport({
+    groupId,
+    groupName: '晨练组',
+    date: '2026-11-16',
+    roster,
+    fetchDailyStatus: async () => ({ groupName: '晨练组', members: [] }),
+    fetchMonthStats: async () => ({
+      groupName: '晨练组',
+      days: ['2026-11-01', '2026-11-16'],
+      members: [{ unionId: 'union-b', nickname: '乙', checkedDays: ['2026-11-01'] }]
+    }),
+    fetchMonthReports: async (userId) => {
+      asked.push(userId)
+      if (userId === 'union-b') return [{ userId: 'union-b', date: '2026-11-01' }]
+      return []
+    }
+  })
+  assert.equal(collected.ok, true)
+  assert.equal(collected.memberCount, 3)
+  assert.equal(collected.zeroCount, 2)
+  assert.deepEqual(asked.sort(), ['union-a', 'union-b', 'union-c'].sort())
+  assert.equal(collected.monthRows.flat().includes('戊'), false)
+  assert.equal(collected.monthRows.find(row => row[0] === '乙')[3], 1)
+  assert.equal(collected.monthRows.find(row => row[0] === '丙')[3], 0)
+  assert.equal(collected.dailyRows.filter(row => row[3] === '未打卡').length, 3)
+  assert.equal(collected.fileName, '晨练组_202611打卡统计.xlsx')
+})
+
+test('团队月报接口失败时不生成成功结果', async () => {
+  const missing = await collectTeamMonthExport({ groupId: '', date: '2026-11-16', roster: [] })
+  assert.equal(missing.ok, false)
+  const failed = await collectTeamMonthExport({
+    groupId,
+    date: '2026-11-16',
+    roster: [{ unionId: 'union-a', nickname: '甲', isOwner: true, aliases: ['union-a'] }],
+    fetchDailyStatus: async () => ({}),
+    fetchMonthStats: async () => { throw new Error('网络失败') }
+  })
+  assert.equal(failed.ok, false)
+  assert.equal(failed.reason.includes('没有生成文件'), true)
 })

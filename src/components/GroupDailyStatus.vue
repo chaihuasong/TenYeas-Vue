@@ -38,14 +38,6 @@
         <button class="action-btn primary" @click="copyShareLink">
           <i class="el-icon-share"></i> 复制提醒链接
         </button>
-        <button class="action-btn" :disabled="exporting" @click="exportMonthExcel">
-          <i class="el-icon-download"></i> {{ exporting ? '导出中...' : '导出本月 Excel' }}
-        </button>
-      </div>
-      <div v-if="exportResult" class="export-result">
-        <div class="export-result-title">{{ exportResult.saved ? 'Excel 已导出' : '没有保存到手机' }}</div>
-        <div class="export-result-line">文件名：{{ exportResult.fileName }}</div>
-        <div class="export-result-line">保存位置：{{ exportResult.location }}</div>
       </div>
     </div>
 
@@ -105,7 +97,7 @@
         </div>
 
         <div class="hint">
-          把上方链接发到群里，组员打开即可查看今日完成情况；需要月度统计可点「导出本月 Excel」。
+          把上方链接发到群里，组员打开即可查看今日完成情况。月度统计请到「统计」页导出。
         </div>
       </template>
     </div>
@@ -114,12 +106,10 @@
 
 <script>
 import axios from 'axios'
-import XLSX from 'xlsx'
-import FileSaver from 'file-saver'
 import global from '@/components/Common'
 import { copyToClipboard } from '@/utils/clipboard'
 import { buildGroupView, withCacheBust } from '@/utils/groupMembership'
-import { assembleTeamDailyBoard, buildApprovedRoster, buildMonthExportMembers } from '@/utils/groupDailyBoard'
+import { assembleTeamDailyBoard, buildApprovedRoster } from '@/utils/groupDailyBoard'
 
 export default {
   name: 'GroupDailyStatus',
@@ -134,8 +124,6 @@ export default {
       members: [],
       loading: true,
       loadError: '',
-      exporting: false,
-      exportResult: null,
       fromShare: false,
       datePickerOptions: {
         disabledDate(time) {
@@ -280,185 +268,6 @@ export default {
       } finally {
         if (seq === this.statusSeq) this.loading = false
       }
-    },
-    monthPrefix(dateStr) {
-      if (!dateStr || dateStr.length < 7) return ''
-      return dateStr.substring(0, 7) + '-'
-    },
-    exportFileName() {
-      const monthDate = this.monthPrefix(this.selectedDate).replace(/-/g, '')
-      return `${this.groupName || this.groupId}_${monthDate}打卡统计.xlsx`
-    },
-    inHtzApp() {
-      const ua = navigator.userAgent || ''
-      if (window.HTZApp && typeof window.HTZApp.saveExcel === 'function') return true
-      if (/HTZApp/.test(ua)) return true
-      if (/MicroMessenger/i.test(ua)) return false
-      // 安卓系统 WebView 的标识。黄庭书院 App 里打开打卡页会带上它
-      if (/\bwv\b/.test(ua)) return true
-      try {
-        return localStorage.getItem('htz_nickname') != null
-      } catch (e) {
-        return false
-      }
-    },
-    bytesToBase64(buffer) {
-      const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer)
-      let binary = ''
-      const chunk = 0x8000
-      for (let i = 0; i < bytes.length; i += chunk) {
-        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk))
-      }
-      return btoa(binary)
-    },
-    downloadLocationHint() {
-      const ua = navigator.userAgent || ''
-      const inWechat = /MicroMessenger/i.test(ua)
-      const isIOS = /iPhone|iPad|iPod/i.test(ua)
-      if (inWechat && isIOS) {
-        return '微信里通常不会出现下载。请点右上角用 Safari 打开后再导出，文件在「文件」App 的「下载」里'
-      }
-      if (isIOS) {
-        return '「文件」App 的「下载」文件夹'
-      }
-      if (/Android/i.test(ua)) {
-        return '手机「下载」文件夹（内部存储 / Download）'
-      }
-      return '浏览器的下载文件夹'
-    },
-    async saveExcelFile(wbout, fileName, pickedHandle) {
-      const blob = new Blob([wbout], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      })
-      if (pickedHandle) {
-        const writable = await pickedHandle.createWritable()
-        await writable.write(blob)
-        await writable.close()
-        return { location: '你刚才选择的文件夹', saved: true }
-      }
-      const bridge = window.HTZApp
-      if (bridge && typeof bridge.saveExcel === 'function') {
-        const path = bridge.saveExcel(this.bytesToBase64(wbout), fileName) || ''
-        if (!path) {
-          return { location: 'App 写入下载目录失败', saved: false }
-        }
-        return { location: path, saved: true }
-      }
-      // 旧版 App 的网页容器不处理下载，文件不会出现在任何目录
-      if (this.inHtzApp()) {
-        return {
-          location: '当前 App 没有把文件写到手机上，所以没有实际路径。更新 App 后再导出',
-          saved: false
-        }
-      }
-      FileSaver.saveAs(blob, fileName)
-      return { location: this.downloadLocationHint(), saved: true }
-    },
-    async exportMonthExcel() {
-      if (!this.groupId || this.exporting) return
-      const fileName = this.exportFileName()
-      let pickedHandle = null
-      if (window.showSaveFilePicker) {
-        try {
-          pickedHandle = await window.showSaveFilePicker({
-            suggestedName: fileName,
-            types: [{
-              description: 'Excel 工作簿',
-              accept: {
-                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
-              }
-            }]
-          })
-        } catch (err) {
-          if (err && err.name === 'AbortError') return
-          pickedHandle = null
-        }
-      }
-      this.exporting = true
-      try {
-        const monthDate = this.monthPrefix(this.selectedDate)
-        const res = await axios.get(
-          `${this.serverUrl}getGroupCheckinStats?groupId=${encodeURIComponent(this.groupId)}&monthDate=${monthDate}`
-        )
-        const data = res.data || {}
-        if (data.error === 'group_not_found') {
-          this.$message.warning('未找到该团队')
-          return
-        }
-        const days = data.days || []
-        const statMembers = Array.isArray(data.members) ? data.members : []
-        const people = this.members.length ? this.members : statMembers
-        const reportsByUnionId = {}
-        await Promise.all(people.map(async person => {
-          const unionId = person && person.unionId
-          if (!unionId) return
-          try {
-            const reportRes = await axios.get(
-              `${this.serverUrl}getReportInfoListByIdAndMonth?userId=${encodeURIComponent(unionId)}&monthDate=${monthDate}`
-            )
-            if (Array.isArray(reportRes.data)) reportsByUnionId[unionId] = reportRes.data
-          } catch (reportErr) {
-            reportsByUnionId[unionId] = []
-          }
-        }))
-        const members = buildMonthExportMembers({
-          people,
-          statMembers,
-          monthDays: days,
-          reportsByUnionId
-        })
-        if (members.length === 0) {
-          this.$message.warning('暂无成员数据可导出')
-          return
-        }
-
-        // 表头：昵称 / 姓名 / 角色 / 打卡天数 / 各日
-        const header = ['昵称', '姓名', '角色', '打卡天数', ...days.map(d => d.substring(5))]
-        const rows = [header]
-        members.forEach(m => {
-          const checkedSet = new Set(m.checkedDays || [])
-          const dayCells = days.map(d => (checkedSet.has(d) ? '✓' : ''))
-          rows.push([
-            m.nickname || '',
-            m.name || '',
-            m.isOwner ? '组长' : '组员',
-            m.checkedCount || 0,
-            ...dayCells
-          ])
-        })
-
-        // 当日汇总 sheet
-        const dailyHeader = ['昵称', '姓名', '角色', '是否打卡', '反省']
-        const dailyRows = [dailyHeader]
-        this.members.forEach(m => {
-          dailyRows.push([
-            m.nickname || '',
-            m.name || '',
-            m.isOwner ? '组长' : '组员',
-            m.checkedIn ? '已打卡' : '未打卡',
-            m.note || ''
-          ])
-        })
-
-        const wb = XLSX.utils.book_new()
-        const wsMonth = XLSX.utils.aoa_to_sheet(rows)
-        const wsDaily = XLSX.utils.aoa_to_sheet(dailyRows)
-        XLSX.utils.book_append_sheet(wb, wsMonth, '月度统计')
-        XLSX.utils.book_append_sheet(wb, wsDaily, this.selectedDate)
-        const wbout = XLSX.write(wb, { bookType: 'xlsx', bookSST: true, type: 'array' })
-        const savedName = (data.groupName || this.groupName || this.groupId) + '_' + monthDate.replace(/-/g, '') + '打卡统计.xlsx'
-        const saved = await this.saveExcelFile(wbout, savedName, pickedHandle)
-        this.exportResult = {
-          fileName: pickedHandle && pickedHandle.name ? pickedHandle.name : savedName,
-          location: saved.location,
-          saved: saved.saved
-        }
-      } catch (err) {
-        console.error('导出失败', err)
-        this.$message.error('导出失败，请稍后重试')
-      } finally {
-        this.exporting = false
-      }
     }
   }
 }
@@ -585,36 +394,6 @@ export default {
   background: #fff;
   color: #667eea;
   font-weight: 600;
-}
-
-.action-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.export-result {
-  margin-top: 12px;
-  background: #fff;
-  color: #303133;
-  border-radius: 10px;
-  padding: 12px 14px;
-  text-align: left;
-}
-
-.export-result-title {
-  font-size: 14px;
-  font-weight: 700;
-  margin-bottom: 6px;
-}
-
-.export-result-line {
-  font-size: 13px;
-  line-height: 1.6;
-  word-break: break-word;
-}
-
-.export-result-line + .export-result-line {
-  margin-top: 2px;
 }
 
 .content {

@@ -43,6 +43,85 @@
       </div>
     </div>
 
+    <div class="export-section">
+      <div class="section-title">导出</div>
+
+      <div class="export-block">
+        <div class="export-block-title">我的打卡</div>
+        <div class="export-note">只导出系统目前还能确认属于你的打卡记录。如果换过登录方式、合并或删除过账号，早期记录可能无法找回，导出不一定包含全部历史。</div>
+        <el-radio-group v-model="myExportMode" class="export-mode">
+          <el-radio label="all">全部记录</el-radio>
+          <el-radio label="range">按日期</el-radio>
+        </el-radio-group>
+        <div v-if="myExportMode === 'range'" class="export-dates">
+          <el-date-picker
+            v-model="myExportStart"
+            type="date"
+            value-format="yyyy-MM-dd"
+            format="yyyy-MM-dd"
+            placeholder="开始日期"
+            :editable="false"
+            :clearable="false"
+            size="small">
+          </el-date-picker>
+          <span class="export-dates-sep">至</span>
+          <el-date-picker
+            v-model="myExportEnd"
+            type="date"
+            value-format="yyyy-MM-dd"
+            format="yyyy-MM-dd"
+            placeholder="结束日期"
+            :editable="false"
+            :clearable="false"
+            size="small">
+          </el-date-picker>
+        </div>
+        <div class="export-preview">{{ myExportPreview }}</div>
+        <el-button size="small" type="primary" plain :loading="exportingMine" @click="exportMyReports">
+          <i class="el-icon-download"></i> 导出我的打卡
+        </el-button>
+        <div v-if="myExportResult" class="export-result">
+          <div class="export-result-title">{{ myExportResult.title }}</div>
+          <div class="export-result-line">{{ myExportResult.detail }}</div>
+        </div>
+      </div>
+
+      <div class="export-block">
+        <div class="export-block-title">团队打卡</div>
+        <div v-if="exportTeams.length === 0" class="export-note">还没有已加入的团队。待审核的申请不会出现在这里。</div>
+        <template v-else>
+          <el-select v-model="exportGroupId" size="small" class="export-team-select" placeholder="选择团队">
+            <el-option
+              v-for="team in exportTeams"
+              :key="team.groupId"
+              :label="(team.groupName || team.groupId) + (team.isOwner ? '（我创建的）' : '')"
+              :value="team.groupId">
+            </el-option>
+          </el-select>
+          <el-date-picker
+            v-model="exportTeamDate"
+            type="date"
+            value-format="yyyy-MM-dd"
+            format="yyyy-MM-dd"
+            placeholder="选择日期"
+            :editable="false"
+            :clearable="false"
+            size="small"
+            class="export-team-date"
+            :picker-options="teamDateOptions">
+          </el-date-picker>
+          <div class="export-preview">{{ teamExportPreview }}</div>
+          <el-button size="small" type="primary" plain :loading="exportingTeam" @click="exportTeamExcel">
+            <i class="el-icon-download"></i> 导出团队打卡
+          </el-button>
+        </template>
+        <div v-if="teamExportResult" class="export-result">
+          <div class="export-result-title">{{ teamExportResult.title }}</div>
+          <div class="export-result-line">{{ teamExportResult.detail }}</div>
+        </div>
+      </div>
+    </div>
+
     <!-- 打卡率统计 -->
     <div class="rate-section">
       <div class="section-title">打卡率</div>
@@ -205,8 +284,22 @@
 
 <script>
 import axios from 'axios'
+import XLSX from 'xlsx'
 import global from "@/components/Common";
 import * as echarts from "echarts";
+import { buildGroupView, visibleTeamSummaries, withCacheBust } from '@/utils/groupMembership'
+import { collectTeamMonthExport, rosterFromGroupView } from '@/utils/groupDailyBoard'
+import { saveExcelFile } from '@/utils/excelSave'
+import {
+  buildExportNoteSheet,
+  buildOwnExportSheet,
+  describeOwnExportOutcome,
+  ownExportFileName,
+  ownExportRequestUrl,
+  runOwnExport,
+  sheetMatchesRecords,
+  validateOwnExportRequest
+} from '@/utils/reportExport'
 
 export default {
   name: 'Statistics',
@@ -252,13 +345,50 @@ export default {
       },
       // 原始数据
       allReports: [],
-      templateCache: {}
+      templateCache: {},
+      myExportMode: 'all',
+      myExportStart: '',
+      myExportEnd: '',
+      exportingMine: false,
+      myExportResult: null,
+      exportTeams: [],
+      exportGroupView: null,
+      exportGroupId: '',
+      exportTeamDate: '',
+      exportingTeam: false,
+      teamExportResult: null,
+      teamDateOptions: {
+        disabledDate(time) {
+          return time.getTime() > Date.now()
+        }
+      }
     };
+  },
+  computed: {
+    myExportPreview() {
+      const checked = validateOwnExportRequest({
+        mode: this.myExportMode,
+        startDate: this.myExportStart,
+        endDate: this.myExportEnd
+      })
+      if (!checked.ok) return checked.reason
+      if (checked.mode === 'all') return '将导出全部目前还能确认属于你的打卡记录，不按日期删减。空着的旧记录也会保留。'
+      return '将导出 ' + checked.rangeLabel + ' 的打卡，只包含你本人的记录。'
+    },
+    teamExportPreview() {
+      const team = this.exportTeams.find(item => item.groupId === this.exportGroupId)
+      const name = team ? (team.groupName || team.groupId) : '所选团队'
+      const date = this.exportTeamDate || '所选日期'
+      const month = date && date.length >= 7 ? date.substring(0, 7) : '该月'
+      return '将导出「' + name + '」' + month + ' 的月度统计，以及 ' + date + ' 的当日汇总。已通过但没有打卡的成员仍会列出。'
+    }
   },
   mounted() {
     document.title = this.$route.meta.title
+    this.exportTeamDate = this.formatDate(new Date())
     this.initWeekDays()
     this.loadData()
+    this.loadExportTeams()
   },
   methods: {
     // 初始化本周日期
@@ -286,6 +416,176 @@ export default {
       const month = String(date.getMonth() + 1).padStart(2, '0')
       const day = String(date.getDate()).padStart(2, '0')
       return `${year}-${month}-${day}`
+    },
+
+    viewerId() {
+      const storeUnionid = this.$store.getters.getUnionid
+      return storeUnionid ? String(storeUnionid).replace(/"/g, '') : ''
+    },
+
+    async loadExportTeams() {
+      const unionId = this.viewerId()
+      if (!unionId) return
+      try {
+        const [owned, joined, ownedMembers] = await Promise.all([
+          axios.get(withCacheBust(`${this.serverUrl}findGroupByOwner?unionId=${encodeURIComponent(unionId)}`)),
+          axios.get(withCacheBust(`${this.serverUrl}findAllJoinGroups?unionId=${encodeURIComponent(unionId)}`)),
+          axios.get(withCacheBust(`${this.serverUrl}findJoinGroups?unionId=${encodeURIComponent(unionId)}`)).catch(() => ({ data: [] }))
+        ])
+        const source = {
+          ownedGroups: Array.isArray(owned.data) ? owned.data : [],
+          ownedMemberRows: (ownedMembers.data == null || ownedMembers.data === '') ? [] : ownedMembers.data,
+          joinedRaw: (joined.data == null || joined.data === '') ? [] : joined.data,
+          unionId
+        }
+        this.exportGroupView = buildGroupView(source)
+        this.exportTeams = visibleTeamSummaries(source)
+        if (!this.exportTeams.some(team => team.groupId === this.exportGroupId)) {
+          this.exportGroupId = this.exportTeams.length ? this.exportTeams[0].groupId : ''
+        }
+      } catch (err) {
+        console.error('加载可导出团队失败', err)
+      }
+    },
+
+    async exportMyReports() {
+      if (this.exportingMine) return
+      const userId = this.viewerId()
+      this.exportingMine = true
+      this.myExportResult = null
+      try {
+        const prepared = await runOwnExport({
+          userId,
+          mode: this.myExportMode,
+          startDate: this.myExportStart,
+          endDate: this.myExportEnd,
+          getProfile: async (id) => {
+            const res = await axios.get(`${this.serverUrl}getById?id=${encodeURIComponent(id)}`)
+            return res.data && typeof res.data === 'object' ? res.data : null
+          },
+          getExport: async (id) => {
+            const res = await axios.get(ownExportRequestUrl(this.serverUrl, id))
+            return res.data
+          }
+        })
+        const outcome = describeOwnExportOutcome(prepared)
+        if (!prepared.download) {
+          this.myExportResult = outcome
+          if (prepared.status === 'invalid' || prepared.status === 'empty' || prepared.status === 'complete') {
+            this.$message.warning(outcome.detail)
+          } else {
+            this.$message.error(outcome.detail)
+          }
+          return
+        }
+        const records = buildOwnExportSheet(prepared.rows)
+        if (!sheetMatchesRecords(records, prepared.rows)) {
+          this.myExportResult = {
+            saved: false,
+            title: '没有生成文件',
+            detail: '导出校验失败，文件内容与系统记录不一致，没有保存文件'
+          }
+          this.$message.error(this.myExportResult.detail)
+          return
+        }
+        const book = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(buildExportNoteSheet(prepared)), '说明')
+        XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(records), '我的打卡')
+        const out = XLSX.write(book, { bookType: 'xlsx', bookSST: true, type: 'array' })
+        const fileName = ownExportFileName(prepared, new Date())
+        const saved = await saveExcelFile(out, fileName, null)
+        this.myExportResult = {
+          saved: saved.saved && outcome.saved,
+          title: saved.saved ? outcome.title : '没有保存到手机',
+          detail: outcome.detail + ' 文件名：' + fileName + '。保存位置：' + saved.location
+        }
+        if (!saved.saved) {
+          this.$message.error(this.myExportResult.detail)
+          return
+        }
+        if (prepared.status === 'complete') this.$message.success(outcome.title + '。' + outcome.detail)
+        else this.$message.warning(outcome.title + '。' + outcome.detail)
+      } catch (err) {
+        console.error('导出我的打卡失败', err)
+        this.myExportResult = { saved: false, title: '没有生成文件', detail: '导出失败，没有生成文件' }
+        this.$message.error('导出失败，没有生成文件')
+      } finally {
+        this.exportingMine = false
+      }
+    },
+
+    async exportTeamExcel() {
+      if (this.exportingTeam) return
+      const unionId = this.viewerId()
+      if (!unionId) {
+        this.$message.warning('未获取到用户信息，请重新进入')
+        return
+      }
+      this.exportingTeam = true
+      this.teamExportResult = null
+      try {
+        await this.loadExportTeams()
+        const team = this.exportTeams.find(item => item.groupId === this.exportGroupId)
+        if (!team) {
+          this.teamExportResult = { title: '没有生成文件', detail: '请选择你已加入或创建的团队' }
+          this.$message.warning(this.teamExportResult.detail)
+          return
+        }
+        const date = this.exportTeamDate
+        if (!date) {
+          this.teamExportResult = { title: '没有生成文件', detail: '请选择日期' }
+          this.$message.warning(this.teamExportResult.detail)
+          return
+        }
+        const roster = rosterFromGroupView(this.exportGroupView, team, unionId)
+        const collected = await collectTeamMonthExport({
+          groupId: team.groupId,
+          groupName: team.groupName,
+          date,
+          roster,
+          fetchDailyStatus: (groupId, day) => axios.get(
+            `${this.serverUrl}getGroupDailyStatus?groupId=${encodeURIComponent(groupId)}&date=${day}`
+          ).then(res => res.data),
+          fetchMonthStats: (groupId, monthDate) => axios.get(
+            `${this.serverUrl}getGroupCheckinStats?groupId=${encodeURIComponent(groupId)}&monthDate=${monthDate}`
+          ).then(res => res.data),
+          fetchMonthReports: (userId, monthDate) => axios.get(
+            `${this.serverUrl}getReportInfoListByIdAndMonth?userId=${encodeURIComponent(userId)}&monthDate=${monthDate}`
+          ).then(res => res.data),
+          fetchReport: person => axios.get(
+            `${this.serverUrl}getReportInfoByUserIdAndDate?userId=${encodeURIComponent(person.unionId)}&date=${date}`
+          ).then(res => res.data),
+          fetchProfile: person => axios.get(
+            `${this.serverUrl}getById?id=${encodeURIComponent(person.unionId)}`
+          ).then(res => res.data)
+        })
+        if (!collected.ok) {
+          this.teamExportResult = { title: '没有生成文件', detail: collected.reason }
+          this.$message.warning(collected.reason)
+          return
+        }
+        const book = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(collected.monthRows), '月度统计')
+        XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(collected.dailyRows), collected.sheetDate)
+        const out = XLSX.write(book, { bookType: 'xlsx', bookSST: true, type: 'array' })
+        const saved = await saveExcelFile(out, collected.fileName, null)
+        const month = date.substring(0, 7)
+        const detail = '「' + collected.groupName + '」' + month + ' 月度统计共 ' + collected.memberCount
+          + ' 人，其中 ' + collected.zeroCount + ' 人该月没有打卡，仍保留在表里。另附 ' + date
+          + ' 的当日汇总。文件名：' + collected.fileName + '。保存位置：' + saved.location
+        this.teamExportResult = {
+          title: saved.saved ? 'Excel 已导出' : '没有保存到手机',
+          detail
+        }
+        if (saved.saved) this.$message.success(this.teamExportResult.title)
+        else this.$message.error(detail)
+      } catch (err) {
+        console.error('导出团队打卡失败', err)
+        this.teamExportResult = { title: '没有生成文件', detail: '导出失败，请稍后重试' }
+        this.$message.error('导出失败，请稍后重试')
+      } finally {
+        this.exportingTeam = false
+      }
     },
 
     formatNumber(num) {
@@ -789,6 +1089,81 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.export-section {
+  margin-bottom: 20px;
+}
+
+.export-block {
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  text-align: left;
+}
+
+.export-block-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #303133;
+  margin-bottom: 8px;
+}
+
+.export-note,
+.export-preview,
+.export-result-line {
+  font-size: 12px;
+  color: #909399;
+  line-height: 1.5;
+}
+
+.export-mode {
+  display: flex;
+  margin: 10px 0;
+}
+
+.export-dates {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.export-dates .el-date-editor {
+  flex: 1;
+  width: auto;
+}
+
+.export-dates-sep {
+  margin: 0 8px;
+  color: #606266;
+  flex: none;
+}
+
+.export-preview {
+  margin: 8px 0 12px;
+  color: #606266;
+}
+
+.export-team-select,
+.export-team-date {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.export-result {
+  margin-top: 12px;
+  background: #f5f7fa;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.export-result-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #303133;
+  margin-bottom: 4px;
 }
 
 .year-select {

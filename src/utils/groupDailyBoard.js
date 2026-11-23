@@ -333,8 +333,123 @@ export function buildMonthExportMembers(input) {
       nickname: person.nickname || (stat && stat.nickname) || '',
       name: person.name || (stat && stat.name) || '',
       isOwner: person.isOwner === true || !!(stat && stat.isOwner),
-      checkedDays,
-      checkedCount: checkedDays.length
-    }
+    checkedDays,
+    checkedCount: checkedDays.length
+  }
+})
+}
+
+export function buildTeamExportTables(input) {
+  const source = input || {}
+  const days = Array.isArray(source.days) ? source.days : []
+  const members = buildMonthExportMembers({
+    people: source.people,
+    statMembers: source.statMembers,
+    monthDays: days,
+    reportsByUnionId: source.reportsByUnionId
   })
+  const header = ['昵称', '姓名', '角色', '打卡天数', ...days.map(day => String(day).substring(5))]
+  const monthRows = [header]
+  members.forEach(member => {
+    const checkedSet = new Set(member.checkedDays || [])
+    monthRows.push([
+      member.nickname || '',
+      member.name || '',
+      member.isOwner ? '组长' : '组员',
+      member.checkedCount || 0,
+      ...days.map(day => (checkedSet.has(day) ? '✓' : ''))
+    ])
+  })
+  const dailyMembers = Array.isArray(source.dailyMembers) ? source.dailyMembers : []
+  const dailyRows = [['昵称', '姓名', '角色', '是否打卡', '反省']]
+  dailyMembers.forEach(member => {
+    dailyRows.push([
+      member.nickname || '',
+      member.name || '',
+      member.isOwner ? '组长' : '组员',
+      member.checkedIn ? '已打卡' : '未打卡',
+      member.note || ''
+    ])
+  })
+  return { members, monthRows, dailyRows }
+}
+
+function monthToken(date) {
+  if (!date || date.length < 7) return ''
+  return date.substring(0, 7) + '-'
+}
+
+// 团队月报导出。roster 必须是已通过成员；统计接口没返回的人仍保留，打卡天数为 0。
+export async function collectTeamMonthExport(input) {
+  const source = input || {}
+  const groupId = source.groupId || ''
+  const date = source.date || ''
+  const roster = Array.isArray(source.roster) ? source.roster : []
+  if (!groupId || !date) {
+    return { ok: false, reason: '请选择团队和日期' }
+  }
+  let daily = {}
+  try {
+    daily = (typeof source.fetchDailyStatus === 'function'
+      ? await source.fetchDailyStatus(groupId, date)
+      : {}) || {}
+  } catch (err) {
+    if (!roster.length) return { ok: false, reason: '加载失败，请稍后重试' }
+    daily = {}
+  }
+  if (daily.error === 'group_not_found' && !roster.length) {
+    return { ok: false, reason: '未找到该团队' }
+  }
+  const board = await assembleTeamDailyBoard({
+    roster,
+    statusMembers: Array.isArray(daily.members) ? daily.members : [],
+    fetchReport: source.fetchReport,
+    fetchProfile: source.fetchProfile
+  })
+  let stats = {}
+  try {
+    stats = (typeof source.fetchMonthStats === 'function'
+      ? await source.fetchMonthStats(groupId, monthToken(date))
+      : {}) || {}
+  } catch (err) {
+    return { ok: false, reason: '月度统计加载失败，没有生成文件' }
+  }
+  if (stats.error === 'group_not_found') {
+    return { ok: false, reason: '未找到该团队' }
+  }
+  const days = Array.isArray(stats.days) ? stats.days : []
+  const statMembers = Array.isArray(stats.members) ? stats.members : []
+  const people = board.members.length ? board.members : statMembers
+  const reportsByUnionId = {}
+  await Promise.all(people.map(async person => {
+    const unionId = person && person.unionId
+    if (!unionId || typeof source.fetchMonthReports !== 'function') return
+    try {
+      const list = await source.fetchMonthReports(unionId, monthToken(date))
+      reportsByUnionId[unionId] = Array.isArray(list) ? list : []
+    } catch (err) {
+      reportsByUnionId[unionId] = []
+    }
+  }))
+  const tables = buildTeamExportTables({
+    people,
+    statMembers,
+    days,
+    reportsByUnionId,
+    dailyMembers: board.members
+  })
+  if (!tables.members.length) {
+    return { ok: false, reason: '暂无成员数据可导出' }
+  }
+  const groupName = stats.groupName || source.groupName || groupId
+  return {
+    ok: true,
+    groupName,
+    monthRows: tables.monthRows,
+    dailyRows: tables.dailyRows,
+    fileName: groupName + '_' + monthToken(date).replace(/-/g, '') + '打卡统计.xlsx',
+    sheetDate: date,
+    memberCount: tables.members.length,
+    zeroCount: tables.members.filter(member => !member.checkedCount).length
+  }
 }
