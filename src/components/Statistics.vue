@@ -98,19 +98,49 @@
               :value="team.groupId">
             </el-option>
           </el-select>
-          <el-date-picker
-            v-model="exportTeamDate"
-            type="date"
-            value-format="yyyy-MM-dd"
-            format="yyyy-MM-dd"
-            placeholder="选择日期"
-            :editable="false"
-            :clearable="false"
-            size="small"
-            class="export-team-date"
-            :picker-options="teamDateOptions">
-          </el-date-picker>
+          <div class="export-dates">
+            <el-date-picker
+              v-model="teamRangeStart"
+              type="date"
+              value-format="yyyy-MM-dd"
+              format="yyyy-MM-dd"
+              placeholder="开始日期"
+              :editable="false"
+              :clearable="false"
+              size="small"
+              :picker-options="teamDateOptions">
+            </el-date-picker>
+            <span class="export-dates-sep">至</span>
+            <el-date-picker
+              v-model="teamRangeEnd"
+              type="date"
+              value-format="yyyy-MM-dd"
+              format="yyyy-MM-dd"
+              placeholder="结束日期"
+              :editable="false"
+              :clearable="false"
+              size="small"
+              :picker-options="teamDateOptions">
+            </el-date-picker>
+          </div>
           <div class="export-preview">{{ teamExportPreview }}</div>
+          <div v-if="teamRange.status === 'loading'" class="export-note">正在加载这个团队在所选范围内的打卡...</div>
+          <div v-else-if="teamRange.ok" class="team-range-panel">
+            <div class="team-range-summary">
+              <span>成员 {{ teamRange.memberCount }}</span>
+              <span>已打卡 {{ teamRange.checkedPeople }}</span>
+              <span>未打卡 {{ teamRange.zeroCount }}</span>
+              <span>打卡 {{ teamRange.checkinTotal }} 人次</span>
+            </div>
+            <div v-for="member in teamRange.members" :key="teamRange.key + '-' + member.unionId" class="team-member-row">
+              <div class="team-member-name">
+                {{ member.nickname || member.name || '未命名' }}
+                <span class="team-role">{{ member.isOwner ? '组长' : '组员' }}</span>
+              </div>
+              <div class="team-member-days">{{ member.checkedCount }} 天<span v-if="member.checkedDays.length"> · {{ member.checkedDays.join('、') }}</span></div>
+            </div>
+          </div>
+          <div v-else-if="teamRange.reason" class="export-note">{{ teamRange.reason }}</div>
           <el-button size="small" type="primary" plain :loading="exportingTeam" @click="exportTeamExcel">
             <i class="el-icon-download"></i> 导出团队打卡
           </el-button>
@@ -288,7 +318,7 @@ import XLSX from 'xlsx'
 import global from "@/components/Common";
 import * as echarts from "echarts";
 import { buildGroupView, visibleTeamSummaries, withCacheBust } from '@/utils/groupMembership'
-import { collectTeamMonthExport, rosterFromGroupView } from '@/utils/groupDailyBoard'
+import { collectTeamRange, currentMonthRange, rosterFromGroupView, teamRangeKey, validateTeamRange } from '@/utils/groupDailyBoard'
 import { saveExcelFile } from '@/utils/excelSave'
 import {
   buildExportNoteSheet,
@@ -354,9 +384,12 @@ export default {
       exportTeams: [],
       exportGroupView: null,
       exportGroupId: '',
-      exportTeamDate: '',
+      teamRangeStart: currentMonthRange(new Date()).startDate,
+      teamRangeEnd: currentMonthRange(new Date()).endDate,
       exportingTeam: false,
       teamExportResult: null,
+      teamRange: { ok: false, status: '', members: [] },
+      teamRangeSeq: 0,
       teamDateOptions: {
         disabledDate(time) {
           return time.getTime() > Date.now()
@@ -378,14 +411,24 @@ export default {
     teamExportPreview() {
       const team = this.exportTeams.find(item => item.groupId === this.exportGroupId)
       const name = team ? (team.groupName || team.groupId) : '所选团队'
-      const date = this.exportTeamDate || '所选日期'
-      const month = date && date.length >= 7 ? date.substring(0, 7) : '该月'
-      return '将导出「' + name + '」' + month + ' 的月度统计，以及 ' + date + ' 的当日汇总。已通过但没有打卡的成员仍会列出。'
+      const checked = validateTeamRange({ startDate: this.teamRangeStart, endDate: this.teamRangeEnd })
+      if (!checked.ok) return '「' + name + '」' + checked.reason
+      return '「' + name + '」当前范围是 ' + checked.rangeLabel + '。下面的汇总、成员打卡和导出都使用这个范围。已通过但没有打卡的成员仍会列出。'
+    }
+  },
+  watch: {
+    exportGroupId() {
+      this.loadTeamRange()
+    },
+    teamRangeStart() {
+      this.loadTeamRange()
+    },
+    teamRangeEnd() {
+      this.loadTeamRange()
     }
   },
   mounted() {
     document.title = this.$route.meta.title
-    this.exportTeamDate = this.formatDate(new Date())
     this.initWeekDays()
     this.loadData()
     this.loadExportTeams()
@@ -440,11 +483,61 @@ export default {
         }
         this.exportGroupView = buildGroupView(source)
         this.exportTeams = visibleTeamSummaries(source)
+        const previous = this.exportGroupId
         if (!this.exportTeams.some(team => team.groupId === this.exportGroupId)) {
           this.exportGroupId = this.exportTeams.length ? this.exportTeams[0].groupId : ''
         }
+        if (this.exportGroupId === previous) this.loadTeamRange()
       } catch (err) {
         console.error('加载可导出团队失败', err)
+      }
+    },
+
+    async loadTeamRange() {
+      const unionId = this.viewerId()
+      const team = this.exportTeams.find(item => item.groupId === this.exportGroupId)
+      const checked = validateTeamRange({ startDate: this.teamRangeStart, endDate: this.teamRangeEnd })
+      const seq = (this.teamRangeSeq += 1)
+      if (!unionId || !team) {
+        this.teamRange = { ok: false, status: '', members: [], reason: '' }
+        return
+      }
+      if (!checked.ok) {
+        this.teamRange = { ok: false, status: '', members: [], reason: checked.reason }
+        return
+      }
+      const key = teamRangeKey(team.groupId, checked.startDate, checked.endDate)
+      this.teamRange = { ok: false, status: 'loading', key, members: [], reason: '' }
+      try {
+        const roster = rosterFromGroupView(this.exportGroupView, team, unionId)
+        const result = await collectTeamRange({
+          groupId: team.groupId,
+          groupName: team.groupName,
+          startDate: checked.startDate,
+          endDate: checked.endDate,
+          roster,
+          fetchMonthStats: (groupId, monthDate) => axios.get(
+            `${this.serverUrl}getGroupCheckinStats?groupId=${encodeURIComponent(groupId)}&monthDate=${monthDate}`
+          ).then(res => res.data),
+          fetchMonthReports: (userId, monthDate) => axios.get(
+            `${this.serverUrl}getReportInfoListByIdAndMonth?userId=${encodeURIComponent(userId)}&monthDate=${monthDate}`
+          ).then(res => res.data),
+          fetchProfile: person => axios.get(
+            `${this.serverUrl}getById?id=${encodeURIComponent(person.unionId)}`
+          ).then(res => res.data)
+        })
+        if (seq !== this.teamRangeSeq || result.key !== key) return
+        this.teamRange = Object.assign({ status: result.ok ? 'ready' : 'error' }, result)
+      } catch (err) {
+        if (seq !== this.teamRangeSeq) return
+        console.error('加载团队范围数据失败', err)
+        this.teamRange = {
+          ok: false,
+          status: 'error',
+          key,
+          members: [],
+          reason: '团队数据加载失败，没有生成文件'
+        }
       }
     },
 
@@ -531,48 +624,28 @@ export default {
           this.$message.warning(this.teamExportResult.detail)
           return
         }
-        const date = this.exportTeamDate
-        if (!date) {
-          this.teamExportResult = { title: '没有生成文件', detail: '请选择日期' }
+        const checked = validateTeamRange({ startDate: this.teamRangeStart, endDate: this.teamRangeEnd })
+        if (!checked.ok) {
+          this.teamExportResult = { title: '没有生成文件', detail: checked.reason }
+          this.$message.warning(checked.reason)
+          return
+        }
+        const key = teamRangeKey(team.groupId, checked.startDate, checked.endDate)
+        if (!this.teamRange.ok || this.teamRange.key !== key) await this.loadTeamRange()
+        const collected = this.teamRange
+        if (!collected.ok || collected.key !== key || !collected.monthRows) {
+          this.teamExportResult = { title: '没有生成文件', detail: (collected && collected.reason) || '团队数据不完整，没有生成文件' }
           this.$message.warning(this.teamExportResult.detail)
           return
         }
-        const roster = rosterFromGroupView(this.exportGroupView, team, unionId)
-        const collected = await collectTeamMonthExport({
-          groupId: team.groupId,
-          groupName: team.groupName,
-          date,
-          roster,
-          fetchDailyStatus: (groupId, day) => axios.get(
-            `${this.serverUrl}getGroupDailyStatus?groupId=${encodeURIComponent(groupId)}&date=${day}`
-          ).then(res => res.data),
-          fetchMonthStats: (groupId, monthDate) => axios.get(
-            `${this.serverUrl}getGroupCheckinStats?groupId=${encodeURIComponent(groupId)}&monthDate=${monthDate}`
-          ).then(res => res.data),
-          fetchMonthReports: (userId, monthDate) => axios.get(
-            `${this.serverUrl}getReportInfoListByIdAndMonth?userId=${encodeURIComponent(userId)}&monthDate=${monthDate}`
-          ).then(res => res.data),
-          fetchReport: person => axios.get(
-            `${this.serverUrl}getReportInfoByUserIdAndDate?userId=${encodeURIComponent(person.unionId)}&date=${date}`
-          ).then(res => res.data),
-          fetchProfile: person => axios.get(
-            `${this.serverUrl}getById?id=${encodeURIComponent(person.unionId)}`
-          ).then(res => res.data)
-        })
-        if (!collected.ok) {
-          this.teamExportResult = { title: '没有生成文件', detail: collected.reason }
-          this.$message.warning(collected.reason)
-          return
-        }
         const book = XLSX.utils.book_new()
-        XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(collected.monthRows), '月度统计')
-        XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(collected.dailyRows), collected.sheetDate)
+        XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(collected.monthRows), collected.summarySheet || '打卡统计')
+        XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(collected.dailyRows), collected.dailySheet || '每日明细')
         const out = XLSX.write(book, { bookType: 'xlsx', bookSST: true, type: 'array' })
         const saved = await saveExcelFile(out, collected.fileName, null)
-        const month = date.substring(0, 7)
-        const detail = '「' + collected.groupName + '」' + month + ' 月度统计共 ' + collected.memberCount
-          + ' 人，其中 ' + collected.zeroCount + ' 人该月没有打卡，仍保留在表里。另附 ' + date
-          + ' 的当日汇总。文件名：' + collected.fileName + '。保存位置：' + saved.location
+        const detail = '「' + collected.groupName + '」' + collected.rangeLabel + '，共 ' + collected.memberCount
+          + ' 人，其中 ' + collected.zeroCount + ' 人没有打卡，仍保留在表里。打卡 ' + collected.checkinTotal
+          + ' 人次。文件名：' + collected.fileName + '。保存位置：' + saved.location
         this.teamExportResult = {
           title: saved.saved ? 'Excel 已导出' : '没有保存到手机',
           detail
@@ -1146,10 +1219,46 @@ export default {
   color: #606266;
 }
 
-.export-team-select,
-.export-team-date {
+.export-team-select {
   width: 100%;
   margin-bottom: 8px;
+}
+
+.team-range-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: #303133;
+  font-weight: 600;
+}
+
+.team-member-row {
+  padding: 8px 0;
+  border-top: 1px solid #f0f2f5;
+}
+
+.team-member-name {
+  font-size: 14px;
+  color: #303133;
+}
+
+.team-role {
+  margin-left: 6px;
+  font-size: 11px;
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.12);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+.team-member-days {
+  margin-top: 3px;
+  font-size: 12px;
+  color: #909399;
+  line-height: 1.5;
+  word-break: break-all;
 }
 
 .export-result {

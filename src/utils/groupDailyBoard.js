@@ -7,6 +7,7 @@
 // 这里以已通过成员为底，再用能解析 _id / unionid / openid 的打卡结果补状态。没有打卡记录的人仍然留下。
 
 import { STATE_JOINED, classifyState } from './groupMembership.js'
+import { parseExportDate } from './reportExport.js'
 
 export function normalizeId(value) {
   return String(value == null ? '' : value).replace(/"/g, '').trim()
@@ -451,5 +452,318 @@ export async function collectTeamMonthExport(input) {
     sheetDate: date,
     memberCount: tables.members.length,
     zeroCount: tables.members.filter(member => !member.checkedCount).length
+  }
+}
+
+const MAX_TEAM_RANGE_MONTHS = 36
+
+export function currentMonthRange(now) {
+  const clock = now instanceof Date ? now : new Date()
+  const year = clock.getFullYear()
+  const month = String(clock.getMonth() + 1).padStart(2, '0')
+  const day = String(clock.getDate()).padStart(2, '0')
+  return {
+    startDate: year + '-' + month + '-01',
+    endDate: year + '-' + month + '-' + day
+  }
+}
+
+export function teamRangeKey(groupId, startDate, endDate) {
+  return [groupId || '', startDate || '', endDate || ''].join('|')
+}
+
+function addIsoDays(iso, count) {
+  const parts = iso.split('-').map(Number)
+  const date = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2] + count))
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(date.getUTCDate()).padStart(2, '0')
+  return date.getUTCFullYear() + '-' + month + '-' + day
+}
+
+function enumerateDates(startDate, endDate) {
+  const days = []
+  let cursor = startDate
+  while (cursor <= endDate) {
+    days.push(cursor)
+    cursor = addIsoDays(cursor, 1)
+  }
+  return days
+}
+
+function enumerateMonths(startDate, endDate) {
+  const months = []
+  let year = Number(startDate.slice(0, 4))
+  let month = Number(startDate.slice(5, 7))
+  const endKey = endDate.slice(0, 7)
+  while (months.length < MAX_TEAM_RANGE_MONTHS) {
+    const key = year + '-' + String(month).padStart(2, '0')
+    months.push(key + '-')
+    if (key === endKey) return months
+    month += 1
+    if (month === 13) {
+      month = 1
+      year += 1
+    }
+  }
+  return null
+}
+
+export function validateTeamRange(input) {
+  const source = input || {}
+  if (source.startDate == null || source.startDate === '' || source.endDate == null || source.endDate === '') {
+    return { ok: false, reason: '请选择开始日期和结束日期' }
+  }
+  const startDate = parseExportDate(String(source.startDate))
+  const endDate = parseExportDate(String(source.endDate))
+  if (!startDate || !endDate) {
+    return { ok: false, reason: '日期格式应为 YYYY-MM-DD，并且是真实存在的日期' }
+  }
+  if (startDate > endDate) {
+    return { ok: false, reason: '开始日期不能晚于结束日期' }
+  }
+  const months = enumerateMonths(startDate, endDate)
+  if (!months) {
+    return { ok: false, reason: '日期范围超过 36 个月，没有生成文件' }
+  }
+  const rangeLabel = startDate === endDate
+    ? startDate + '（当天，含这一天）'
+    : startDate + ' 至 ' + endDate + '（含开始和结束两天）'
+  return {
+    ok: true,
+    startDate,
+    endDate,
+    rangeLabel,
+    days: enumerateDates(startDate, endDate),
+    months
+  }
+}
+
+function keepRosterPerson(person) {
+  if (!person || typeof person !== 'object') return false
+  if (person.isOwner === true) return true
+  return classifyState(person.state) === STATE_JOINED
+}
+
+function readReportList(data) {
+  if (data == null || data === '') return []
+  if (Array.isArray(data)) return data
+  if (typeof data === 'object') {
+    if (data.truncated === true || data.complete === false) {
+      throw new Error('打卡记录不完整，没有生成文件')
+    }
+    if (Array.isArray(data.list)) {
+      if (data.total != null && Number(data.total) !== data.list.length) {
+        throw new Error('打卡记录不完整，没有生成文件')
+      }
+      return data.list
+    }
+  }
+  throw new Error('打卡记录不完整，没有生成文件')
+}
+
+function readMonthStats(data) {
+  if (data == null || data === '') return {}
+  if (typeof data !== 'object' || Array.isArray(data)) {
+    throw new Error('团队统计不完整，没有生成文件')
+  }
+  if (data.truncated === true || data.complete === false) {
+    throw new Error('团队统计不完整，没有生成文件')
+  }
+  return data
+}
+
+function personAliases(person, profile) {
+  const aliases = new Set()
+  addAlias(aliases, person.unionId)
+  ;(Array.isArray(person.aliases) ? person.aliases : []).forEach(alias => addAlias(aliases, alias))
+  if (profile && typeof profile === 'object' && !Array.isArray(profile)) {
+    addAlias(aliases, profile.id)
+    addAlias(aliases, profile.unionid)
+    addAlias(aliases, profile.unionId)
+    addAlias(aliases, profile.openid)
+    addAlias(aliases, profile.openId)
+  }
+  return aliases
+}
+
+function inRangeDay(value, startDate, endDate) {
+  if (value == null || value === '') return ''
+  const day = parseExportDate(String(value).slice(0, 10))
+  if (!day || day < startDate || day > endDate) return ''
+  return day
+}
+
+function dayHeaderLabels(days) {
+  if (!days.length) return []
+  const month = days[0].slice(0, 7)
+  if (days.every(day => day.slice(0, 7) === month)) return days.map(day => day.slice(5))
+  return days.slice()
+}
+
+function buildRangeTables(people, days) {
+  const labels = dayHeaderLabels(days)
+  const header = ['昵称', '姓名', '角色', '打卡天数', ...labels]
+  const monthRows = [header]
+  people.forEach(person => {
+    const checkedSet = new Set(person.checkedDays || [])
+    monthRows.push([
+      person.nickname || '',
+      person.name || '',
+      person.isOwner ? '组长' : '组员',
+      person.checkedCount || 0,
+      ...days.map(day => (checkedSet.has(day) ? '✓' : ''))
+    ])
+  })
+  const singleDay = days.length === 1
+  const dailyRows = [singleDay
+    ? ['昵称', '姓名', '角色', '是否打卡', '反省']
+    : ['日期', '昵称', '姓名', '角色', '是否打卡', '反省']]
+  days.forEach(day => {
+    people.forEach(person => {
+      const checked = (person.checkedDays || []).indexOf(day) >= 0
+      const note = person.notes && person.notes[day] ? person.notes[day] : ''
+      const base = [
+        person.nickname || '',
+        person.name || '',
+        person.isOwner ? '组长' : '组员',
+        checked ? '已打卡' : '未打卡',
+        note
+      ]
+      dailyRows.push(singleDay ? base : [day].concat(base))
+    })
+  })
+  const sameMonth = days.length > 0 && days.every(day => day.slice(0, 7) === days[0].slice(0, 7))
+  return {
+    monthRows,
+    dailyRows,
+    summarySheet: sameMonth ? '月度统计' : '打卡统计',
+    dailySheet: singleDay ? days[0] : '每日明细'
+  }
+}
+
+// 按闭区间统计团队打卡。按自然月调用现有整月接口，任一请求失败或结果被截断时不返回可导出的表。
+export async function collectTeamRange(input) {
+  const source = input || {}
+  const groupId = source.groupId || ''
+  if (!groupId) return { ok: false, reason: '请选择团队' }
+  const checked = validateTeamRange(source)
+  if (!checked.ok) return { ok: false, reason: checked.reason }
+  const roster = (Array.isArray(source.roster) ? source.roster : []).filter(keepRosterPerson)
+  const key = teamRangeKey(groupId, checked.startDate, checked.endDate)
+  if (!roster.length) {
+    return { ok: false, key, reason: '暂无已通过成员可统计' }
+  }
+  let statsList = []
+  try {
+    statsList = await Promise.all(checked.months.map(async month => {
+      if (typeof source.fetchMonthStats !== 'function') return {}
+      return readMonthStats(await source.fetchMonthStats(groupId, month))
+    }))
+  } catch (err) {
+    return { ok: false, key, reason: err && err.message && err.message.indexOf('没有生成文件') >= 0
+      ? err.message
+      : '团队统计加载失败，没有生成文件' }
+  }
+  if (statsList.some(stats => stats && stats.error === 'group_not_found')) {
+    return { ok: false, key, reason: '未找到该团队' }
+  }
+  const profiles = []
+  try {
+    for (let index = 0; index < roster.length; index += 1) {
+      if (typeof source.fetchProfile !== 'function') {
+        profiles.push(null)
+      } else {
+        profiles.push(await source.fetchProfile(roster[index]))
+      }
+    }
+  } catch (err) {
+    return { ok: false, key, reason: '成员身份加载失败，没有生成文件' }
+  }
+  const reportBuckets = []
+  try {
+    for (let index = 0; index < roster.length; index += 1) {
+      const aliases = personAliases(roster[index], profiles[index])
+      const reports = []
+      if (typeof source.fetchMonthReports === 'function') {
+        for (const alias of aliases) {
+          for (const month of checked.months) {
+            const list = readReportList(await source.fetchMonthReports(alias, month))
+            list.forEach(report => {
+              if (!report || typeof report !== 'object') return
+              const owner = normalizeId(report.userId || report.unionId || report.unionid)
+              if (owner && !aliases.has(owner)) return
+              reports.push(report)
+            })
+          }
+        }
+      }
+      reportBuckets.push({ aliases, reports })
+    }
+  } catch (err) {
+    return { ok: false, key, reason: err && err.message && err.message.indexOf('没有生成文件') >= 0
+      ? err.message
+      : '打卡记录加载失败，没有生成文件' }
+  }
+  const people = roster.map((person, index) => {
+    const profile = profiles[index]
+    const bucket = reportBuckets[index]
+    const daySet = new Set()
+    const notes = {}
+    statsList.forEach(stats => {
+      const members = Array.isArray(stats.members) ? stats.members : []
+      members.forEach(member => {
+        if (!statMatches({ unionId: person.unionId, aliases: Array.from(bucket.aliases) }, member)) return
+        ;(Array.isArray(member.checkedDays) ? member.checkedDays : []).forEach(day => {
+          const parsed = inRangeDay(day, checked.startDate, checked.endDate)
+          if (parsed) daySet.add(parsed)
+        })
+      })
+    })
+    bucket.reports.forEach(report => {
+      const parsed = inRangeDay(report.date, checked.startDate, checked.endDate)
+      if (!parsed) return
+      daySet.add(parsed)
+      if (report.note && !notes[parsed]) notes[parsed] = String(report.note)
+    })
+    const checkedDays = checked.days.filter(day => daySet.has(day))
+    return {
+      unionId: person.unionId || '',
+      nickname: person.nickname || (profile && (profile.nickname || profile.name)) || '',
+      name: person.name || (profile && profile.name) || '',
+      isOwner: person.isOwner === true,
+      checkedDays,
+      checkedCount: checkedDays.length,
+      notes
+    }
+  })
+  const tables = buildRangeTables(people, checked.days)
+  const groupName = (statsList.find(stats => stats && stats.groupName) || {}).groupName || source.groupName || groupId
+  const checkinTotal = people.reduce((sum, person) => sum + person.checkedCount, 0)
+  return {
+    ok: true,
+    key,
+    groupId,
+    groupName,
+    startDate: checked.startDate,
+    endDate: checked.endDate,
+    rangeLabel: checked.rangeLabel,
+    days: checked.days,
+    members: people.map(person => ({
+      unionId: person.unionId,
+      nickname: person.nickname,
+      name: person.name,
+      isOwner: person.isOwner,
+      checkedDays: person.checkedDays,
+      checkedCount: person.checkedCount
+    })),
+    memberCount: people.length,
+    checkedPeople: people.filter(person => person.checkedCount > 0).length,
+    zeroCount: people.filter(person => person.checkedCount === 0).length,
+    checkinTotal,
+    monthRows: tables.monthRows,
+    dailyRows: tables.dailyRows,
+    summarySheet: tables.summarySheet,
+    dailySheet: tables.dailySheet,
+    fileName: groupName + '_' + checked.startDate.replace(/-/g, '') + '-' + checked.endDate.replace(/-/g, '') + '打卡统计.xlsx'
   }
 }
