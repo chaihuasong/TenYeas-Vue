@@ -6,8 +6,11 @@ import {
   buildApprovedRoster,
   buildMonthExportMembers,
   collectTeamMonthExport,
+  collectTeamRange,
   reconcileTeamDailyBoard,
-  rosterFromGroupView
+  rosterFromGroupView,
+  teamRangeKey,
+  validateTeamRange
 } from '../src/utils/groupDailyBoard.js'
 
 const groupId = 'HTZ-0000009'
@@ -198,6 +201,158 @@ test('团队月报导出保留零打卡的已通过成员，待审核的人不�
   assert.equal(collected.monthRows.find(row => row[0] === '丙')[3], 0)
   assert.equal(collected.dailyRows.filter(row => row[3] === '未打卡').length, 3)
   assert.equal(collected.fileName, '晨练组_202611打卡统计.xlsx')
+})
+
+function rangeRoster() {
+  return [
+    { unionId: 'union-a', nickname: '甲', isOwner: true, aliases: ['union-a'] },
+    { unionId: 'union-b', nickname: '乙', name: '乙某', isOwner: false, state: 1, aliases: ['union-b'] },
+    { unionId: 'union-c', nickname: '丙', isOwner: false, state: 1, aliases: ['union-c'] },
+    { unionId: 'union-e', nickname: '戊', isOwner: false, state: 0, aliases: ['union-e'] }
+  ]
+}
+
+test('团队日期范围含首尾、跨月跨年，零打卡和待审核不混入', async () => {
+  const months = []
+  const reportCalls = []
+  const result = await collectTeamRange({
+    groupId,
+    groupName: '晨练组',
+    startDate: '2025-12-31',
+    endDate: '2026-02-01',
+    roster: rangeRoster(),
+    fetchProfile: async person => {
+      if (person.unionId === 'union-b') return { id: 'id-b', unionid: 'union-b', openid: 'openid-b', nickname: '乙' }
+      return { id: person.unionId }
+    },
+    fetchMonthStats: async (id, month) => {
+      months.push(id + ':' + month)
+      if (month === '2025-12-') {
+        return {
+          groupName: '晨练组',
+          members: [
+            { unionId: 'union-a', checkedDays: ['2025-12-30', '2025-12-31'] },
+            { unionId: 'union-e', checkedDays: ['2025-12-31'] }
+          ]
+        }
+      }
+      if (month === '2026-02-') {
+        return { groupName: '晨练组', members: [{ unionId: 'union-a', checkedDays: ['2026-02-01', '2026-02-03'] }] }
+      }
+      return { groupName: '晨练组', members: [] }
+    },
+    fetchMonthReports: async (userId, month) => {
+      reportCalls.push(userId + ':' + month)
+      if (userId === 'id-b' && month === '2026-01-') {
+        return [
+          { userId: 'id-b', date: '2026-01-31', note: '跨月' },
+          { userId: 'other-user', date: '2026-01-15', note: '别人' }
+        ]
+      }
+      if (userId === 'union-b' && month === '2026-01-') return []
+      return []
+    }
+  })
+  assert.equal(result.ok, true)
+  assert.deepEqual(months, [
+    groupId + ':2025-12-',
+    groupId + ':2026-01-',
+    groupId + ':2026-02-'
+  ])
+  assert.equal(result.memberCount, 3)
+  assert.equal(result.members.some(person => person.nickname === '戊'), false)
+  const owner = result.members.find(person => person.nickname === '甲')
+  assert.deepEqual(owner.checkedDays, ['2025-12-31', '2026-02-01'])
+  const second = result.members.find(person => person.nickname === '乙')
+  assert.deepEqual(second.checkedDays, ['2026-01-31'])
+  const quiet = result.members.find(person => person.nickname === '丙')
+  assert.equal(quiet.checkedCount, 0)
+  assert.equal(result.zeroCount, 1)
+  assert.equal(result.monthRows[0][4], '2025-12-31')
+  assert.equal(result.summarySheet, '打卡统计')
+  assert.equal(result.dailySheet, '每日明细')
+  assert.equal(result.dailyRows[0][0], '日期')
+  assert.equal(result.dailyRows.some(row => row.join('|').includes('别人')), false)
+  assert.equal(result.dailyRows.some(row => row[5] === '跨月' && row[0] === '2026-01-31'), true)
+  assert.equal(result.rangeLabel.includes('含开始和结束两天'), true)
+  assert.equal(result.fileName, '晨练组_20251231-20260201打卡统计.xlsx')
+  assert.equal(reportCalls.includes('id-b:2026-01-'), true)
+  assert.equal(reportCalls.includes('openid-b:2026-01-'), true)
+})
+
+test('团队单日范围沿用每日表，空数据仍保留成员', async () => {
+  const result = await collectTeamRange({
+    groupId,
+    groupName: '晨练组',
+    startDate: '2026-04-04',
+    endDate: '2026-04-04',
+    roster: [
+      { unionId: 'union-a', nickname: '甲', isOwner: true },
+      { unionId: 'union-b', nickname: '乙', state: 1 }
+    ],
+    fetchMonthStats: async () => ({ days: ['2026-04-01', '2026-04-04'], members: [] }),
+    fetchMonthReports: async () => []
+  })
+  assert.equal(result.ok, true)
+  assert.equal(result.memberCount, 2)
+  assert.equal(result.checkinTotal, 0)
+  assert.equal(result.zeroCount, 2)
+  assert.equal(result.summarySheet, '月度统计')
+  assert.equal(result.monthRows[0][4], '04-04')
+  assert.deepEqual(result.dailyRows[0], ['昵称', '姓名', '角色', '是否打卡', '反省'])
+  assert.equal(result.dailySheet, '2026-04-04')
+  assert.equal(result.dailyRows.filter(row => row[3] === '未打卡').length, 2)
+})
+
+test('团队日期无效、倒置、截断或中途失败时不返回可导出的表', async () => {
+  assert.equal(validateTeamRange({ startDate: '', endDate: '2026-01-02' }).ok, false)
+  assert.equal(validateTeamRange({ startDate: '2023-02-29', endDate: '2023-03-01' }).reason.includes('真实存在'), true)
+  assert.equal(validateTeamRange({ startDate: '2026-03-02', endDate: '2026-03-01' }).reason, '开始日期不能晚于结束日期')
+  const calls = []
+  const failed = await collectTeamRange({
+    groupId,
+    startDate: '2025-12-01',
+    endDate: '2026-01-15',
+    roster: [{ unionId: 'union-a', nickname: '甲', isOwner: true }],
+    fetchMonthStats: async (id, month) => {
+      calls.push(month)
+      if (month === '2026-01-') throw new Error('网络失败')
+      return { members: [{ unionId: 'union-a', checkedDays: ['2025-12-01'] }] }
+    },
+    fetchMonthReports: async () => [{ userId: 'union-a', date: '2025-12-01' }]
+  })
+  assert.equal(failed.ok, false)
+  assert.equal(failed.monthRows, undefined)
+  assert.equal(failed.reason.includes('没有生成文件'), true)
+  const truncated = await collectTeamRange({
+    groupId,
+    startDate: '2026-05-01',
+    endDate: '2026-05-03',
+    roster: [{ unionId: 'union-a', nickname: '甲', isOwner: true }],
+    fetchMonthStats: async () => ({ members: [] }),
+    fetchMonthReports: async () => ({ list: [{ userId: 'union-a', date: '2026-05-01' }], total: 9, truncated: true })
+  })
+  assert.equal(truncated.ok, false)
+  assert.equal(truncated.monthRows, undefined)
+})
+
+test('切换团队后结果只属于当前团队', async () => {
+  const load = (id, nickname) => collectTeamRange({
+    groupId: id,
+    groupName: nickname,
+    startDate: '2026-06-01',
+    endDate: '2026-06-02',
+    roster: [{ unionId: id + '-user', nickname, isOwner: true }],
+    fetchMonthStats: async () => ({ groupName: nickname, members: [] }),
+    fetchMonthReports: async () => []
+  })
+  const first = await load('HTZ-A', '甲队')
+  const second = await load('HTZ-B', '乙队')
+  assert.notEqual(first.key, second.key)
+  assert.equal(teamRangeKey('HTZ-B', '2026-06-01', '2026-06-02'), second.key)
+  assert.equal(second.members.some(person => person.nickname === '甲队'), false)
+  assert.equal(second.members[0].nickname, '乙队')
+  assert.equal(second.groupId, 'HTZ-B')
 })
 
 test('团队月报接口失败时不生成成功结果', async () => {
