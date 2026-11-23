@@ -7,8 +7,8 @@ export const LEGACY_COUNTDOWN_DATE_TEXT = '2031年04月17日'
 export const LEGACY_FORM_DEADLINE = '2031-04-17 23:59:59'
 export const LEGACY_ITEM_ID = 'legacy'
 export const COUNTDOWN_NAME_MAX = 20
-export const SERVER_SINGLE_COUNTDOWN_MESSAGE = '服务器目前每个用户只保存一个倒计时，已有的倒计时没有被覆盖。'
-export const SELECT_DEFAULT_NEEDS_DELETE_MESSAGE = '要改回显示默认十年倒计时，需要删除已保存的自定义倒计时。服务器还不能同时保留自定义项并改成显示默认。'
+export const COUNTDOWN_ITEM_MAX = 20
+export const LIST_UNAVAILABLE_MESSAGE = '多个倒计时接口还不可用，没有改动已保存的倒计时。'
 const STORAGE_PREFIX = 'tenyears.countdown.'
 const SHANGHAI = 'Asia/Shanghai'
 
@@ -269,68 +269,218 @@ export function displayedCountdown(state, nowMs) {
   return resolveCountdown(active || null, nowMs)
 }
 
-export function planCountdownChange(state, action) {
+export function createCountdownId(existingIds, rng) {
+  const used = new Set(existingIds || [])
+  const rand = typeof rng === 'function' ? rng : Math.random
+  const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789'
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    let body = ''
+    for (let i = 0; i < 16; i += 1) {
+      body += alphabet[Math.floor(rand() * alphabet.length)]
+    }
+    const id = 'cd' + body
+    if (itemIdOk(id) && !used.has(id)) return id
+  }
+  return ''
+}
+
+function listRequest(nextState) {
+  return {
+    type: 'list',
+    state: copyState(nextState)
+  }
+}
+
+export function planCountdownChange(state, action, rng) {
   const current = copyState(countdownStateFromPayload(state))
   const type = action && action.type
-  const refused = (message, supported) => ({
+  const refused = message => ({
     ok: false,
-    supported: supported !== false,
+    supported: true,
     message,
     request: null,
     nextState: current
   })
   if (type === 'add' || type === 'edit') {
     const checked = validateCountdownInput(action.name, action.deadline)
-    if (!checked.ok) return refused(checked.message, true)
+    if (!checked.ok) return refused(checked.message)
     if (type === 'add') {
-      if (current.items.length >= 1) return refused(SERVER_SINGLE_COUNTDOWN_MESSAGE, false)
-      const item = { id: LEGACY_ITEM_ID, name: checked.value.name, deadline: checked.value.deadline }
-      return {
-        ok: true,
-        supported: true,
-        message: '',
-        request: { type: 'save', name: item.name, deadline: item.deadline },
-        nextState: { items: [item], activeId: item.id }
-      }
+      if (current.items.length >= COUNTDOWN_ITEM_MAX) return refused('倒计时最多 20 个')
+      const id = action.id
+        ? String(action.id).trim()
+        : createCountdownId(current.items.map(item => item.id), rng)
+      if (!itemIdOk(id) || current.items.some(item => item.id === id)) return refused('倒计时编号无效')
+      const item = { id, name: checked.value.name, deadline: checked.value.deadline }
+      const nextState = { items: current.items.concat([item]), activeId: item.id }
+      return { ok: true, supported: true, message: '', request: listRequest(nextState), nextState }
     }
-    const item = current.items.find(entry => entry.id === action.id)
-    if (!item) return refused('没有找到这个倒计时', true)
-    if (current.items.length !== 1) return refused(SERVER_SINGLE_COUNTDOWN_MESSAGE, false)
-    const nextItem = { id: item.id, name: checked.value.name, deadline: checked.value.deadline }
-    return {
-      ok: true,
-      supported: true,
-      message: '',
-      request: { type: 'save', name: nextItem.name, deadline: nextItem.deadline },
-      nextState: { items: [nextItem], activeId: nextItem.id }
-    }
+    const index = current.items.findIndex(entry => entry.id === action.id)
+    if (index < 0) return refused('没有找到这个倒计时')
+    const items = current.items.slice()
+    items[index] = { id: current.items[index].id, name: checked.value.name, deadline: checked.value.deadline }
+    const nextState = { items, activeId: current.activeId }
+    return { ok: true, supported: true, message: '', request: listRequest(nextState), nextState }
   }
   if (type === 'remove') {
-    if (!current.items.some(entry => entry.id === action.id)) return refused('没有找到这个倒计时', true)
-    if (current.items.length !== 1) return refused(SERVER_SINGLE_COUNTDOWN_MESSAGE, false)
-    return {
-      ok: true,
-      supported: true,
-      message: '',
-      request: { type: 'clear' },
-      nextState: emptyCountdownState()
-    }
+    if (!current.items.some(entry => entry.id === action.id)) return refused('没有找到这个倒计时')
+    const items = current.items.filter(entry => entry.id !== action.id)
+    const activeId = items.some(entry => entry.id === current.activeId) ? current.activeId : ''
+    const nextState = { items, activeId }
+    return { ok: true, supported: true, message: '', request: listRequest(nextState), nextState }
   }
   if (type === 'select') {
     const id = action.id == null || action.id === 'default' ? '' : String(action.id)
-    if (!id) {
-      if (current.items.length === 0) {
-        return { ok: true, supported: true, message: '', request: null, nextState: current }
-      }
-      return refused(SELECT_DEFAULT_NEEDS_DELETE_MESSAGE, false)
-    }
-    if (!current.items.some(entry => entry.id === id)) return refused('没有找到这个倒计时', true)
-    if (current.activeId === id) {
+    if (id && !current.items.some(entry => entry.id === id)) return refused('没有找到这个倒计时')
+    if ((current.activeId || '') === id) {
       return { ok: true, supported: true, message: '', request: null, nextState: current }
     }
-    return refused(SERVER_SINGLE_COUNTDOWN_MESSAGE, false)
+    const nextState = { items: current.items, activeId: id }
+    return { ok: true, supported: true, message: '', request: listRequest(nextState), nextState }
   }
-  return refused('无法识别的操作', true)
+  return refused('无法识别的操作')
+}
+
+export function countdownListSaveBody(userId, state) {
+  const normalized = countdownStateFromPayload(state)
+  return {
+    userId: normalizeAccountId(userId),
+    activeId: normalized.activeId || '',
+    items: normalized.items.map(item => ({
+      id: item.id,
+      name: item.name,
+      deadline: item.deadline
+    }))
+  }
+}
+
+export function sameCountdownState(left, right) {
+  const a = countdownStateFromPayload(left)
+  const b = countdownStateFromPayload(right)
+  if (a.activeId !== b.activeId || a.items.length !== b.items.length) return false
+  for (let i = 0; i < a.items.length; i += 1) {
+    if (a.items[i].id !== b.items[i].id || a.items[i].name !== b.items[i].name
+        || a.items[i].deadline !== b.items[i].deadline) return false
+  }
+  return true
+}
+
+export function parseCountdownListResponse(data) {
+  let body = data
+  if (typeof body === 'string') {
+    const text = body.trim()
+    if (!text) return { status: 'unavailable', message: LIST_UNAVAILABLE_MESSAGE }
+    try {
+      body = JSON.parse(text)
+    } catch (e) {
+      return { status: 'unavailable', message: LIST_UNAVAILABLE_MESSAGE }
+    }
+  }
+  if (!body || typeof body !== 'object' || Array.isArray(body) || typeof body.success !== 'boolean'
+      || !Array.isArray(body.items)) {
+    return { status: 'unavailable', message: LIST_UNAVAILABLE_MESSAGE }
+  }
+  if (body.success !== true) {
+    return { status: 'error', message: body.message || '读取倒计时失败' }
+  }
+  if (body.items.length > COUNTDOWN_ITEM_MAX) {
+    return { status: 'error', message: '倒计时数据无法识别' }
+  }
+  const items = []
+  const seen = new Set()
+  for (let i = 0; i < body.items.length; i += 1) {
+    const raw = body.items[i]
+    if (!raw || typeof raw !== 'object') return { status: 'error', message: '倒计时数据无法识别' }
+    const checked = validateCountdownInput(raw.name, raw.deadline)
+    const id = String(raw.id == null ? '' : raw.id).trim()
+    if (!checked.ok || !itemIdOk(id) || seen.has(id)) {
+      return { status: 'error', message: '倒计时数据无法识别' }
+    }
+    seen.add(id)
+    items.push({ id, name: checked.value.name, deadline: checked.value.deadline })
+  }
+  let activeId = body.activeId == null ? '' : String(body.activeId).trim()
+  if (activeId === 'default') activeId = ''
+  if (activeId && !seen.has(activeId)) {
+    return { status: 'error', message: '倒计时数据无法识别' }
+  }
+  return { status: 'ready', state: { items, activeId } }
+}
+
+export function confirmCountdownListWrite(data, requestedState) {
+  const parsed = parseCountdownListResponse(data)
+  if (parsed.status !== 'ready') {
+    return { ok: false, message: parsed.message || '服务器没有确认操作成功' }
+  }
+  if (!sameCountdownState(parsed.state, requestedState)) {
+    return { ok: false, message: '服务器确认的列表和提交的不一致，没有改用本次填写的内容' }
+  }
+  return { ok: true, state: parsed.state, message: '' }
+}
+
+// 读取失败时保留已有列表。只有新接口明确返回 success 和 items，才用服务器结果替换。
+export function chooseCountdownList(parsed, localState) {
+  const kept = localState ? countdownStateFromPayload(localState) : emptyCountdownState()
+  if (parsed && parsed.status === 'ready') {
+    return {
+      state: parsed.state,
+      status: 'server',
+      clearLocal: parsed.state.items.length === 0,
+      writeLocal: parsed.state.items.length ? parsed.state : null
+    }
+  }
+  if (parsed && parsed.status === 'unavailable') {
+    return {
+      state: kept,
+      status: 'unavailable',
+      clearLocal: false,
+      writeLocal: null,
+      message: parsed.message || LIST_UNAVAILABLE_MESSAGE
+    }
+  }
+  if (kept.items.length) {
+    return {
+      state: kept,
+      status: 'local-unconfirmed',
+      clearLocal: false,
+      writeLocal: null,
+      message: parsed && parsed.message ? parsed.message : '读取倒计时失败'
+    }
+  }
+  return {
+    state: kept,
+    status: 'error',
+    clearLocal: false,
+    writeLocal: null,
+    message: parsed && parsed.message ? parsed.message : '读取倒计时失败'
+  }
+}
+
+export function readStoredCountdownState(userId, storage) {
+  const raw = readStoredCountdown(userId, storage)
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
+  if (raw.version === 2 && Array.isArray(raw.items)) {
+    const parsed = parseCountdownListResponse({
+      success: true,
+      activeId: raw.activeId || '',
+      items: raw.items
+    })
+    return parsed.status === 'ready' ? parsed.state : null
+  }
+  const single = countdownStateFromPayload(raw)
+  return single.items.length ? single : null
+}
+
+export function writeStoredCountdownState(userId, state, storage) {
+  const key = countdownStorageKey(userId)
+  const store = storageOf(storage)
+  const normalized = countdownStateFromPayload(state)
+  if (!key || !store) return false
+  store.setItem(key, JSON.stringify({
+    version: 2,
+    activeId: normalized.activeId || '',
+    items: normalized.items
+  }))
+  return true
 }
 
 export function confirmCountdownWrite(data, request) {
@@ -449,6 +599,7 @@ export function validateCountdownInput(name, deadlineText) {
   }
   const text = String(deadlineText || '').trim()
   if (!text) return { ok: false, message: '请选择截止时间' }
+  if (text.includes('T')) return { ok: false, message: '请选择有效的截止时间' }
   if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
     return { ok: false, message: '请选择截止时间（含小时和分钟）' }
   }

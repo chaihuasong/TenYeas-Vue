@@ -6,21 +6,27 @@ import {
   clearStoredCountdown,
   countdownFormValues,
   legacyRemainingDays,
+  COUNTDOWN_ITEM_MAX,
   LEGACY_ITEM_ID,
-  SELECT_DEFAULT_NEEDS_DELETE_MESSAGE,
-  SERVER_SINGLE_COUNTDOWN_MESSAGE,
+  LIST_UNAVAILABLE_MESSAGE,
   chooseCountdown,
+  chooseCountdownList,
+  confirmCountdownListWrite,
   confirmCountdownWrite,
+  countdownListSaveBody,
   countdownStateFromPayload,
   displayedCountdown,
+  parseCountdownListResponse,
   parseCountdownResponse,
   parseWriteResponse,
   planCountdownChange,
   readStoredCountdown,
+  readStoredCountdownState,
   resolveCountdown,
   sameAccount,
   validateCountdownInput,
-  writeStoredCountdown
+  writeStoredCountdown,
+  writeStoredCountdownState
 } from '../src/utils/countdown.js'
 
 const NOW = Date.parse('2031-04-16T16:00:00.000Z')
@@ -168,72 +174,139 @@ test('旧的单个倒计时迁移成列表中的一项，默认十年倒计时�
   assert.equal(displayedCountdown(defaults, NOW).legacy, true)
 })
 
-test('新增第二个、改回默认或编辑多个项时不发出会覆盖旧数据的请求', () => {
-  const saved = countdownStateFromPayload({ name: '已有', deadline: '2031-06-01 08:00:00' })
-  const second = planCountdownChange(saved, {
+test('可以新增多个、编辑一条、删除和切回默认，其它项保持不动', () => {
+  const first = planCountdownChange(countdownStateFromPayload(null), {
     type: 'add',
-    name: '第二个',
-    deadline: '2032-01-01 09:00:00'
+    id: 'a',
+    name: ' 甲 ',
+    deadline: '2031-06-01 08:00'
   })
-  assert.equal(second.ok, false)
-  assert.equal(second.supported, false)
-  assert.equal(second.request, null)
-  assert.equal(second.message, SERVER_SINGLE_COUNTDOWN_MESSAGE)
-  assert.deepEqual(second.nextState, saved)
-
-  const backToDefault = planCountdownChange(saved, { type: 'select', id: '' })
-  assert.equal(backToDefault.request, null)
-  assert.equal(backToDefault.message, SELECT_DEFAULT_NEEDS_DELETE_MESSAGE)
-  assert.equal(backToDefault.nextState.activeId, LEGACY_ITEM_ID)
-
-  const many = {
-    items: [
-      { id: 'a', name: '甲', deadline: '2031-06-01 08:00:00' },
-      { id: 'b', name: '乙', deadline: '2031-07-01 08:00:00' }
-    ],
-    activeId: 'a'
-  }
-  const editMany = planCountdownChange(many, {
-    type: 'edit',
+  const second = planCountdownChange(first.nextState, {
+    type: 'add',
     id: 'b',
-    name: '乙改',
-    deadline: '2031-08-01 08:00:00'
+    name: '乙',
+    deadline: '2031-07-01 09:30:00'
   })
-  assert.equal(editMany.request, null)
-  assert.deepEqual(editMany.nextState.items.map(item => item.name), ['甲', '乙'])
+  assert.equal(second.ok, true)
+  assert.equal(second.request.type, 'list')
+  assert.deepEqual(second.nextState.items.map(item => item.name), ['甲', '乙'])
+  assert.equal(second.nextState.activeId, 'b')
+  assert.equal(second.nextState.items[0].deadline, '2031-06-01 08:00:00')
+
+  const edited = planCountdownChange(second.nextState, {
+    type: 'edit',
+    id: 'a',
+    name: '甲改',
+    deadline: '2031-06-02 10:00:00'
+  })
+  assert.equal(edited.nextState.items[1].name, '乙')
+  assert.equal(edited.nextState.items[1].deadline, '2031-07-01 09:30:00')
+  assert.equal(edited.nextState.activeId, 'b')
+
+  const removeOther = planCountdownChange(edited.nextState, { type: 'remove', id: 'a' })
+  assert.equal(removeOther.nextState.activeId, 'b')
+  assert.deepEqual(removeOther.nextState.items.map(item => item.id), ['b'])
+
+  const removeCurrent = planCountdownChange(second.nextState, { type: 'remove', id: 'b' })
+  assert.equal(removeCurrent.nextState.activeId, '')
+  assert.equal(removeCurrent.nextState.items[0].name, '甲')
+
+  const back = planCountdownChange(second.nextState, { type: 'select', id: '' })
+  assert.equal(back.nextState.activeId, '')
+  assert.equal(back.nextState.items.length, 2)
+  assert.equal(displayedCountdown(back.nextState, NOW).name, LEGACY_COUNTDOWN_NAME)
+
+  const chosen = planCountdownChange(back.nextState, { type: 'select', id: 'a' })
+  assert.equal(chosen.nextState.activeId, 'a')
+  assert.equal(displayedCountdown(chosen.nextState, NOW).name, '甲')
 })
 
-test('第一条可以保存，编辑后仍是这一条，删除才清空，服务器没确认就不算成功', () => {
-  const empty = countdownStateFromPayload(null)
-  const added = planCountdownChange(empty, {
+test('名称或日期不合法时不生成保存请求，第 21 个被拒绝', () => {
+  const base = countdownStateFromPayload(null)
+  assert.equal(planCountdownChange(base, { type: 'add', id: 'a', name: '  ', deadline: '2031-06-01 08:00:00' }).request, null)
+  assert.equal(planCountdownChange(base, { type: 'add', id: 'a', name: '甲', deadline: '2031-06-01' }).request, null)
+  assert.equal(planCountdownChange(base, { type: 'add', id: 'a', name: '甲', deadline: '2031-02-31 00:00:00' }).request, null)
+  assert.equal(planCountdownChange(base, { type: 'add', id: 'a', name: '甲', deadline: '2031-06-01T08:00:00' }).request, null)
+  const items = []
+  for (let i = 0; i < COUNTDOWN_ITEM_MAX; i += 1) {
+    items.push({ id: 'id' + i, name: '项' + i, deadline: '2031-06-01 08:00:00' })
+  }
+  const full = planCountdownChange({ items, activeId: 'id0' }, {
     type: 'add',
-    name: ' 每日打卡 ',
-    deadline: '2031-04-17 08:00'
+    id: 'extra',
+    name: '超限',
+    deadline: '2031-08-01 08:00:00'
   })
-  assert.equal(added.ok, true)
-  assert.deepEqual(added.request, { type: 'save', name: '每日打卡', deadline: '2031-04-17 08:00:00' })
-  assert.equal(added.nextState.items.length, 1)
-  assert.equal(added.nextState.activeId, LEGACY_ITEM_ID)
+  assert.equal(full.ok, false)
+  assert.equal(full.request, null)
+  assert.equal(full.nextState.items.length, 20)
+})
 
-  const edited = planCountdownChange(added.nextState, {
-    type: 'edit',
-    id: LEGACY_ITEM_ID,
-    name: '冲刺',
-    deadline: '2032-01-02 03:04:00'
+test('列表保存必须和服务器回显一致，失败响应不算出成功', () => {
+  const state = {
+    items: [
+      { id: 'a', name: '甲', deadline: '2031-06-01 08:00:00' },
+      { id: 'b', name: '乙', deadline: '2031-07-01 09:30:00' }
+    ],
+    activeId: 'b'
+  }
+  const body = countdownListSaveBody(' "union-a" ', state)
+  assert.equal(body.userId, 'union-a')
+  assert.equal(body.activeId, 'b')
+  assert.equal(JSON.stringify(body).includes('saveUserCountdown'), false)
+  const ok = confirmCountdownListWrite({
+    success: true,
+    activeId: 'b',
+    name: '乙',
+    deadline: '2031-07-01 09:30:00',
+    items: body.items
+  }, state)
+  assert.equal(ok.ok, true)
+  assert.equal(confirmCountdownListWrite({ success: false, message: '倒计时编号重复' }, state).ok, false)
+  assert.equal(confirmCountdownListWrite({ success: true, activeId: 'a', items: body.items }, state).ok, false)
+  const legacy = parseCountdownListResponse({
+    success: true,
+    activeId: 'legacy',
+    name: '每日打卡倒计时',
+    deadline: '2031-04-17 08:00:00',
+    items: [{ id: 'legacy', name: '每日打卡倒计时', deadline: '2031-04-17 08:00:00' }]
   })
-  assert.equal(edited.request.name, '冲刺')
-  assert.equal(edited.nextState.items[0].deadline, '2032-01-02 03:04:00')
+  assert.equal(legacy.state.items[0].id, 'legacy')
+  const defaults = parseCountdownListResponse({
+    success: true,
+    activeId: '',
+    items: [{ id: 'a', name: '甲', deadline: '2031-06-01 08:00:00' }]
+  })
+  assert.equal(defaults.state.activeId, '')
+  assert.equal(defaults.state.items.length, 1)
+  assert.equal(parseCountdownListResponse({ name: '只有旧字段', deadline: '2031-06-01 08:00:00' }).status, 'unavailable')
+  assert.equal(parseCountdownListResponse({ success: false, message: '用户不存在', items: [], activeId: '' }).status, 'error')
+})
 
-  const removed = planCountdownChange(edited.nextState, { type: 'remove', id: LEGACY_ITEM_ID })
-  assert.deepEqual(removed.request, { type: 'clear' })
-  assert.deepEqual(removed.nextState.items, [])
-  assert.equal(displayedCountdown(removed.nextState, NOW).name, LEGACY_COUNTDOWN_NAME)
-
-  assert.equal(confirmCountdownWrite({ success: false, message: '没有写入' }, added.request).ok, false)
-  assert.equal(confirmCountdownWrite({ success: true, name: '别的名字', deadline: added.request.deadline }, added.request).ok, false)
-  assert.equal(confirmCountdownWrite({ success: true, name: added.request.name, deadline: added.request.deadline }, added.request).ok, true)
-  assert.equal(confirmCountdownWrite({ success: true }, { type: 'clear' }).ok, true)
-  assert.equal(confirmCountdownWrite('success', added.request).ok, false)
+test('读取失败保留本机列表，不会拿空结果覆盖', () => {
+  const storage = memoryStorage()
+  const saved = {
+    items: [{ id: 'a', name: '甲', deadline: '2031-06-01 08:00:00' }],
+    activeId: 'a'
+  }
+  writeStoredCountdownState('user-a', saved, storage)
+  const kept = chooseCountdownList(
+    { status: 'error', message: '读取倒计时失败' },
+    readStoredCountdownState('user-a', storage)
+  )
+  assert.equal(kept.status, 'local-unconfirmed')
+  assert.equal(kept.clearLocal, false)
+  assert.equal(kept.state.items[0].name, '甲')
+  const missing = chooseCountdownList({ status: 'unavailable', message: LIST_UNAVAILABLE_MESSAGE }, saved)
+  assert.equal(missing.status, 'unavailable')
+  assert.equal(missing.state.items[0].name, '甲')
+  assert.equal(missing.clearLocal, false)
+  const empty = chooseCountdownList(
+    parseCountdownListResponse({ success: true, activeId: '', items: [] }),
+    saved
+  )
+  assert.equal(empty.clearLocal, true)
+  assert.equal(empty.state.items.length, 0)
 })
 
 test('读取带列表的响应时保留各项，当前接口的单条响应仍按原来显示', () => {
