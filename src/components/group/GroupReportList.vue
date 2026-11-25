@@ -1,12 +1,26 @@
 <template>
   <div class="report-section">
     <div class="report-header">
-      <span><i class="el-icon-date"></i> 近期打卡</span>
-      <span v-if="reports.length > 0" class="report-count">{{ reports.length }}条</span>
+      <div class="report-title">
+        <span><i class="el-icon-date"></i> 近期打卡</span>
+        <span v-if="dayView.count" class="report-count">{{ dayView.count }}条</span>
+      </div>
+      <el-date-picker
+        v-model="selectedDate"
+        type="date"
+        size="mini"
+        format="yyyy-MM-dd"
+        value-format="yyyy-MM-dd"
+        placeholder="选择日期"
+        :clearable="false"
+        :editable="false"
+        :picker-options="datePickerOptions"
+        class="report-date"
+      />
     </div>
 
-    <div v-if="reports.length > 0" class="report-list">
-      <div v-for="data in visibleReports" :key="data.id" class="report-item">
+    <div v-if="dayView.count" class="report-list">
+      <div v-for="data in visibleReports" :key="data.id || (data.userId + '-' + data.date)" class="report-item">
         <div class="report-user">
           <el-avatar :size="36" :src="data.headimgurl" class="report-avatar">
             <i class="el-icon-user-solid"></i>
@@ -22,21 +36,29 @@
         </div>
       </div>
 
-      <div v-if="reports.length > limit" class="report-more" @click="expanded = !expanded">
-        {{ expanded ? '收起' : `展开全部 ${reports.length} 条` }}
+      <div v-if="dayView.count > limit" class="report-more" @click="expanded = !expanded">
+        {{ expanded ? '收起' : `展开全部 ${dayView.count} 条` }}
         <i :class="expanded ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"></i>
       </div>
     </div>
 
     <div v-else class="empty-inline">
       <i class="el-icon-document"></i>
-      <span>暂无打卡记录</span>
+      <span>{{ dayView.emptyText }}</span>
     </div>
   </div>
 </template>
 
 <script>
-import { buildReportItems, sortByDateDesc } from './reportItems'
+import { buildReportItems } from './reportItems'
+import {
+  calendarDate,
+  isAfterShanghaiToday,
+  localCalendarDate,
+  recentCheckinView,
+  shanghaiCalendarDate,
+  visibleDayReports
+} from '@/utils/groupRecentReports'
 
 export default {
   name: 'GroupReportList',
@@ -52,22 +74,39 @@ export default {
   },
   data() {
     return {
-      expanded: false
+      expanded: false,
+      selectedDate: shanghaiCalendarDate(new Date()),
+      datePickerOptions: {
+        disabledDate(time) {
+          return isAfterShanghaiToday(localCalendarDate(time))
+        }
+      }
     }
   },
   computed: {
-    // 一次性把 template/value 摊平缓存，避免模板里反复计算
-    normalizedReports() {
-      return sortByDateDesc(this.reports).map(data => ({ ...data, items: buildReportItems(data) }))
+    dayView() {
+      return recentCheckinView(this.reports, this.selectedDate)
     },
+    // 一次性把当天记录的 template/value 摊平，避免模板里反复计算
     visibleReports() {
-      return this.expanded ? this.normalizedReports : this.normalizedReports.slice(0, this.limit)
+      return visibleDayReports(this.dayView, this.expanded, this.limit)
+        .map(data => ({ ...data, items: buildReportItems(data) }))
+    }
+  },
+  watch: {
+    selectedDate(value) {
+      this.expanded = false
+      const day = value instanceof Date ? localCalendarDate(value) : calendarDate(value)
+      const next = day || shanghaiCalendarDate(new Date())
+      if (next && next !== value) this.selectedDate = next
     }
   },
   methods: {
     formatDate(date) {
       if (!date || typeof date !== 'string') return ''
-      return date.length > 5 ? date.substring(5) : date
+      const day = calendarDate(date)
+      const text = day || date
+      return text.length > 5 ? text.substring(5) : text
     }
   }
 }
@@ -83,13 +122,44 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   font-size: 14px;
   color: #606266;
   margin-bottom: 12px;
 }
 
+.report-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
 .report-header i {
   margin-right: 5px;
+}
+
+.report-date {
+  width: 150px;
+  flex-shrink: 0;
+}
+
+.report-date /deep/ .el-input__inner {
+  height: 28px;
+  line-height: 28px;
+  border-radius: 14px;
+  padding-right: 8px;
+  font-size: 12px;
+  color: #606266;
+}
+
+.report-date /deep/ .el-input__icon {
+  line-height: 28px;
+}
+
+.report-date /deep/ .el-input__prefix {
+  left: 4px;
 }
 
 .report-count {
