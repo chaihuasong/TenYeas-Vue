@@ -3280,32 +3280,27 @@ a {
   background: rgba(103, 194, 58, 0.15);
 }
 
-/* 选中的日期（补打卡选历史日期时同样适用）：与日历顶栏同系的实心蓝底 + 描边，一眼能看出选的是哪天 */
+/* 选中日：统一用浅蓝底 + 淡描边（覆盖 Element 默认/hover，避免默认选中和点击看起来两套） */
 .tenyears-home-page .el-calendar-table td.is-selected,
 .tenyears-home-page .el-calendar-table td.is-today.is-selected {
-  background: #4facfe;
-  box-shadow: inset 0 0 0 2px #1f7fd0;
+  background: rgba(79, 172, 254, 0.18);
+  box-shadow: inset 0 0 0 2px rgba(79, 172, 254, 0.55);
   transition: background 0.2s;
 }
 
-/* 选中格里的文字压在蓝底上，统一转白保证可读 */
-.tenyears-home-page .el-calendar-table td.is-selected .calendar-day,
-.tenyears-home-page .el-calendar-table td.is-selected .calendar-day-note {
-  color: #fff;
+/* 盖住 Element 默认 hover/选中底，保证格子内外是同一种浅蓝 */
+.tenyears-home-page .el-calendar-table td.is-selected .el-calendar-day,
+.tenyears-home-page .el-calendar-table td.is-selected .el-calendar-day:hover {
+  background: transparent;
+}
+
+.tenyears-home-page .el-calendar-table .el-calendar-day:hover {
+  background: rgba(79, 172, 254, 0.1);
 }
 
 .tenyears-home-page .el-calendar-table td.is-selected .calendar-day {
   font-weight: bold;
-}
-
-/* +/- 换成白底圆片，蓝底上依旧保留红绿的含义 */
-.tenyears-home-page .el-calendar-table td.is-selected .calendar-day-state:not(:empty) {
-  display: inline-block;
-  min-width: 18px;
-  line-height: 18px;
-  background: #fff;
-  border-radius: 50%;
-  font-weight: bold;
+  color: #1f7fd0;
 }
 
 .tenyears-home-page .el-calendar-table .calendar-selected-day {
