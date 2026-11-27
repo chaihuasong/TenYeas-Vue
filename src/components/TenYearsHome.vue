@@ -3280,15 +3280,15 @@ a {
   background: rgba(103, 194, 58, 0.15);
 }
 
-/* 选中的日期（补打卡选历史日期时同样适用）：实心橙底 + 深色描边，一眼能看出补的是哪天 */
+/* 选中的日期（补打卡选历史日期时同样适用）：与日历顶栏同系的实心蓝底 + 描边，一眼能看出选的是哪天 */
 .tenyears-home-page .el-calendar-table td.is-selected,
 .tenyears-home-page .el-calendar-table td.is-today.is-selected {
-  background: #ff8f1f;
-  box-shadow: inset 0 0 0 2px #d2620a;
+  background: #4facfe;
+  box-shadow: inset 0 0 0 2px #1f7fd0;
   transition: background 0.2s;
 }
 
-/* 选中格里的文字压在橙底上，统一转白保证可读 */
+/* 选中格里的文字压在蓝底上，统一转白保证可读 */
 .tenyears-home-page .el-calendar-table td.is-selected .calendar-day,
 .tenyears-home-page .el-calendar-table td.is-selected .calendar-day-note {
   color: #fff;
@@ -3298,7 +3298,7 @@ a {
   font-weight: bold;
 }
 
-/* +/- 换成白底圆片，橙底上依旧保留红绿的含义 */
+/* +/- 换成白底圆片，蓝底上依旧保留红绿的含义 */
 .tenyears-home-page .el-calendar-table td.is-selected .calendar-day-state:not(:empty) {
   display: inline-block;
   min-width: 18px;
