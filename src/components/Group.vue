@@ -909,6 +909,11 @@ export default {
         return
       }
 
+      if (!this.unionid) {
+        this.$message.warning('无法识别你的身份，请重新登录后再试')
+        return
+      }
+
       this.submitting = true
       try {
         const res = await axios.post(`${this.serverUrl}joinGroup`, qs.stringify({
@@ -923,7 +928,8 @@ export default {
           2: '你已在组中，无需申请',
           3: '已再次提交申请',
           4: '无法申请加入自己的组',
-          5: '已再次提交申请'
+          5: '已再次提交申请',
+          6: '无法识别你的身份，请重新登录后再试'
         }
 
         if (result === 0 || result === 3 || result === 5) {

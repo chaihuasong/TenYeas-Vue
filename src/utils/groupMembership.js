@@ -176,11 +176,11 @@ export function withCacheBust(url, nowMs) {
   return url + joiner + '_t=' + stamp
 }
 
-// joinGroup 约定返回 0-5。空响应不能当成 0，否则会把失败显示成申请成功。
+// joinGroup 约定返回 0-6。空响应不能当成 0，否则会把失败显示成申请成功。
 export function parseJoinResult(data) {
   if (data === 0 || data === '0') return 0
-  if (typeof data === 'number' && data >= 1 && data <= 5) return data
-  if (typeof data === 'string' && /^[1-5]$/.test(data.trim())) return Number(data.trim())
+  if (typeof data === 'number' && data >= 1 && data <= 6) return data
+  if (typeof data === 'string' && /^[1-6]$/.test(data.trim())) return Number(data.trim())
   return null
 }
 
