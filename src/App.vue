@@ -35,4 +35,10 @@ export default {
 .dialog-footer .el-button {
   border-radius: 15px;
 }
+
+/* 移动端确认弹窗收窄：Element UI 默认 420px，在手机屏幕上会被裁掉，
+   按钮（靠右对齐）显示不全，这里按屏宽收小 */
+.el-message-box {
+  max-width: 85vw;
+}
 </style>
