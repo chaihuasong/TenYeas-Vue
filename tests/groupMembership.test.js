@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   buildGroupView,
+  buildReviewQuery,
   parseJoinResult,
   readReviewResult,
   visibleTeamSummaries,
@@ -160,6 +161,54 @@ test('自己创建的组不会在我加入的里再出现一次', () => {
     joinedRaw: [[{ groupId: 'HTZ-0000001', groupName: '晨练组', unionId: 'user-a', state: 1 }]]
   })
   assert.equal(view.joined.length, 0)
+})
+
+test('申请行缺组长或组号时，同意和拒绝用所在小组卡片补上', () => {
+  const group = { groupId: 'HTZ-0000001', owner: 'owner-a', groupName: '晨练组' }
+  const member = { id: 11, unionId: 'user-b', nickname: '乙', state: 0 }
+  const review = buildReviewQuery(member, group)
+  assert.equal(review.message, '')
+  assert.equal(review.query, 'owner=owner-a&groupId=HTZ-0000001&unionId=user-b')
+})
+
+test('申请行自带 owner、groupId 时优先用申请行，小写 groupid 和 unionid 也能用', () => {
+  const preferred = buildReviewQuery(
+    { unionId: 'user-b', owner: 'owner-row', groupId: 'HTZ-ROW' },
+    { owner: 'owner-card', groupId: 'HTZ-CARD' }
+  )
+  assert.equal(preferred.query, 'owner=owner-row&groupId=HTZ-ROW&unionId=user-b')
+
+  const aliased = buildReviewQuery(
+    { unionid: 'user-b', groupid: 'HTZ-0000001' },
+    { ownerId: 'owner-a', groupId: 'HTZ-OTHER' }
+  )
+  assert.equal(aliased.query, 'owner=owner-a&groupId=HTZ-0000001&unionId=user-b')
+})
+
+test('组员 unionId 只取申请行，缺失时不拿登录用户或小组卡片顶替', () => {
+  const review = buildReviewQuery(
+    { id: 11, nickname: '乙', owner: 'owner-a', groupId: 'HTZ-0000001' },
+    { owner: 'owner-a', groupId: 'HTZ-0000001', unionId: 'logged-in-owner', unionid: 'logged-in-owner' }
+  )
+  assert.equal(review.query, '')
+  assert.equal(review.message, '申请记录缺少组员 unionId')
+})
+
+test('小组卡片也没有组长或组号时仍然不能审核，且不会改用当前用户', () => {
+  const review = buildReviewQuery(
+    { unionId: 'user-b' },
+    { unionId: 'logged-in-owner' }
+  )
+  assert.equal(review.query, '')
+  assert.equal(review.message, '申请记录缺少组长或组员信息，无法审核')
+})
+
+test('审核参数里的特殊字符会被编码', () => {
+  const review = buildReviewQuery(
+    { unionId: 'a&b' },
+    { owner: 'o w', groupId: 'HTZ 1' }
+  )
+  assert.equal(review.query, 'owner=o%20w&groupId=HTZ%201&unionId=a%26b')
 })
 
 test('审核接口 HTTP 200 且正文为 error! 时不算成功', () => {

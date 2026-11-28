@@ -134,10 +134,10 @@
                     <div class="member-actions">
                       <el-button
                         size="mini" type="success" :loading="acting === member.id"
-                        @click="agreeJoinGroup(member)">同意</el-button>
+                        @click="agreeJoinGroup(member, group)">同意</el-button>
                       <el-button
                         size="mini" type="danger" plain :loading="acting === member.id"
-                        @click="rejectJoinGroup(member)">拒绝</el-button>
+                        @click="rejectJoinGroup(member, group)">拒绝</el-button>
                     </div>
                   </div>
                 </div>
@@ -508,7 +508,7 @@ import global from '@/components/Common'
 import GroupReportList from '@/components/group/GroupReportList'
 import { buildReportItems, sortByDateDesc } from '@/components/group/reportItems'
 import { copyToClipboard } from '@/utils/clipboard'
-import { buildGroupView, parseJoinResult, readReviewResult, withCacheBust } from '@/utils/groupMembership'
+import { buildGroupView, buildReviewQuery, parseJoinResult, readReviewResult, withCacheBust } from '@/utils/groupMembership'
 import { assembleTeamDailyBoard, buildApprovedRoster } from '@/utils/groupDailyBoard'
 
 export default {
@@ -995,23 +995,19 @@ export default {
       }
     },
 
-    reviewQuery(member) {
-      const owner = member.owner || member.ownerId || ''
-      const groupId = member.groupId || ''
-      const unionId = member.unionId || member.unionid || ''
-      if (!owner || !groupId || !unionId) return ''
-      return `owner=${encodeURIComponent(owner)}&groupId=${encodeURIComponent(groupId)}&unionId=${encodeURIComponent(unionId)}`
+    reviewQuery(member, group) {
+      return buildReviewQuery(member, group)
     },
 
-    async agreeJoinGroup(member) {
-      const query = this.reviewQuery(member)
-      if (!query) {
-        this.$message.error('申请记录缺少组长或组员信息，无法审核')
+    async agreeJoinGroup(member, group) {
+      const review = this.reviewQuery(member, group)
+      if (!review.query) {
+        this.$message.error(review.message || '申请记录缺少组长或组员信息，无法审核')
         return
       }
       this.acting = member.id
       try {
-        const res = await axios.post(`${this.serverUrl}agreeGroup?${query}`)
+        const res = await axios.post(`${this.serverUrl}agreeGroup?${review.query}`)
         const result = readReviewResult(res.data)
         if (result.ok) this.$message.success('已同意入组！')
         else this.$message.error(result.message || '同意没有成功')
@@ -1023,15 +1019,15 @@ export default {
       }
     },
 
-    async rejectJoinGroup(member) {
-      const query = this.reviewQuery(member)
-      if (!query) {
-        this.$message.error('申请记录缺少组长或组员信息，无法审核')
+    async rejectJoinGroup(member, group) {
+      const review = this.reviewQuery(member, group)
+      if (!review.query) {
+        this.$message.error(review.message || '申请记录缺少组长或组员信息，无法审核')
         return
       }
       this.acting = member.id
       try {
-        const res = await axios.post(`${this.serverUrl}rejectGroup?${query}`)
+        const res = await axios.post(`${this.serverUrl}rejectGroup?${review.query}`)
         const result = readReviewResult(res.data)
         if (result.ok) this.$message.warning('已拒绝入组')
         else this.$message.error(result.message || '拒绝没有成功')
