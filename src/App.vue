@@ -41,4 +41,13 @@ export default {
 .el-message-box {
   max-width: 85vw;
 }
+
+/* el-avatar 默认只给图片 height:100%，没有宽度，object-fit 不生效，
+   非正方形头像（如上传的长方形照片）铺不满圆形会露出灰色底，
+   补上宽高让头像铺满整个圆 */
+.el-avatar > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 </style>
