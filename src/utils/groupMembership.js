@@ -184,6 +184,32 @@ export function parseJoinResult(data) {
   return null
 }
 
+function firstId(...values) {
+  for (let i = 0; i < values.length; i++) {
+    if (values[i]) return String(values[i])
+  }
+  return ''
+}
+
+// agreeGroup / rejectGroup 的查询参数是 owner、groupId、unionId。
+// 申请行经常没有组长和组号，用所在「我创建的」卡片补上。
+// 组员 unionId 只取申请行，不能用当前登录用户，也不能用小组卡片上的 id。
+export function buildReviewQuery(member, group) {
+  const row = member && typeof member === 'object' ? member : {}
+  const card = group && typeof group === 'object' ? group : {}
+  const owner = firstId(row.owner, row.ownerId, card.owner, card.ownerId)
+  const groupId = firstId(row.groupId, row.groupid, card.groupId, card.groupid)
+  const unionId = firstId(row.unionId, row.unionid)
+  if (!unionId) return { query: '', message: '申请记录缺少组员 unionId' }
+  if (!owner || !groupId) return { query: '', message: '申请记录缺少组长或组员信息，无法审核' }
+  return {
+    query: 'owner=' + encodeURIComponent(owner)
+      + '&groupId=' + encodeURIComponent(groupId)
+      + '&unionId=' + encodeURIComponent(unionId),
+    message: ''
+  }
+}
+
 // agreeGroup / rejectGroup 在 HTTP 200 时仍可能用正文 error! 表示失败。
 export function readReviewResult(data) {
   if (data == null) return { ok: false, message: '服务器没有返回审核结果' }
